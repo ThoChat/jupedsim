@@ -21,7 +21,7 @@ HumanoidModelV0::HumanoidModelV0(double bodyForce_, double friction_)
 
 OperationalModelType HumanoidModelV0::Type() const
 {
-    return OperationalModelType::SOCIAL_FORCE;
+    return OperationalModelType::HUMANOID_V0;
 }
 
 std::unique_ptr<OperationalModel> HumanoidModelV0::Clone() const

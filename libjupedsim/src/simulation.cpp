@@ -331,7 +331,7 @@ JPS_AgentId JPS_Simulation_AddHumanoidModelV0Agent(
     auto result = GenericAgent::ID::Invalid;
     auto simulation = reinterpret_cast<Simulation*>(handle);
     try {
-        if(simulation->ModelType() != OperationalModelType::HUMANOID_MODEL_V0) {
+        if(simulation->ModelType() != OperationalModelType::HUMANOID_V0) {
             throw std::runtime_error("Simulation is not configured to use Social Force Model");
         }
         GenericAgent agent{
@@ -518,7 +518,7 @@ JPS_ModelType JPS_Simulation_ModelType(JPS_Simulation handle)
             return JPS_CollisionFreeSpeedModelV2;
         case OperationalModelType::SOCIAL_FORCE:
             return JPS_SocialForceModel;
-        case OperationalModelType::HUMANOID_MODEL_V0:
+        case OperationalModelType::HUMANOID_V0:
             return JPS_HumanoidModelV0;
     }
     UNREACHABLE();
