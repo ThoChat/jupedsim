@@ -24,7 +24,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
     {
         return fmt::format_to(
             ctx.out(),
-            "SFM[velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}])",
+            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}])",
             m.velocity,
             m.mass,
             m.desiredSpeed,
