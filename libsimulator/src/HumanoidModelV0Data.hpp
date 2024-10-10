@@ -4,6 +4,7 @@
 
 #include "Point.hpp"
 struct HumanoidModelV0Data {
+    // SFM parameter, for navigation
     Point velocity{}; // v
     double mass{}; // m
     double desiredSpeed{}; // v0
@@ -12,6 +13,9 @@ struct HumanoidModelV0Data {
     double obstacleScale{}; // A for obstacles
     double forceDistance{}; // B
     double radius{}; // r
+    // Humanoid model variables
+    Point head_position{}; // h_p
+    Point head_velocity{}; // h_v
 };
 
 template <>
@@ -24,7 +28,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
     {
         return fmt::format_to(
             ctx.out(),
-            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}])",
+            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={},head_position={},head_velocity={}])",
             m.velocity,
             m.mass,
             m.desiredSpeed,
@@ -32,6 +36,8 @@ struct fmt::formatter<HumanoidModelV0Data> {
             m.agentScale,
             m.obstacleScale,
             m.forceDistance,
-            m.radius);
+            m.radius,
+            m.head_position,
+            m.head_velocity);
     }
 };

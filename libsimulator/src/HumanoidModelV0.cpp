@@ -59,8 +59,12 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         });
     forces += obstacle_f / model.mass;
 
+    // creating update for the SFM navigation
     update.velocity = model.velocity + forces * dT;
     update.position = ped.pos + update.velocity * dT;
+    // creating update for the Humanoid model
+    update.head_position = ped.pos + update.velocity * dT;
+    update.head_velocity = model.velocity + forces * dT;
 
     return update;
 }
@@ -69,9 +73,13 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
 {
     auto& model = std::get<HumanoidModelV0Data>(agent.model);
     const auto& upd = std::get<HumanoidModelV0Update>(update);
+    // update the SFM navigation
     agent.pos = upd.position;
     model.velocity = upd.velocity;
     agent.orientation = upd.velocity.Normalized();
+    // update the Humanoid model
+    model.head_position = upd.head_position;
+    model.head_velocity = upd.head_velocity;
 }
 
 void HumanoidModelV0::CheckModelConstraint(

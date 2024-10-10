@@ -7,4 +7,7 @@
 struct HumanoidModelV0Update {
     Point position{};
     Point velocity{};
+    // Humanoid model variables
+    Point head_position{}; // h_p
+    Point head_velocity{}; // h_v
 };
