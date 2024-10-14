@@ -15,6 +15,7 @@
 #include <Logger.hpp>
 #include <iostream>
 #include <stdexcept>
+#include <cmath> 
 
 HumanoidModelV0::HumanoidModelV0(double bodyForce_, double friction_)
     : bodyForce(bodyForce_), friction(friction_){};
@@ -63,8 +64,11 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     update.velocity = model.velocity + forces * dT;
     update.position = ped.pos + update.velocity * dT;
     // creating update for the Humanoid model
+    // Simple linearized pendulum perpendicular to the walking direction
+    Point NormalVelocity = model.velocity.Rotate90Deg()/model.velocity.Norm() ;
+    update.head_velocity = model.head_velocity + NormalVelocity*(0.05*Distance(update.position, ped.pos) * dT); 
     update.head_position = ped.pos + update.velocity * dT;
-    update.head_velocity = model.velocity + forces * dT;
+    
 
     return update;
 }
