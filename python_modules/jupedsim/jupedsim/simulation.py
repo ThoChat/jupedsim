@@ -27,10 +27,6 @@ from jupedsim.models.social_force import (
     SocialForceModel,
     SocialForceModelAgentParameters,
 )
-from jupedsim.models.humanoid_model_v0 import (
-    HumanoidModelV0,
-    HumanoidModelV0AgentParameters,
-)
 from jupedsim.serialization import TrajectoryWriter
 from jupedsim.stages import (
     ExitStage,
@@ -58,7 +54,6 @@ class Simulation:
             | GeneralizedCentrifugalForceModel
             | CollisionFreeSpeedModelV2
             | SocialForceModel
-            | HumanoidModelV0
         ),
         geometry: (
             str
@@ -132,11 +127,6 @@ class Simulation:
                 bodyForce=model.bodyForce, friction=model.friction
             )
             py_jps_model = model_builder.build()
-        elif isinstance(model, HumanoidModelV0):
-            model_builder = py_jps.HumanoidModelV0Builder(
-                bodyForce=model.bodyForce, friction=model.friction
-            )
-            py_jps_model = model_builder.build()
         else:
             raise Exception("Unknown model type supplied")
         self._writer = trajectory_writer
@@ -144,7 +134,9 @@ class Simulation:
             model=py_jps_model, geometry=build_geometry(geometry)._obj, dt=dt
         )
 
-    def add_waypoint_stage(self, position: tuple[float, float], distance) -> int:
+    def add_waypoint_stage(
+        self, position: tuple[float, float], distance
+    ) -> int:
         """Add a new waypoint stage to this simulation.
 
         Arguments:
@@ -171,7 +163,9 @@ class Simulation:
         """
         return self._obj.add_queue_stage(positions)
 
-    def add_waiting_set_stage(self, positions: list[tuple[float, float]]) -> int:
+    def add_waiting_set_stage(
+        self, positions: list[tuple[float, float]]
+    ) -> int:
         """Add a new waiting set stage to this simulation.
 
         Arguments:
@@ -255,7 +249,6 @@ class Simulation:
             | CollisionFreeSpeedModelAgentParameters
             | CollisionFreeSpeedModelV2AgentParameters
             | SocialForceModelAgentParameters
-            | HumanoidModelV0AgentParameters
         ),
     ) -> int:
         """Add an agent to the simulation.
@@ -379,7 +372,9 @@ class Simulation:
         """
         return self._obj.agent(agent_id)
 
-    def agents_in_range(self, pos: tuple[float, float], distance: float) -> list[Agent]:
+    def agents_in_range(
+        self, pos: tuple[float, float], distance: float
+    ) -> list[Agent]:
         """Agents within the given distance to the given position.
 
         Arguments:
@@ -448,7 +443,9 @@ class Simulation:
             case py_jps.WaitingSetProxy():
                 return WaitingSetStage(stage)
             case _:
-                raise Exception(f"Internal error, unexpected type: {type(stage)}")
+                raise Exception(
+                    f"Internal error, unexpected type: {type(stage)}"
+                )
 
     def set_tracing(self, status: bool) -> None:
         self._obj.set_tracing(status)

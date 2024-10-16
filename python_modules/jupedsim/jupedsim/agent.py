@@ -10,7 +10,6 @@ from jupedsim.models.generalized_centrifugal_force import (
     GeneralizedCentrifugalForceModelState,
 )
 from jupedsim.models.social_force import SocialForceModelState
-from jupedsim.models.humanoid_model_v0 import HumanoidModelV0State
 
 
 class Agent:
@@ -107,7 +106,6 @@ class Agent:
         GeneralizedCentrifugalForceModelState
         | CollisionFreeSpeedModelState
         | SocialForceModelState
-        | HumanoidModelV0State
     ):
         """Access model specific state of this agent."""
         model = self._obj.model
@@ -119,7 +117,5 @@ class Agent:
             return CollisionFreeSpeedModelV2State(model)
         elif isinstance(model, py_jps.SocialForceModelState):
             return SocialForceModelState(model)
-        elif isinstance(model, py_jps.HumanoidModelV0State):
-            return HumanoidModelV0State(model)
         else:
             raise Exception("Internal error")

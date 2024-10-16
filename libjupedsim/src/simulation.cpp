@@ -322,47 +322,6 @@ JPS_AgentId JPS_Simulation_AddSocialForceModelAgent(
     return result.getID();
 }
 
-JPS_AgentId JPS_Simulation_AddHumanoidModelV0Agent(
-    JPS_Simulation handle,
-    JPS_HumanoidModelV0AgentParameters parameters,
-    JPS_ErrorMessage* errorMessage)
-{
-    assert(handle);
-    auto result = GenericAgent::ID::Invalid;
-    auto simulation = reinterpret_cast<Simulation*>(handle);
-    try {
-        if(simulation->ModelType() != OperationalModelType::HUMANOID_V0) {
-            throw std::runtime_error("Simulation is not configured to use Social Force Model");
-        }
-        GenericAgent agent{
-            GenericAgent::ID::Invalid,
-            Journey::ID(parameters.journeyId),
-            BaseStage::ID(parameters.stageId),
-            intoPoint(parameters.position),
-            intoPoint(parameters.orientation),
-            HumanoidModelV0Data{
-                intoPoint(parameters.velocity),
-                parameters.mass,
-                parameters.desiredSpeed,
-                parameters.reactionTime,
-                parameters.agentScale,
-                parameters.obstacleScale,
-                parameters.forceDistance,
-                parameters.radius}};
-        result = simulation->AddAgent(std::move(agent));
-    } catch(const std::exception& ex) {
-        if(errorMessage) {
-            *errorMessage = reinterpret_cast<JPS_ErrorMessage>(new JPS_ErrorMessage_t{ex.what()});
-        }
-    } catch(...) {
-        if(errorMessage) {
-            *errorMessage = reinterpret_cast<JPS_ErrorMessage>(
-                new JPS_ErrorMessage_t{"Unknown internal error."});
-        }
-    }
-    return result.getID();
-}
-
 bool JPS_Simulation_MarkAgentForRemoval(
     JPS_Simulation handle,
     JPS_AgentId agentId,
@@ -518,8 +477,6 @@ JPS_ModelType JPS_Simulation_ModelType(JPS_Simulation handle)
             return JPS_CollisionFreeSpeedModelV2;
         case OperationalModelType::SOCIAL_FORCE:
             return JPS_SocialForceModel;
-        case OperationalModelType::HUMANOID_V0:
-            return JPS_HumanoidModelV0;
     }
     UNREACHABLE();
 }

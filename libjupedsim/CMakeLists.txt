@@ -19,7 +19,6 @@ add_library(jupedsim_obj OBJECT
     src/operational_model.cpp
     src/simulation.cpp
     src/social_force_model.cpp
-    src/humanoid_model_v0.cpp
     src/stage.cpp
     src/routing.cpp
 )
