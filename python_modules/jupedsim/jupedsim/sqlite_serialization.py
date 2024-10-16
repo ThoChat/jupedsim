@@ -10,7 +10,7 @@ from shapely import from_wkt
 
 from jupedsim.serialization import TrajectoryWriter
 from jupedsim.simulation import Simulation
-from jupedsim.models import social_force
+from jupedsim.models import humanoid_model_v0
 
 DATABASE_VERSION: Final = 2
 
@@ -198,11 +198,11 @@ class SqliteTrajectoryWriter(TrajectoryWriter):
         return self._value_or_default(cur, "ymax", float("-inf"))
 
 
-class SqliteHmanoidTrajectoryWriter(TrajectoryWriter):
+class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
     """Write the trajectories of all Humanoid agents into a sqlite db, the trajectory of non-humanoid agents will also be stored in the sqlite."""
 
     def __init__(self, *, output_file: Path, every_nth_frame: int = 4) -> None:
-        """SqliteHmanoidTrajectoryWriter constructor
+        """SqliteHumanoidTrajectoryWriter constructor
 
         Args:
             output_file : pathlib.Path
@@ -212,7 +212,7 @@ class SqliteHmanoidTrajectoryWriter(TrajectoryWriter):
                 indicates interval between writes, 1 means every frame, 5 every 5th
 
         Returns:
-            SqliteHmanoidTrajectoryWriter
+            SqliteHumanoidTrajectoryWriter
         """
         self._output_file = output_file
         if every_nth_frame < 1:
@@ -306,7 +306,7 @@ class SqliteHmanoidTrajectoryWriter(TrajectoryWriter):
                         agent.model.v0,  # Add this line to get the velocity
                         agent.model.friction,  # Add this line to get the friction
                     )
-                    if isinstance(agent.model, social_force.SocialForceModel)
+                    if isinstance(agent.model, humanoid_model_v0.HumanoidModelV0)
                     else (
                         frame,
                         agent.id,

@@ -56,7 +56,7 @@ from jupedsim.serialization import TrajectoryWriter
 from jupedsim.simulation import Simulation
 from jupedsim.sqlite_serialization import (
     SqliteTrajectoryWriter,
-    SqliteHmanoidTrajectoryWriter,
+    SqliteHumanoidTrajectoryWriter,
 )
 from jupedsim.stages import (
     ExitStage,
@@ -102,7 +102,7 @@ __all__ = [
     "RoutingEngine",
     "Simulation",
     "SqliteTrajectoryWriter",
-    "SqliteHmanoidTrajectoryWriter",
+    "SqliteHumanoidTrajectoryWriter",
     "Trace",
     "TrajectoryWriter",
     "Transition",
