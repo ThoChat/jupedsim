@@ -4,6 +4,7 @@
 #include "CollisionFreeSpeedModelData.hpp"
 #include "CollisionFreeSpeedModelV2Data.hpp"
 #include "GeneralizedCentrifugalForceModelData.hpp"
+#include "HumanoidModelV0Data.hpp"
 #include "OperationalModel.hpp"
 #include "Point.hpp"
 #include "SocialForceModelData.hpp"
@@ -33,7 +34,8 @@ struct GenericAgent {
         GeneralizedCentrifugalForceModelData,
         CollisionFreeSpeedModelData,
         CollisionFreeSpeedModelV2Data,
-        SocialForceModelData>;
+        SocialForceModelData,
+        HumanoidModelV0Data>;
     Model model{};
 
     GenericAgent(
@@ -91,6 +93,20 @@ struct fmt::formatter<GenericAgent> {
                         m);
                 }},
             [&ctx, &agent](const SocialForceModelData& m) {
+                return fmt::format_to(
+                    ctx.out(),
+                    "Agent[id={}, journey={}, stage={}, destination={}, waypoint={}, pos={}, "
+                    "orientation={}, model={})",
+                    agent.id,
+                    agent.journeyId,
+                    agent.stageId,
+                    agent.destination,
+                    agent.target,
+                    agent.pos,
+                    agent.orientation,
+                    m);
+            },
+            [&ctx, &agent](const HumanoidModelV0Data& m) {
                 return fmt::format_to(
                     ctx.out(),
                     "Agent[id={}, journey={}, stage={}, destination={}, waypoint={}, pos={}, "

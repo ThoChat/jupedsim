@@ -4,6 +4,7 @@
 #include "CollisionFreeSpeedModelV2Update.hpp"
 #include "GeneralizedCentrifugalForceModelUpdate.hpp"
 #include "SocialForceModelUpdate.hpp"
+#include "HumanoidModelV0Update.hpp"
 
 #include <variant>
 
@@ -11,4 +12,5 @@ using OperationalModelUpdate = std::variant<
     GeneralizedCentrifugalForceModelUpdate,
     CollisionFreeSpeedModelUpdate,
     CollisionFreeSpeedModelV2Update,
-    SocialForceModelUpdate>;
+    SocialForceModelUpdate,
+    HumanoidModelV0Update>;
