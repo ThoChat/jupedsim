@@ -54,7 +54,10 @@ from jupedsim.recording import Recording, RecordingAgent, RecordingFrame
 from jupedsim.routing import RoutingEngine
 from jupedsim.serialization import TrajectoryWriter
 from jupedsim.simulation import Simulation
-from jupedsim.sqlite_serialization import SqliteTrajectoryWriter
+from jupedsim.sqlite_serialization import (
+    SqliteTrajectoryWriter,
+    SqliteHmanoidTrajectoryWriter,
+)
 from jupedsim.stages import (
     ExitStage,
     NotifiableQueueStage,
@@ -99,6 +102,7 @@ __all__ = [
     "RoutingEngine",
     "Simulation",
     "SqliteTrajectoryWriter",
+    "SqliteHmanoidTrajectoryWriter",
     "Trace",
     "TrajectoryWriter",
     "Transition",
