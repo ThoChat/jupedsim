@@ -45,6 +45,11 @@ from jupedsim.models.social_force import (
     SocialForceModelAgentParameters,
     SocialForceModelState,
 )
+from jupedsim.models.humanoid_model_v0 import (
+    HumanoidModelV0,
+    HumanoidModelV0AgentParameters,
+    HumanoidModelV0State,
+)
 from jupedsim.recording import Recording, RecordingAgent, RecordingFrame
 from jupedsim.routing import RoutingEngine
 from jupedsim.serialization import TrajectoryWriter
@@ -110,6 +115,9 @@ __all__ = [
     "SocialForceModelAgentParameters",
     "SocialForceModel",
     "SocialForceModelState",
+    "HumanoidModelV0AgentParameters",
+    "HumanoidModelV0",
+    "HumanoidModelV0State",
     "WaitingSetStage",
     "WaitingSetState",
     "WaypointStage",
