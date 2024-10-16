@@ -35,12 +35,6 @@ add_library(simulator STATIC
     src/GeometryBuilder.hpp
     src/GeometrySwitchError.hpp
     src/Graph.hpp
-    src/HumanoidModelV0.cpp
-    src/HumanoidModelV0.hpp
-    src/HumanoidModelV0Builder.cpp
-    src/HumanoidModelV0Builder.hpp
-    src/HumanoidModelV0Data.hpp
-    src/HumanoidModelV0Update.hpp
     src/Journey.cpp
     src/Journey.hpp
     src/LineSegment.cpp

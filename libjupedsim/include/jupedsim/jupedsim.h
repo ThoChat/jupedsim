@@ -16,7 +16,6 @@
 #include "routing.h"
 #include "simulation.h"
 #include "social_force_model.h"
-#include "humanoid_model_v0.h"
 #include "stage.h"
 #include "transition.h"
 #include "types.h"

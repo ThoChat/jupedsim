@@ -92,8 +92,6 @@ JPS_ModelType JPS_Agent_GetModelType(JPS_Agent handle)
             return JPS_CollisionFreeSpeedModelV2;
         case 3:
             return JPS_SocialForceModel;
-        case 4:
-            return JPS_HumanoidModelV0;
     }
     UNREACHABLE();
 }
@@ -182,26 +180,6 @@ JPS_Agent_GetSocialForceModelState(JPS_Agent handle, JPS_ErrorMessage* errorMess
     return nullptr;
 }
 
-JPS_HumanoidModelV0State
-JPS_Agent_GetHumanoidModelV0State(JPS_Agent handle, JPS_ErrorMessage* errorMessage)
-{
-    assert(handle);
-    const auto agent = reinterpret_cast<GenericAgent*>(handle);
-    try {
-        auto& model = std::get<HumanoidModelV0Data>(agent->model);
-        return reinterpret_cast<JPS_HumanoidModelV0State>(&model);
-    } catch(const std::exception& ex) {
-        if(errorMessage) {
-            *errorMessage = reinterpret_cast<JPS_ErrorMessage>(new JPS_ErrorMessage_t{ex.what()});
-        }
-    } catch(...) {
-        if(errorMessage) {
-            *errorMessage = reinterpret_cast<JPS_ErrorMessage>(
-                new JPS_ErrorMessage_t{"Unknown internal error."});
-        }
-    }
-    return nullptr;
-}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// AgentIterator
 ////////////////////////////////////////////////////////////////////////////////////////////////////
