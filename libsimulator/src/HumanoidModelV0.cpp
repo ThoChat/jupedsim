@@ -84,7 +84,10 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
     // update the Humanoid model
     model.head_position = upd.head_position;
     model.head_velocity = upd.head_velocity;
+
 }
+
+
 
 void HumanoidModelV0::CheckModelConstraint(
     const GenericAgent& agent,

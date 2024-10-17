@@ -168,6 +168,37 @@ JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetRadius(JPS_HumanoidModelV0State handle, double radius);
 
 /**
+ * Read head position of this agent.
+ * @param handle of the Agent to access.
+ * @return head position of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write head position of this agent.
+ * @param handle of the Agent to access.
+ * @param head position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetHeadPosition(JPS_HumanoidModelV0State handle, JPS_Point head_position);
+
+/**
+ * Read head velocity of this agent.
+ * @param handle of the Agent to access.
+ * @return head velocity of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadVelocity(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write head velocity of this agent.
+ * @param handle of the Agent to access.
+ * @param head velocity of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetHeadVelocity(JPS_HumanoidModelV0State handle, JPS_Point head_velocity);
+
+
+/**
  * Describes parameters of an Agent in HumanoidModelV0
  */
 typedef struct JPS_HumanoidModelV0AgentParameters {
@@ -221,6 +252,14 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
      * radius of the agent
      */
     double radius = 0.3;
+    /**
+     * Initial head position of the Agent
+     */
+    JPS_Point head_position = {0, 0};
+    /**
+     * Initial head velocity of the Agent
+     */
+    JPS_Point head_velocity = {0, 0};
 
 } JPS_HumanoidModelV0AgentParameters;
 

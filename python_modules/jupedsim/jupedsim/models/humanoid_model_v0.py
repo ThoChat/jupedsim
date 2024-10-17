@@ -64,6 +64,9 @@ class HumanoidModelV0AgentParameters:
     radius: float = (
         0.3  # [m] in paper 2r is uniformy distibuted in interval [0.5 m, 0.7 m]
     )
+    ## Variables for Humanoid body
+    head_position: tuple[float, float] = (0.0, 0.0)
+    head_velocity: tuple[float, float] = (0.0, 0.0)
 
     def as_native(
         self,
@@ -81,6 +84,8 @@ class HumanoidModelV0AgentParameters:
             obstacleScale=self.obstacleScale,
             forceDistance=self.forceDistance,
             radius=self.radius,
+            head_position=self.head_position,
+            head_velocity=self.head_velocity,
         )
 
 
@@ -159,3 +164,21 @@ class HumanoidModelV0State:
     @radius.setter
     def radius(self, radius):
         self._obj.radius = radius
+
+    @property
+    def head_position(self) -> tuple[float, float]:
+        """head position of this agent."""
+        return self._obj.head_position
+
+    @head_position.setter
+    def head_position(self, head_position):
+        self._obj.head_position = head_position
+
+    @property
+    def head_velocity(self) -> tuple[float, float]:
+        """head velocity of this agent."""
+        return self._obj.head_velocity
+
+    @head_velocity.setter
+    def head_velocity(self, head_velocity):
+        self._obj.head_velocity = head_velocity

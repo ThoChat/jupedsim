@@ -172,3 +172,33 @@ JPS_HumanoidModelV0State_SetRadius(JPS_HumanoidModelV0State handle, double radiu
     const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
     state->radius = radius;
 }
+
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return intoJPS_Point(state->head_position);
+}
+
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetHeadPosition(JPS_HumanoidModelV0State handle, JPS_Point head_position)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->head_position = intoPoint(head_position);
+}
+
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadVelocity(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return intoJPS_Point(state->head_velocity);
+}
+
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetHeadVelocity(JPS_HumanoidModelV0State handle, JPS_Point head_velocity)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->head_velocity = intoPoint(head_velocity);
+}

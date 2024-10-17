@@ -27,7 +27,10 @@ void init_humanoid_model_v0(py::module_& m)
                         double agentScale,
                         double obstacleScale,
                         double forceDistance,
-                        double radius) {
+                        double radius,
+                        std::tuple<double, double> head_position, // variables of the humanoid body
+                        std::tuple<double, double> head_velocity) // variables of the humanoid body
+                        {
                 return JPS_HumanoidModelV0AgentParameters{
                     intoJPS_Point(position),
                     intoJPS_Point(orientation),
@@ -40,7 +43,9 @@ void init_humanoid_model_v0(py::module_& m)
                     agentScale,
                     obstacleScale,
                     forceDistance,
-                    radius};
+                    radius, 
+                    intoJPS_Point(head_position), 
+                    intoJPS_Point(head_velocity)};
             }),
             py::kw_only(),
             py::arg("position"),
@@ -54,13 +59,15 @@ void init_humanoid_model_v0(py::module_& m)
             py::arg("agentScale"),
             py::arg("obstacleScale"),
             py::arg("forceDistance"),
-            py::arg("radius"))
+            py::arg("radius"),
+            py::arg("head_position"),
+            py::arg("head_velocity"))
         .def("__repr__", [](const JPS_HumanoidModelV0AgentParameters& p) {
             return fmt::format(
                 "position: {}, orientation: {}, journey_id: {}, stage_id: {},"
                 "velocity: {}, mass: {}, desiredSpeed: {},"
-                "reactionTime: {}, agentScale: {}, obstacleScale: {}, forceDistance: {}, radius: "
-                "{}",
+                "reactionTime: {}, agentScale: {}, obstacleScale: {}, forceDistance: {},"
+                "radius: {}, head_position: {}, head_velocity: {}",
                 intoTuple(p.position),
                 intoTuple(p.orientation),
                 p.journeyId,
@@ -72,7 +79,9 @@ void init_humanoid_model_v0(py::module_& m)
                 p.agentScale,
                 p.obstacleScale,
                 p.forceDistance,
-                p.radius);
+                p.radius,
+                intoTuple(p.head_position),
+                intoTuple(p.head_velocity));
         });
     py::class_<JPS_HumanoidModelV0Builder_Wrapper>(m, "HumanoidModelV0Builder")
         .def(
@@ -157,5 +166,21 @@ void init_humanoid_model_v0(py::module_& m)
             },
             [](JPS_HumanoidModelV0State_Wrapper& w, double radius) {
                 JPS_HumanoidModelV0State_SetRadius(w.handle, radius);
+            })
+        .def_property(
+            "head_position",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return intoTuple(JPS_HumanoidModelV0State_GetHeadPosition(w.handle));
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> head_position) {
+                JPS_HumanoidModelV0State_SetHeadPosition(w.handle, intoJPS_Point(head_position));
+            })
+        .def_property(
+            "head_velocity",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return intoTuple(JPS_HumanoidModelV0State_GetHeadVelocity(w.handle));
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> head_velocity) {
+                JPS_HumanoidModelV0State_SetHeadVelocity(w.handle, intoJPS_Point(head_velocity));
             });
 }
