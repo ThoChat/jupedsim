@@ -10,7 +10,6 @@ from shapely import from_wkt
 
 from jupedsim.serialization import TrajectoryWriter
 from jupedsim.simulation import Simulation
-from jupedsim.models import humanoid_model_v0
 
 DATABASE_VERSION: Final = 2
 
@@ -303,10 +302,11 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                         agent.position[1],
                         agent.orientation[0],
                         agent.orientation[1],
-                        agent.model.v0,  # Add this line to get the velocity
-                        agent.model.friction,  # Add this line to get the friction
+                        agent.model.head_position[0],
+                        agent.model.head_position[1],
                     )
-                    if isinstance(agent.model, humanoid_model_v0.HumanoidModelV0)
+                    if str(type(agent.model))
+                    == "<class 'jupedsim.py_jupedsim.HumanoidModelV0State'>"
                     else (
                         frame,
                         agent.id,
