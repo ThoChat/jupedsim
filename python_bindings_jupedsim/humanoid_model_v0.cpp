@@ -28,8 +28,14 @@ void init_humanoid_model_v0(py::module_& m)
                         double obstacleScale,
                         double forceDistance,
                         double radius,
-                        std::tuple<double, double> head_position, // variables of the humanoid body
-                        std::tuple<double, double> head_velocity) // variables of the humanoid body
+                        // variables of the humanoid body
+                        std::tuple<double, double> head_position, 
+                        std::tuple<double, double> head_velocity,
+                        std::tuple<double, double> shoulder_right_position, 
+                        std::tuple<double, double> shoulder_right_velocity,
+                        std::tuple<double, double> shoulder_left_position, 
+                        std::tuple<double, double> shoulder_left_velocity
+                        ) 
                         {
                 return JPS_HumanoidModelV0AgentParameters{
                     intoJPS_Point(position),
@@ -45,7 +51,11 @@ void init_humanoid_model_v0(py::module_& m)
                     forceDistance,
                     radius, 
                     intoJPS_Point(head_position), 
-                    intoJPS_Point(head_velocity)};
+                    intoJPS_Point(head_velocity),
+                    intoJPS_Point(shoulder_right_position),
+                    intoJPS_Point(shoulder_right_velocity),
+                    intoJPS_Point(shoulder_left_position),
+                    intoJPS_Point(shoulder_left_velocity),};
             }),
             py::kw_only(),
             py::arg("position"),
@@ -61,13 +71,18 @@ void init_humanoid_model_v0(py::module_& m)
             py::arg("forceDistance"),
             py::arg("radius"),
             py::arg("head_position"),
-            py::arg("head_velocity"))
+            py::arg("head_velocity"),
+            py::arg("shoulder_right_position"),
+            py::arg("shoulder_right_velocity"),
+            py::arg("shoulder_left_position"),
+            py::arg("shoulder_left_velocity"))
         .def("__repr__", [](const JPS_HumanoidModelV0AgentParameters& p) {
             return fmt::format(
                 "position: {}, orientation: {}, journey_id: {}, stage_id: {},"
                 "velocity: {}, mass: {}, desiredSpeed: {},"
                 "reactionTime: {}, agentScale: {}, obstacleScale: {}, forceDistance: {},"
-                "radius: {}, head_position: {}, head_velocity: {}",
+                "radius: {}, head_position: {}, head_velocity: {}, shoulder_right_position: {},"
+                "shoulder_right_velocity: {}, shoulder_left_position: {}, shoulder_left_velocity: {},",
                 intoTuple(p.position),
                 intoTuple(p.orientation),
                 p.journeyId,
@@ -81,7 +96,12 @@ void init_humanoid_model_v0(py::module_& m)
                 p.forceDistance,
                 p.radius,
                 intoTuple(p.head_position),
-                intoTuple(p.head_velocity));
+                intoTuple(p.head_velocity),
+                intoTuple(p.shoulder_right_position),
+                intoTuple(p.shoulder_right_velocity),
+                intoTuple(p.shoulder_left_position),
+                intoTuple(p.shoulder_left_velocity)
+                );
         });
     py::class_<JPS_HumanoidModelV0Builder_Wrapper>(m, "HumanoidModelV0Builder")
         .def(
@@ -182,5 +202,38 @@ void init_humanoid_model_v0(py::module_& m)
             },
             [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> head_velocity) {
                 JPS_HumanoidModelV0State_SetHeadVelocity(w.handle, intoJPS_Point(head_velocity));
-            });
+            })
+        .def_property(
+            "shoulder_right_position",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return intoTuple(JPS_HumanoidModelV0State_GetShoulderRightPosition(w.handle));
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> shoulder_right_position) {
+                JPS_HumanoidModelV0State_SetShoulderRightPosition(w.handle, intoJPS_Point(shoulder_right_position));
+            })
+        .def_property(
+            "shoulder_right_velocity",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return intoTuple(JPS_HumanoidModelV0State_GetShoulderRightVelocity(w.handle));
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> shoulder_right_velocity) {
+                JPS_HumanoidModelV0State_SetShoulderRightVelocity(w.handle, intoJPS_Point(shoulder_right_velocity));
+            })
+        .def_property(
+            "shoulder_left_position",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return intoTuple(JPS_HumanoidModelV0State_GetShoulderLeftPosition(w.handle));
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> shoulder_left_position) {
+                JPS_HumanoidModelV0State_SetShoulderLeftPosition(w.handle, intoJPS_Point(shoulder_left_position));
+            })
+        .def_property(
+            "shoulder_left_velocity",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return intoTuple(JPS_HumanoidModelV0State_GetShoulderLeftVelocity(w.handle));
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> shoulder_left_velocity) {
+                JPS_HumanoidModelV0State_SetShoulderLeftVelocity(w.handle, intoJPS_Point(shoulder_left_velocity));
+            })
+            ;
 }

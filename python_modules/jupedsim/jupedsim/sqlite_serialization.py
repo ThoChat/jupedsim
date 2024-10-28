@@ -6,10 +6,9 @@ import sqlite3
 from pathlib import Path
 from typing import Final
 
-from shapely import from_wkt
-
 from jupedsim.serialization import TrajectoryWriter
 from jupedsim.simulation import Simulation
+from shapely import from_wkt
 
 DATABASE_VERSION: Final = 2
 
@@ -243,7 +242,11 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                 "   ori_x REAL NOT NULL,"
                 "   ori_y REAL NOT NULL,"
                 "   head_pos_x REAL,"
-                "   head_pos_y REAL )"
+                "   head_pos_y REAL,"
+                "   shoulder_right_pos_x REAL,"
+                "   shoulder_right_pos_y REAL,"
+                "   shoulder_left_pos_x REAL,"
+                "   shoulder_left_pos_y REAL )"
             )
             cur.execute("DROP TABLE IF EXISTS metadata")
             cur.execute(
@@ -304,6 +307,10 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                         agent.orientation[1],
                         agent.model.head_position[0],
                         agent.model.head_position[1],
+                        agent.model.shoulder_right_position[0],
+                        agent.model.shoulder_right_position[1],
+                        agent.model.shoulder_left_position[0],
+                        agent.model.shoulder_left_position[1],
                     )
                     if str(type(agent.model))
                     == "<class 'jupedsim.py_jupedsim.HumanoidModelV0State'>"
@@ -314,14 +321,18 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                         agent.position[1],
                         agent.orientation[0],
                         agent.orientation[1],
-                        "NULL",  # Add this line to add NaN
-                        "NULL",  # Add this line to add NaN
+                        "NULL",
+                        "NULL",
+                        "NULL",
+                        "NULL",
+                        "NULL",
+                        "NULL",
                     )
                 )
                 for agent in simulation.agents()
             ]
             cur.executemany(
-                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 frame_data,
             )
 

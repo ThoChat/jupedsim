@@ -197,6 +197,66 @@ JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadVelocity(JPS_HumanoidMode
 JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetHeadVelocity(JPS_HumanoidModelV0State handle, JPS_Point head_velocity);
 
+/**
+ * Read right shoulder position of this agent.
+ * @param handle of the Agent to access.
+ * @return right shoulder velocity of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderRightPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write right shoulder position of this agent.
+ * @param handle of the Agent to access.
+ * @param right shoulder position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetShoulderRightPosition(JPS_HumanoidModelV0State handle, JPS_Point shoulder_right_position);
+
+/**
+ * Read right shoulder velocity of this agent.
+ * @param handle of the Agent to access.
+ * @return right shoulder velocity of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderRightVelocity(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write right shoulder velocity of this agent.
+ * @param handle of the Agent to access.
+ * @param right shoulder velocity of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetShoulderRightVelocity(JPS_HumanoidModelV0State handle, JPS_Point shoulder_right_velocity);
+
+/**
+ * Read right shoulder position of this agent.
+ * @param handle of the Agent to access.
+ * @return right shoulder velocity of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderLeftPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write right shoulder position of this agent.
+ * @param handle of the Agent to access.
+ * @param right shoulder position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetShoulderLeftPosition(JPS_HumanoidModelV0State handle, JPS_Point shoulder_left_position);
+
+/**
+ * Read right shoulder velocity of this agent.
+ * @param handle of the Agent to access.
+ * @return right shoulder velocity of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderLeftVelocity(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write right shoulder velocity of this agent.
+ * @param handle of the Agent to access.
+ * @param right shoulder velocity of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetShoulderLeftVelocity(JPS_HumanoidModelV0State handle, JPS_Point shoulder_left_velocity);
+
 
 /**
  * Describes parameters of an Agent in HumanoidModelV0
@@ -260,6 +320,22 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
      * Initial head velocity of the Agent
      */
     JPS_Point head_velocity = {0, 0};
+    /**
+     * Initial right shoulder position of the Agent
+     */
+    JPS_Point shoulder_right_position = {0, 0};
+    /**
+     * Initial right shoulder velocity of the Agent
+     */
+    JPS_Point shoulder_right_velocity = {0, 0};
+    /**
+     * Initial left shoulder position of the Agent
+     */
+    JPS_Point shoulder_left_position = {0, 0};
+    /**
+     * Initial left shoulder velocity of the Agent
+     */
+    JPS_Point shoulder_left_velocity = {0, 0};
 
 } JPS_HumanoidModelV0AgentParameters;
 

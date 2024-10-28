@@ -13,8 +13,13 @@ struct HumanoidModelV0Data {
     double obstacleScale{}; // A for obstacles
     double forceDistance{}; // B
     double radius{}; // r
-    Point head_position{}; // head position
-    Point head_velocity{}; // head velocity
+    // Humanoid model variables
+    Point head_position{}; 
+    Point head_velocity{}; 
+    Point shoulder_right_position{}; 
+    Point shoulder_right_velocity{}; 
+    Point shoulder_left_position{}; 
+    Point shoulder_left_velocity{}; 
 };
 
 template <>
@@ -27,7 +32,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
     {
         return fmt::format_to(
             ctx.out(),
-            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={},head_position={},head_velocity={}])",
+            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, head_position={}, head_velocity={}, shoulder_right_position={}, shoulder_right_velocity={}, shoulder_left_position={}, shoulder_left_velocity={} ])",
             m.velocity,
             m.mass,
             m.desiredSpeed,
@@ -37,6 +42,11 @@ struct fmt::formatter<HumanoidModelV0Data> {
             m.forceDistance,
             m.radius,
             m.head_position,
-            m.head_velocity);
+            m.head_velocity,
+            m.shoulder_right_position,
+            m.shoulder_right_velocity,
+            m.shoulder_left_position,
+            m.shoulder_left_velocity
+            );
     }
 };

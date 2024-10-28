@@ -67,6 +67,10 @@ class HumanoidModelV0AgentParameters:
     ## Variables for Humanoid body
     head_position: tuple[float, float] = (0.0, 0.0)
     head_velocity: tuple[float, float] = (0.0, 0.0)
+    shoulder_right_position: tuple[float, float] = (0.0, 0.0)
+    shoulder_right_velocity: tuple[float, float] = (0.0, 0.0)
+    shoulder_left_position: tuple[float, float] = (0.0, 0.0)
+    shoulder_left_velocity: tuple[float, float] = (0.0, 0.0)
 
     def as_native(
         self,
@@ -86,6 +90,10 @@ class HumanoidModelV0AgentParameters:
             radius=self.radius,
             head_position=self.head_position,
             head_velocity=self.head_velocity,
+            shoulder_right_position=self.shoulder_right_position,
+            shoulder_right_velocity=self.shoulder_right_velocity,
+            shoulder_left_position=self.shoulder_left_position,
+            shoulder_left_velocity=self.shoulder_left_velocity,
         )
 
 
@@ -182,3 +190,39 @@ class HumanoidModelV0State:
     @head_velocity.setter
     def head_velocity(self, head_velocity):
         self._obj.head_velocity = head_velocity
+
+    @property
+    def shoulder_right_position(self) -> tuple[float, float]:
+        """right shoulder position of this agent."""
+        return self._obj.shoulder_right_position
+
+    @shoulder_right_position.setter
+    def shoulder_right_position(self, shoulder_right_position):
+        self._obj.shoulder_right_position = shoulder_right_position
+
+    @property
+    def shoulder_right_velocity(self) -> tuple[float, float]:
+        """right shoulder velocity of this agent."""
+        return self._obj.shoulder_right_velocity
+
+    @shoulder_right_velocity.setter
+    def shoulder_right_velocity(self, shoulder_right_velocity):
+        self._obj.shoulder_right_velocity = shoulder_right_velocity
+
+    @property
+    def shoulder_left_position(self) -> tuple[float, float]:
+        """left shoulder position of this agent."""
+        return self._obj.shoulder_left_position
+
+    @shoulder_left_position.setter
+    def shoulder_left_position(self, shoulder_left_position):
+        self._obj.shoulder_left_position = shoulder_left_position
+
+    @property
+    def shoulder_left_velocity(self) -> tuple[float, float]:
+        """left shoulder velocity of this agent."""
+        return self._obj.shoulder_left_velocity
+
+    @shoulder_left_velocity.setter
+    def shoulder_left_velocity(self, shoulder_left_velocity):
+        self._obj.shoulder_left_velocity = shoulder_left_velocity

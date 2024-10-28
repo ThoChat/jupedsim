@@ -64,10 +64,20 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     update.velocity = model.velocity + forces * dT;
     update.position = ped.pos + update.velocity * dT;
     // creating update for the Humanoid model
-    // Simple linearized pendulum perpendicular to the walking direction
+
+    // ## head 
     Point NormalVelocity = model.velocity.Rotate90Deg()/model.velocity.Norm() ;
     update.head_velocity = model.head_velocity + NormalVelocity*(0.05*Distance(update.position, ped.pos) * dT); 
     update.head_position = ped.pos + update.velocity * dT;
+
+    // ##shoulders
+    double shoulder_width = 0.25; // parameter that needs to be added to the model
+    // ### right
+    update.shoulder_right_velocity = update.head_velocity;
+    update.shoulder_right_position = update.head_position - NormalVelocity *shoulder_width;
+    // ### left
+    update.shoulder_left_velocity = update.head_velocity;
+    update.shoulder_left_position = update.head_position + NormalVelocity *shoulder_width;
     
 
     return update;
@@ -84,6 +94,10 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
     // update the Humanoid model
     model.head_position = upd.head_position;
     model.head_velocity = upd.head_velocity;
+    model.shoulder_right_position = upd.shoulder_right_position;
+    model.shoulder_right_velocity = upd.shoulder_right_velocity;
+    model.shoulder_left_position = upd.shoulder_left_position;
+    model.shoulder_left_velocity = upd.shoulder_left_velocity;
 
 }
 

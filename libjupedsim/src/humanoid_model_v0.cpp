@@ -202,3 +202,63 @@ JPS_HumanoidModelV0State_SetHeadVelocity(JPS_HumanoidModelV0State handle, JPS_Po
     const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
     state->head_velocity = intoPoint(head_velocity);
 }
+
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderRightPosition(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return intoJPS_Point(state->shoulder_right_position);
+}
+
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetShoulderRightPosition(JPS_HumanoidModelV0State handle, JPS_Point shoulder_right_position)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->shoulder_right_position = intoPoint(shoulder_right_position);
+}
+
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderRightVelocity(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return intoJPS_Point(state->shoulder_right_velocity);
+}
+
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetShoulderRightVelocity(JPS_HumanoidModelV0State handle, JPS_Point shoulder_right_velocity)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->shoulder_right_velocity = intoPoint(shoulder_right_velocity);
+}
+
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderLeftPosition(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return intoJPS_Point(state->shoulder_left_position);
+}
+
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetShoulderLeftPosition(JPS_HumanoidModelV0State handle, JPS_Point shoulder_left_position)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->shoulder_left_position = intoPoint(shoulder_left_position);
+}
+
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderLeftVelocity(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return intoJPS_Point(state->shoulder_left_velocity);
+}
+
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetShoulderLeftVelocity(JPS_HumanoidModelV0State handle, JPS_Point shoulder_left_velocity)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->shoulder_left_velocity = intoPoint(shoulder_left_velocity);
+}
