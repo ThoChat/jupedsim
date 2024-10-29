@@ -257,6 +257,125 @@ JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderLeftVelocity(JPS_Huma
 JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetShoulderLeftVelocity(JPS_HumanoidModelV0State handle, JPS_Point shoulder_left_velocity);
 
+/**
+ * Read pelvis right position of this agent.
+ * @param handle of the Agent to access.
+ * @return pelvis right position of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetPelvisRightPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write pelvis right position of this agent.
+ * @param handle of the Agent to access.
+ * @param pelvis right position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetPelvisRightPosition(JPS_HumanoidModelV0State handle, JPS_Point pelvis_right_position);
+
+/**
+ * Read pelvis right velocity of this agent.
+ * @param handle of the Agent to access.
+ * @return pelvis right velocity of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetPelvisRightVelocity(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write pelvis right velocity of this agent.
+ * @param handle of the Agent to access.
+ * @param pelvis right velocity of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetPelvisRightVelocity(JPS_HumanoidModelV0State handle, JPS_Point pelvis_right_velocity);
+
+/**
+ * Read pelvis left position of this agent.
+ * @param handle of the Agent to access.
+ * @return pelvis left position of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetPelvisLeftPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write pelvis left position of this agent.
+ * @param handle of the Agent to access.
+ * @param pelvis left position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetPelvisLeftPosition(JPS_HumanoidModelV0State handle, JPS_Point pelvis_left_position);
+
+/**
+ * Read pelvis left velocity of this agent.
+ * @param handle of the Agent to access.
+ * @return pelvis left velocity of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetPelvisLeftVelocity(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write pelvis left velocity of this agent.
+ * @param handle of the Agent to access.
+ * @param pelvis left velocity of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetPelvisLeftVelocity(JPS_HumanoidModelV0State handle, JPS_Point pelvis_left_velocity);
+/**
+ * Read heel right position of this agent.
+ * @param handle of the Agent to access.
+ * @return heel right position of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeelRightPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write heel right position of this agent.
+ * @param handle of the Agent to access.
+ * @param heel right position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetHeelRightPosition(JPS_HumanoidModelV0State handle, JPS_Point heel_right_position);
+
+/**
+ * Read heel right velocity of this agent.
+ * @param handle of the Agent to access.
+ * @return heel right velocity of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeelRightVelocity(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write heel right velocity of this agent.
+ * @param handle of the Agent to access.
+ * @param heel right velocity of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetHeelRightVelocity(JPS_HumanoidModelV0State handle, JPS_Point heel_right_velocity);
+
+/**
+ * Read heel left position of this agent.
+ * @param handle of the Agent to access.
+ * @return heel left position of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeelLeftPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write heel left position of this agent.
+ * @param handle of the Agent to access.
+ * @param heel left position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetHeelLeftPosition(JPS_HumanoidModelV0State handle, JPS_Point heel_left_position);
+
+/**
+ * Read heel left velocity of this agent.
+ * @param handle of the Agent to access.
+ * @return heel left velocity of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeelLeftVelocity(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write heel left velocity of this agent.
+ * @param handle of the Agent to access.
+ * @param heel left velocity of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetHeelLeftVelocity(JPS_HumanoidModelV0State handle, JPS_Point heel_left_velocity);
+
 
 /**
  * Describes parameters of an Agent in HumanoidModelV0
@@ -313,29 +432,24 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
      */
     double radius = 0.3;
     /**
-     * Initial head position of the Agent
+     * Humanoid model variables
      */
-    JPS_Point head_position = {0, 0};
-    /**
-     * Initial head velocity of the Agent
-     */
-    JPS_Point head_velocity = {0, 0};
-    /**
-     * Initial right shoulder position of the Agent
-     */
-    JPS_Point shoulder_right_position = {0, 0};
-    /**
-     * Initial right shoulder velocity of the Agent
-     */
-    JPS_Point shoulder_right_velocity = {0, 0};
-    /**
-     * Initial left shoulder position of the Agent
-     */
-    JPS_Point shoulder_left_position = {0, 0};
-    /**
-     * Initial left shoulder velocity of the Agent
-     */
-    JPS_Point shoulder_left_velocity = {0, 0};
+    JPS_Point head_position = {0, 0}; // Position of the agent's head
+    JPS_Point head_velocity = {0, 0}; // Velocity of the agent's head
+    JPS_Point shoulder_right_position = {0, 0}; // Position of the agent's right shoulder
+    JPS_Point shoulder_right_velocity = {0, 0}; // Velocity of the agent's right shoulder
+    JPS_Point shoulder_left_position = {0, 0}; // Position of the agent's left shoulder
+    JPS_Point shoulder_left_velocity = {0, 0}; // Velocity of the agent's left shoulder
+    JPS_Point pelvis_right_position = {0, 0}; // Position of the agent's right pelvis
+    JPS_Point pelvis_right_velocity = {0, 0}; // Velocity of the agent's right pelvis
+    JPS_Point pelvis_left_position = {0, 0}; // Position of the agent's left pelvis
+    JPS_Point pelvis_left_velocity = {0, 0}; // Velocity of the agent's left pelvis
+    JPS_Point heel_right_position = {0, 0}; // Position of the agent's right heel
+    JPS_Point heel_right_velocity = {0, 0}; // Velocity of the agent's right heel
+    JPS_Point heel_left_position = {0, 0}; // Position of the agent's left heel
+    JPS_Point heel_left_velocity = {0, 0}; // Velocity of the agent's left heel
+
+
 
 } JPS_HumanoidModelV0AgentParameters;
 

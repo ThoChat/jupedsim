@@ -78,7 +78,23 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     // ### left
     update.shoulder_left_velocity = update.head_velocity;
     update.shoulder_left_position = update.head_position + NormalVelocity *shoulder_width;
-    
+        // ## pelviss
+    double pelvis_width = 0.30; // parameter that needs to be added to the model
+    // ### right
+    update.pelvis_right_velocity = update.head_velocity;
+    update.pelvis_right_position = update.head_position - NormalVelocity * pelvis_width;
+    // ### left
+    update.pelvis_left_velocity = update.head_velocity;
+    update.pelvis_left_position = update.head_position + NormalVelocity * pelvis_width;
+    // ## heels
+    double step_width = 0.10; // parameter that needs to be added to the model
+    // ### right
+    update.heel_right_velocity = update.head_velocity;
+    update.heel_right_position = update.head_position - NormalVelocity * step_width;
+    // ### left
+    update.heel_left_velocity = update.head_velocity;
+    update.heel_left_position = update.head_position + NormalVelocity * step_width;
+
 
     return update;
 }
@@ -98,6 +114,14 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
     model.shoulder_right_velocity = upd.shoulder_right_velocity;
     model.shoulder_left_position = upd.shoulder_left_position;
     model.shoulder_left_velocity = upd.shoulder_left_velocity;
+    model.pelvis_right_position = upd.pelvis_right_position;
+    model.pelvis_right_velocity = upd.pelvis_right_velocity;
+    model.pelvis_left_position = upd.pelvis_left_position;
+    model.pelvis_left_velocity = upd.pelvis_left_velocity;
+    model.heel_right_position = upd.heel_right_position;
+    model.heel_right_velocity = upd.heel_right_velocity;
+    model.heel_left_position = upd.heel_left_position;
+    model.heel_left_velocity = upd.heel_left_velocity;
 
 }
 

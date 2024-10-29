@@ -20,6 +20,16 @@ struct HumanoidModelV0Data {
     Point shoulder_right_velocity{}; 
     Point shoulder_left_position{}; 
     Point shoulder_left_velocity{}; 
+    Point pelvis_right_position{}; 
+    Point pelvis_right_velocity{}; 
+    Point pelvis_left_position{}; 
+    Point pelvis_left_velocity{}; 
+    Point heel_right_position{}; 
+    Point heel_right_velocity{}; 
+    Point heel_left_position{}; 
+    Point heel_left_velocity{}; 
+
+
 };
 
 template <>
@@ -32,7 +42,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
     {
         return fmt::format_to(
             ctx.out(),
-            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, head_position={}, head_velocity={}, shoulder_right_position={}, shoulder_right_velocity={}, shoulder_left_position={}, shoulder_left_velocity={} ])",
+            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, head_position={}, head_velocity={}, shoulder_right_position={}, shoulder_right_velocity={}, shoulder_left_position={}, shoulder_left_velocity={}, pelvis_right_position={}, pelvis_right_velocity={}, pelvis_left_position={}, pelvis_left_velocity={}, heel_right_position={}, heel_right_velocity={}, heel_left_position={}, heel_left_velocity={} ])",
             m.velocity,
             m.mass,
             m.desiredSpeed,
@@ -46,7 +56,16 @@ struct fmt::formatter<HumanoidModelV0Data> {
             m.shoulder_right_position,
             m.shoulder_right_velocity,
             m.shoulder_left_position,
-            m.shoulder_left_velocity
+            m.shoulder_left_velocity,
+            m.pelvis_right_position,
+            m.pelvis_right_velocity,
+            m.pelvis_left_position,
+            m.pelvis_left_velocity,
+            m.heel_right_position,
+            m.heel_right_velocity,
+            m.heel_left_position,
+            m.heel_left_velocity
+
             );
     }
 };

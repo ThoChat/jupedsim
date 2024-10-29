@@ -246,7 +246,15 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                 "   shoulder_right_pos_x REAL,"
                 "   shoulder_right_pos_y REAL,"
                 "   shoulder_left_pos_x REAL,"
-                "   shoulder_left_pos_y REAL )"
+                "   shoulder_left_pos_y REAL,"
+                "   pelvis_right_pos_x REAL,"
+                "   pelvis_right_pos_y REAL,"
+                "   pelvis_left_pos_x REAL,"
+                "   pelvis_left_pos_y REAL,"
+                "   heel_right_pos_x REAL,"
+                "   heel_right_pos_y REAL,"
+                "   heel_left_pos_x REAL,"
+                "   heel_left_pos_y REAL )"
             )
             cur.execute("DROP TABLE IF EXISTS metadata")
             cur.execute(
@@ -311,6 +319,14 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                         agent.model.shoulder_right_position[1],
                         agent.model.shoulder_left_position[0],
                         agent.model.shoulder_left_position[1],
+                        agent.model.pelvis_right_position[0],
+                        agent.model.pelvis_right_position[1],
+                        agent.model.pelvis_left_position[0],
+                        agent.model.pelvis_left_position[1],
+                        agent.model.heel_right_position[0],
+                        agent.model.heel_right_position[1],
+                        agent.model.heel_left_position[0],
+                        agent.model.heel_left_position[1],
                     )
                     if str(type(agent.model))
                     == "<class 'jupedsim.py_jupedsim.HumanoidModelV0State'>"
@@ -327,12 +343,20 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                         "NULL",
                         "NULL",
                         "NULL",
+                        "NULL",
+                        "NULL",
+                        "NULL",
+                        "NULL",
+                        "NULL",
+                        "NULL",
+                        "NULL",
+                        "NULL",
                     )
                 )
                 for agent in simulation.agents()
             ]
             cur.executemany(
-                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 frame_data,
             )
 

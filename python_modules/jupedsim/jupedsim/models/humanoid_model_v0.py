@@ -71,6 +71,14 @@ class HumanoidModelV0AgentParameters:
     shoulder_right_velocity: tuple[float, float] = (0.0, 0.0)
     shoulder_left_position: tuple[float, float] = (0.0, 0.0)
     shoulder_left_velocity: tuple[float, float] = (0.0, 0.0)
+    pelvis_right_position: tuple[float, float] = (0.0, 0.0)
+    pelvis_right_velocity: tuple[float, float] = (0.0, 0.0)
+    pelvis_left_position: tuple[float, float] = (0.0, 0.0)
+    pelvis_left_velocity: tuple[float, float] = (0.0, 0.0)
+    heel_right_position: tuple[float, float] = (0.0, 0.0)
+    heel_right_velocity: tuple[float, float] = (0.0, 0.0)
+    heel_left_position: tuple[float, float] = (0.0, 0.0)
+    heel_left_velocity: tuple[float, float] = (0.0, 0.0)
 
     def as_native(
         self,
@@ -94,6 +102,14 @@ class HumanoidModelV0AgentParameters:
             shoulder_right_velocity=self.shoulder_right_velocity,
             shoulder_left_position=self.shoulder_left_position,
             shoulder_left_velocity=self.shoulder_left_velocity,
+            pelvis_right_position=self.pelvis_right_position,
+            pelvis_right_velocity=self.pelvis_right_velocity,
+            pelvis_left_position=self.pelvis_left_position,
+            pelvis_left_velocity=self.pelvis_left_velocity,
+            heel_right_position=self.heel_right_position,
+            heel_right_velocity=self.heel_right_velocity,
+            heel_left_position=self.heel_left_position,
+            heel_left_velocity=self.heel_left_velocity,
         )
 
 
@@ -226,3 +242,75 @@ class HumanoidModelV0State:
     @shoulder_left_velocity.setter
     def shoulder_left_velocity(self, shoulder_left_velocity):
         self._obj.shoulder_left_velocity = shoulder_left_velocity
+
+    @property
+    def pelvis_right_position(self) -> tuple[float, float]:
+        """right pelvis position of this agent."""
+        return self._obj.pelvis_right_position
+
+    @pelvis_right_position.setter
+    def pelvis_right_position(self, pelvis_right_position):
+        self._obj.pelvis_right_position = pelvis_right_position
+
+    @property
+    def pelvis_right_velocity(self) -> tuple[float, float]:
+        """right pelvis velocity of this agent."""
+        return self._obj.pelvis_right_velocity
+
+    @pelvis_right_velocity.setter
+    def pelvis_right_velocity(self, pelvis_right_velocity):
+        self._obj.pelvis_right_velocity = pelvis_right_velocity
+
+    @property
+    def pelvis_left_position(self) -> tuple[float, float]:
+        """left pelvis position of this agent."""
+        return self._obj.pelvis_left_position
+
+    @pelvis_left_position.setter
+    def pelvis_left_position(self, pelvis_left_position):
+        self._obj.pelvis_left_position = pelvis_left_position
+
+    @property
+    def pelvis_left_velocity(self) -> tuple[float, float]:
+        """left pelvis velocity of this agent."""
+        return self._obj.pelvis_left_velocity
+
+    @pelvis_left_velocity.setter
+    def pelvis_left_velocity(self, pelvis_left_velocity):
+        self._obj.pelvis_left_velocity = pelvis_left_velocity
+
+    @property
+    def heel_right_position(self) -> tuple[float, float]:
+        """right heel position of this agent."""
+        return self._obj.heel_right_position
+
+    @heel_right_position.setter
+    def heel_right_position(self, heel_right_position):
+        self._obj.heel_right_position = heel_right_position
+
+    @property
+    def heel_right_velocity(self) -> tuple[float, float]:
+        """right heel velocity of this agent."""
+        return self._obj.heel_right_velocity
+
+    @heel_right_velocity.setter
+    def heel_right_velocity(self, heel_right_velocity):
+        self._obj.heel_right_velocity = heel_right_velocity
+
+    @property
+    def heel_left_position(self) -> tuple[float, float]:
+        """left heel position of this agent."""
+        return self._obj.heel_left_position
+
+    @heel_left_position.setter
+    def heel_left_position(self, heel_left_position):
+        self._obj.heel_left_position = heel_left_position
+
+    @property
+    def heel_left_velocity(self) -> tuple[float, float]:
+        """left heel velocity of this agent."""
+        return self._obj.heel_left_velocity
+
+    @heel_left_velocity.setter
+    def heel_left_velocity(self, heel_left_velocity):
+        self._obj.heel_left_velocity = heel_left_velocity
