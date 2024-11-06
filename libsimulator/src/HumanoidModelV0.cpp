@@ -70,23 +70,19 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     update.head_velocity = model.head_velocity + NormalVelocity*(0.05*Distance(update.position, ped.pos) * dT); 
     update.head_position = ped.pos + update.velocity * dT;
 
-    // ##shoulders
-    double shoulder_width = 0.25; // parameter that needs to be added to the model
-    // ### right
-    update.shoulder_right_velocity = update.head_velocity;
-    update.shoulder_right_position = update.head_position - NormalVelocity *shoulder_width;
-    // ### left
-    update.shoulder_left_velocity = update.head_velocity;
-    update.shoulder_left_position = update.head_position + NormalVelocity *shoulder_width;
-        // ## pelviss
-    double pelvis_width = 0.30; // parameter that needs to be added to the model
-    // ### right
-    update.pelvis_right_velocity = update.head_velocity;
-    update.pelvis_right_position = update.head_position - NormalVelocity * pelvis_width;
-    // ### left
-    update.pelvis_left_velocity = update.head_velocity;
-    update.pelvis_left_position = update.head_position + NormalVelocity * pelvis_width;
-    // ## heels
+    // ## shoulders
+    update.shoulder_rotation_velocity_z = 0.0;
+    update.shoulder_rotation_angle_z = model.shoulder_rotation_angle_z + update.shoulder_rotation_velocity_z * dT;
+
+    // ## trunk
+    // ### along the frontal axis (x) of this agent
+    update.trunk_rotation_velocity_x = 0.0;
+    update.trunk_rotation_angle_x = model.trunk_rotation_angle_x + update.trunk_rotation_velocity_x * dT;
+    // ### along sagittal axis (y) of this agent
+    update.trunk_rotation_velocity_y = 0.0;
+    update.trunk_rotation_angle_y = model.trunk_rotation_angle_y + update.trunk_rotation_velocity_y * dT;
+
+    // ### 
     double step_width = 0.10; // parameter that needs to be added to the model
     // ### right
     update.heel_right_velocity = update.head_velocity;
@@ -110,14 +106,12 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
     // update the Humanoid model
     model.head_position = upd.head_position;
     model.head_velocity = upd.head_velocity;
-    model.shoulder_right_position = upd.shoulder_right_position;
-    model.shoulder_right_velocity = upd.shoulder_right_velocity;
-    model.shoulder_left_position = upd.shoulder_left_position;
-    model.shoulder_left_velocity = upd.shoulder_left_velocity;
-    model.pelvis_right_position = upd.pelvis_right_position;
-    model.pelvis_right_velocity = upd.pelvis_right_velocity;
-    model.pelvis_left_position = upd.pelvis_left_position;
-    model.pelvis_left_velocity = upd.pelvis_left_velocity;
+    model.shoulder_rotation_angle_z = upd.shoulder_rotation_angle_z;
+    model.shoulder_rotation_velocity_z = upd.shoulder_rotation_velocity_z;
+    model.trunk_rotation_angle_x = upd.trunk_rotation_angle_x;
+    model.trunk_rotation_velocity_x = upd.trunk_rotation_velocity_x;
+    model.trunk_rotation_angle_y = upd.trunk_rotation_angle_y;
+    model.trunk_rotation_velocity_y = upd.trunk_rotation_velocity_y;
     model.heel_right_position = upd.heel_right_position;
     model.heel_right_velocity = upd.heel_right_velocity;
     model.heel_left_position = upd.heel_left_position;

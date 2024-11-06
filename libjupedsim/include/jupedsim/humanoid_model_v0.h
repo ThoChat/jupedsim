@@ -198,124 +198,96 @@ JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetHeadVelocity(JPS_HumanoidModelV0State handle, JPS_Point head_velocity);
 
 /**
- * Read right shoulder position of this agent.
+ * Read shoulder rotation angle along the longitudinal axis (z) of this agent.
  * @param handle of the Agent to access.
- * @return right shoulder velocity of this agent.
+ * @return shoulder rotation angle along the longitudinal axis (z) of this agent.
  */
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderRightPosition(JPS_HumanoidModelV0State handle);
+JUPEDSIM_API double JPS_HumanoidModelV0State_GetShoulderRotationAngleZ(JPS_HumanoidModelV0State handle);
 
 /**
- * Write right shoulder position of this agent.
+ * Write shoulder rotation angle along the longitudinal axis (z) of this agent.
  * @param handle of the Agent to access.
- * @param right shoulder position of this agent.
+ * @param shoulder rotation angle along the longitudinal axis (z) of this agent.
  */
 JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetShoulderRightPosition(JPS_HumanoidModelV0State handle, JPS_Point shoulder_right_position);
+JPS_HumanoidModelV0State_SetShoulderRotationAngleZ(JPS_HumanoidModelV0State handle, double shoulder_rotation_angle_z);
 
 /**
- * Read right shoulder velocity of this agent.
+ * Read shoulder rotation velocity along the longitudinal axis (z) of this agent.
  * @param handle of the Agent to access.
- * @return right shoulder velocity of this agent.
+ * @return shoulder rotation velocity along the longitudinal axis (z) of this agent.
  */
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderRightVelocity(JPS_HumanoidModelV0State handle);
+JUPEDSIM_API double JPS_HumanoidModelV0State_GetShoulderRotationVelocityZ(JPS_HumanoidModelV0State handle);
 
 /**
- * Write right shoulder velocity of this agent.
+ * Write shoulder rotation velocity along the longitudinal axis (z) of this agent.
  * @param handle of the Agent to access.
- * @param right shoulder velocity of this agent.
- */
-JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetShoulderRightVelocity(JPS_HumanoidModelV0State handle, JPS_Point shoulder_right_velocity);
-
-/**
- * Read right shoulder position of this agent.
- * @param handle of the Agent to access.
- * @return right shoulder velocity of this agent.
- */
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderLeftPosition(JPS_HumanoidModelV0State handle);
-
-/**
- * Write right shoulder position of this agent.
- * @param handle of the Agent to access.
- * @param right shoulder position of this agent.
+ * @param shoulder rotation velocity along the longitudinal axis (z) of this agent.
  */
 JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetShoulderLeftPosition(JPS_HumanoidModelV0State handle, JPS_Point shoulder_left_position);
+JPS_HumanoidModelV0State_SetShoulderRotationVelocityZ(JPS_HumanoidModelV0State handle, double shoulder_rotation_velocity_z);
 
 /**
- * Read right shoulder velocity of this agent.
+ * Read trunk rotation angle along the frontal axis (x) of this agent.
  * @param handle of the Agent to access.
- * @return right shoulder velocity of this agent.
+ * @return trunk rotation angle along the frontal axis (x) of this agent.
  */
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetShoulderLeftVelocity(JPS_HumanoidModelV0State handle);
+JUPEDSIM_API double JPS_HumanoidModelV0State_GetTrunkRotationAngleX(JPS_HumanoidModelV0State handle);
 
 /**
- * Write right shoulder velocity of this agent.
+ * Write trunk rotation angle along the frontal axis (x) of this agent.
  * @param handle of the Agent to access.
- * @param right shoulder velocity of this agent.
- */
-JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetShoulderLeftVelocity(JPS_HumanoidModelV0State handle, JPS_Point shoulder_left_velocity);
-
-/**
- * Read pelvis right position of this agent.
- * @param handle of the Agent to access.
- * @return pelvis right position of this agent.
- */
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetPelvisRightPosition(JPS_HumanoidModelV0State handle);
-
-/**
- * Write pelvis right position of this agent.
- * @param handle of the Agent to access.
- * @param pelvis right position of this agent.
+ * @param trunk rotation angle along the frontal axis (x) of this agent.
  */
 JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetPelvisRightPosition(JPS_HumanoidModelV0State handle, JPS_Point pelvis_right_position);
+JPS_HumanoidModelV0State_SetTrunkRotationAngleX(JPS_HumanoidModelV0State handle, double trunk_rotation_angle_x);
 
 /**
- * Read pelvis right velocity of this agent.
+ * Read trunk rotation velocity along the frontal axis (x) of this agent.
  * @param handle of the Agent to access.
- * @return pelvis right velocity of this agent.
+ * @return trunk rotation velocity along the frontal axis (x) of this agent.
  */
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetPelvisRightVelocity(JPS_HumanoidModelV0State handle);
+JUPEDSIM_API double JPS_HumanoidModelV0State_GetTrunkRotationVelocityX(JPS_HumanoidModelV0State handle);
 
 /**
- * Write pelvis right velocity of this agent.
+ * Write trunk rotation velocity along the frontal axis (x) of this agent.
  * @param handle of the Agent to access.
- * @param pelvis right velocity of this agent.
- */
-JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetPelvisRightVelocity(JPS_HumanoidModelV0State handle, JPS_Point pelvis_right_velocity);
-
-/**
- * Read pelvis left position of this agent.
- * @param handle of the Agent to access.
- * @return pelvis left position of this agent.
- */
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetPelvisLeftPosition(JPS_HumanoidModelV0State handle);
-
-/**
- * Write pelvis left position of this agent.
- * @param handle of the Agent to access.
- * @param pelvis left position of this agent.
+ * @param trunk rotation velocity along the frontal axis (x) of this agent.
  */
 JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetPelvisLeftPosition(JPS_HumanoidModelV0State handle, JPS_Point pelvis_left_position);
+JPS_HumanoidModelV0State_SetTrunkRotationVelocityX(JPS_HumanoidModelV0State handle, double trunk_rotation_velocity_x);
 
 /**
- * Read pelvis left velocity of this agent.
+ * Read trunk rotation angle along the sagittal axis (y) of this agent
  * @param handle of the Agent to access.
- * @return pelvis left velocity of this agent.
+ * @return trunk rotation angle along sagittal axis (y) of this agent
  */
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetPelvisLeftVelocity(JPS_HumanoidModelV0State handle);
+JUPEDSIM_API double JPS_HumanoidModelV0State_GetTrunkRotationAngleY(JPS_HumanoidModelV0State handle);
 
 /**
- * Write pelvis left velocity of this agent.
+ * Write trunk rotation angle along the sagittal axis (y) of this agent.
  * @param handle of the Agent to access.
- * @param pelvis left velocity of this agent.
+ * @param trunk rotation angle along the sagittal axis (y) of this agent.
  */
 JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetPelvisLeftVelocity(JPS_HumanoidModelV0State handle, JPS_Point pelvis_left_velocity);
+JPS_HumanoidModelV0State_SetTrunkRotationAngleY(JPS_HumanoidModelV0State handle, double trunk_rotation_angle_y);
+
+
+/**
+ * Read trunk rotation velocity along the sagittal axis (y) of this agent.
+ * @param handle of the Agent to access.
+ * @return trunk rotation velocity along the sagittal axis (y) of this agent.
+ */
+JUPEDSIM_API double JPS_HumanoidModelV0State_GetTrunkRotationVelocityY(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write trunk rotation velocity along the sagittal axis (y) of this agent.
+ * @param handle of the Agent to access.
+ * @param trunk rotation velocity along the sagittal axis (y) of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetTrunkRotationVelocityY(JPS_HumanoidModelV0State handle, double trunk_rotation_velocity_y);
+
 /**
  * Read heel right position of this agent.
  * @param handle of the Agent to access.
@@ -436,14 +408,12 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
      */
     JPS_Point head_position = {0, 0}; // Position of the agent's head
     JPS_Point head_velocity = {0, 0}; // Velocity of the agent's head
-    JPS_Point shoulder_right_position = {0, 0}; // Position of the agent's right shoulder
-    JPS_Point shoulder_right_velocity = {0, 0}; // Velocity of the agent's right shoulder
-    JPS_Point shoulder_left_position = {0, 0}; // Position of the agent's left shoulder
-    JPS_Point shoulder_left_velocity = {0, 0}; // Velocity of the agent's left shoulder
-    JPS_Point pelvis_right_position = {0, 0}; // Position of the agent's right pelvis
-    JPS_Point pelvis_right_velocity = {0, 0}; // Velocity of the agent's right pelvis
-    JPS_Point pelvis_left_position = {0, 0}; // Position of the agent's left pelvis
-    JPS_Point pelvis_left_velocity = {0, 0}; // Velocity of the agent's left pelvis
+    double shoulder_rotation_angle_z = 0.0; // shoulder rotation angle along the longitudinal axis (z)
+    double shoulder_rotation_velocity_z = 0.0; // shoulder rotation velocity along the longitudinal axis (z)
+    double trunk_rotation_angle_x = 0.0; // trunk rotation angle along the frontal axis (x)
+    double trunk_rotation_velocity_x = 0.0; // trunk rotation velocity along the frontal axis (x)
+    double trunk_rotation_angle_y = 0.0; // trunk rotation angle along the sagittal axis (y)
+    double trunk_rotation_velocity_y = 0.0; // trunk rotation velocity along the sagittal axis (y)
     JPS_Point heel_right_position = {0, 0}; // Position of the agent's right heel
     JPS_Point heel_right_velocity = {0, 0}; // Velocity of the agent's right heel
     JPS_Point heel_left_position = {0, 0}; // Position of the agent's left heel

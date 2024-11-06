@@ -11,16 +11,15 @@ struct HumanoidModelV0Update {
     // head
     Point head_position{};
     Point head_velocity{};
-    // shoulders
-    Point shoulder_right_position{};
-    Point shoulder_right_velocity{};
-    Point shoulder_left_position{};
-    Point shoulder_left_velocity{};
-    // pelvis
-    Point pelvis_right_position{};
-    Point pelvis_right_velocity{};
-    Point pelvis_left_position{};
-    Point pelvis_left_velocity{};
+    // shoulder rotation
+    double shoulder_rotation_angle_z{};
+    double shoulder_rotation_velocity_z{};
+    // trunk 
+    double trunk_rotation_angle_x{};
+    double trunk_rotation_velocity_x{};
+    double trunk_rotation_angle_y{};
+    double trunk_rotation_velocity_y{};
+
     // heels
     Point heel_right_position{};
     Point heel_right_velocity{};

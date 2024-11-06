@@ -243,14 +243,9 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                 "   ori_y REAL NOT NULL,"
                 "   head_pos_x REAL,"
                 "   head_pos_y REAL,"
-                "   shoulder_right_pos_x REAL,"
-                "   shoulder_right_pos_y REAL,"
-                "   shoulder_left_pos_x REAL,"
-                "   shoulder_left_pos_y REAL,"
-                "   pelvis_right_pos_x REAL,"
-                "   pelvis_right_pos_y REAL,"
-                "   pelvis_left_pos_x REAL,"
-                "   pelvis_left_pos_y REAL,"
+                "   shoulder_rotation_angle_z REAL,"
+                "   trunk_rotation_angle_x REAL,"
+                "   trunk_rotation_angle_y REAL,"
                 "   heel_right_pos_x REAL,"
                 "   heel_right_pos_y REAL,"
                 "   heel_left_pos_x REAL,"
@@ -315,14 +310,9 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                         agent.orientation[1],
                         agent.model.head_position[0],
                         agent.model.head_position[1],
-                        agent.model.shoulder_right_position[0],
-                        agent.model.shoulder_right_position[1],
-                        agent.model.shoulder_left_position[0],
-                        agent.model.shoulder_left_position[1],
-                        agent.model.pelvis_right_position[0],
-                        agent.model.pelvis_right_position[1],
-                        agent.model.pelvis_left_position[0],
-                        agent.model.pelvis_left_position[1],
+                        agent.model.shoulder_rotation_angle_z,
+                        agent.model.trunk_rotation_angle_x,
+                        agent.model.trunk_rotation_angle_y,
                         agent.model.heel_right_position[0],
                         agent.model.heel_right_position[1],
                         agent.model.heel_left_position[0],
@@ -345,18 +335,12 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                         "NULL",
                         "NULL",
                         "NULL",
-                        "NULL",
-                        "NULL",
-                        "NULL",
-                        "NULL",
-                        "NULL",
-                        "NULL",
                     )
                 )
                 for agent in simulation.agents()
             ]
             cur.executemany(
-                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 frame_data,
             )
 

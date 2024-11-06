@@ -67,14 +67,12 @@ class HumanoidModelV0AgentParameters:
     ## Variables for Humanoid body
     head_position: tuple[float, float] = (0.0, 0.0)
     head_velocity: tuple[float, float] = (0.0, 0.0)
-    shoulder_right_position: tuple[float, float] = (0.0, 0.0)
-    shoulder_right_velocity: tuple[float, float] = (0.0, 0.0)
-    shoulder_left_position: tuple[float, float] = (0.0, 0.0)
-    shoulder_left_velocity: tuple[float, float] = (0.0, 0.0)
-    pelvis_right_position: tuple[float, float] = (0.0, 0.0)
-    pelvis_right_velocity: tuple[float, float] = (0.0, 0.0)
-    pelvis_left_position: tuple[float, float] = (0.0, 0.0)
-    pelvis_left_velocity: tuple[float, float] = (0.0, 0.0)
+    shoulder_rotation_angle_z: float = 0.0
+    shoulder_rotation_velocity_z: float = 0.0
+    trunk_rotation_angle_x: float = 0.0
+    trunk_rotation_angle_y: float = 0.0
+    trunk_rotation_velocity_x: float = 0.0
+    trunk_rotation_velocity_y: float = 0.0
     heel_right_position: tuple[float, float] = (0.0, 0.0)
     heel_right_velocity: tuple[float, float] = (0.0, 0.0)
     heel_left_position: tuple[float, float] = (0.0, 0.0)
@@ -98,14 +96,12 @@ class HumanoidModelV0AgentParameters:
             radius=self.radius,
             head_position=self.head_position,
             head_velocity=self.head_velocity,
-            shoulder_right_position=self.shoulder_right_position,
-            shoulder_right_velocity=self.shoulder_right_velocity,
-            shoulder_left_position=self.shoulder_left_position,
-            shoulder_left_velocity=self.shoulder_left_velocity,
-            pelvis_right_position=self.pelvis_right_position,
-            pelvis_right_velocity=self.pelvis_right_velocity,
-            pelvis_left_position=self.pelvis_left_position,
-            pelvis_left_velocity=self.pelvis_left_velocity,
+            shoulder_rotation_angle_z=self.shoulder_rotation_angle_z,
+            shoulder_rotation_velocity_z=self.shoulder_rotation_velocity_z,
+            trunk_rotation_angle_x=self.trunk_rotation_angle_x,
+            trunk_rotation_angle_y=self.trunk_rotation_angle_y,
+            trunk_rotation_velocity_x=self.trunk_rotation_velocity_x,
+            trunk_rotation_velocity_y=self.trunk_rotation_velocity_y,
             heel_right_position=self.heel_right_position,
             heel_right_velocity=self.heel_right_velocity,
             heel_left_position=self.heel_left_position,
@@ -208,76 +204,58 @@ class HumanoidModelV0State:
         self._obj.head_velocity = head_velocity
 
     @property
-    def shoulder_right_position(self) -> tuple[float, float]:
-        """right shoulder position of this agent."""
-        return self._obj.shoulder_right_position
+    def shoulder_rotation_angle_z(self) -> float:
+        """right shoulder rotation angle z of this agent."""
+        return self._obj.shoulder_rotation_angle_z
 
-    @shoulder_right_position.setter
-    def shoulder_right_position(self, shoulder_right_position):
-        self._obj.shoulder_right_position = shoulder_right_position
-
-    @property
-    def shoulder_right_velocity(self) -> tuple[float, float]:
-        """right shoulder velocity of this agent."""
-        return self._obj.shoulder_right_velocity
-
-    @shoulder_right_velocity.setter
-    def shoulder_right_velocity(self, shoulder_right_velocity):
-        self._obj.shoulder_right_velocity = shoulder_right_velocity
+    @shoulder_rotation_angle_z.setter
+    def shoulder_rotation_angle_z(self, shoulder_rotation_angle_z):
+        self._obj.shoulder_rotation_angle_z = shoulder_rotation_angle_z
 
     @property
-    def shoulder_left_position(self) -> tuple[float, float]:
-        """left shoulder position of this agent."""
-        return self._obj.shoulder_left_position
+    def shoulder_rotation_velocity_z(self) -> float:
+        """right shoulder rotation velocity z of this agent."""
+        return self._obj.shoulder_rotation_velocity_z
 
-    @shoulder_left_position.setter
-    def shoulder_left_position(self, shoulder_left_position):
-        self._obj.shoulder_left_position = shoulder_left_position
-
-    @property
-    def shoulder_left_velocity(self) -> tuple[float, float]:
-        """left shoulder velocity of this agent."""
-        return self._obj.shoulder_left_velocity
-
-    @shoulder_left_velocity.setter
-    def shoulder_left_velocity(self, shoulder_left_velocity):
-        self._obj.shoulder_left_velocity = shoulder_left_velocity
+    @shoulder_rotation_velocity_z.setter
+    def shoulder_rotation_velocity_z(self, shoulder_rotation_velocity_z):
+        self._obj.shoulder_rotation_velocity_z = shoulder_rotation_velocity_z
 
     @property
-    def pelvis_right_position(self) -> tuple[float, float]:
-        """right pelvis position of this agent."""
-        return self._obj.pelvis_right_position
+    def trunk_rotation_angle_x(self) -> float:
+        """trunk rotation angle x of this agent."""
+        return self._obj.trunk_rotation_angle_x
 
-    @pelvis_right_position.setter
-    def pelvis_right_position(self, pelvis_right_position):
-        self._obj.pelvis_right_position = pelvis_right_position
-
-    @property
-    def pelvis_right_velocity(self) -> tuple[float, float]:
-        """right pelvis velocity of this agent."""
-        return self._obj.pelvis_right_velocity
-
-    @pelvis_right_velocity.setter
-    def pelvis_right_velocity(self, pelvis_right_velocity):
-        self._obj.pelvis_right_velocity = pelvis_right_velocity
+    @trunk_rotation_angle_x.setter
+    def trunk_rotation_angle_x(self, trunk_rotation_angle_x):
+        self._obj.trunk_rotation_angle_x = trunk_rotation_angle_x
 
     @property
-    def pelvis_left_position(self) -> tuple[float, float]:
-        """left pelvis position of this agent."""
-        return self._obj.pelvis_left_position
+    def trunk_rotation_angle_y(self) -> float:
+        """trunk rotation angle y of this agent."""
+        return self._obj.trunk_rotation_angle_y
 
-    @pelvis_left_position.setter
-    def pelvis_left_position(self, pelvis_left_position):
-        self._obj.pelvis_left_position = pelvis_left_position
+    @trunk_rotation_angle_y.setter
+    def trunk_rotation_angle_y(self, trunk_rotation_angle_y):
+        self._obj.trunk_rotation_angle_y = trunk_rotation_angle_y
 
     @property
-    def pelvis_left_velocity(self) -> tuple[float, float]:
-        """left pelvis velocity of this agent."""
-        return self._obj.pelvis_left_velocity
+    def trunk_rotation_velocity_x(self) -> float:
+        """trunk rotation velocity x of this agent."""
+        return self._obj.trunk_rotation_velocity_x
 
-    @pelvis_left_velocity.setter
-    def pelvis_left_velocity(self, pelvis_left_velocity):
-        self._obj.pelvis_left_velocity = pelvis_left_velocity
+    @trunk_rotation_velocity_x.setter
+    def trunk_rotation_velocity_x(self, trunk_rotation_velocity_x):
+        self._obj.trunk_rotation_velocity_x = trunk_rotation_velocity_x
+
+    @property
+    def trunk_rotation_velocity_y(self) -> float:
+        """trunk rotation velocity y of this agent."""
+        return self._obj.trunk_rotation_velocity_y
+
+    @trunk_rotation_velocity_y.setter
+    def trunk_rotation_velocity_y(self, trunk_rotation_velocity_y):
+        self._obj.trunk_rotation_velocity_y = trunk_rotation_velocity_y
 
     @property
     def heel_right_position(self) -> tuple[float, float]:
