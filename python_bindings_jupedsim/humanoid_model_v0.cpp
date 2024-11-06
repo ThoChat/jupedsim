@@ -28,6 +28,8 @@ void init_humanoid_model_v0(py::module_& m)
                         double obstacleScale,
                         double forceDistance,
                         double radius,
+                        // humanoid body parameters
+                        double height,
                         // humanoid body variables
                         std::tuple<double, double> head_position, 
                         std::tuple<double, double> head_velocity,
@@ -56,6 +58,7 @@ void init_humanoid_model_v0(py::module_& m)
                     obstacleScale,
                     forceDistance,
                     radius, 
+                    height,
                     intoJPS_Point(head_position),
                     intoJPS_Point(head_velocity),
                     shoulder_rotation_angle_z,
@@ -83,6 +86,7 @@ void init_humanoid_model_v0(py::module_& m)
             py::arg("obstacleScale"),
             py::arg("forceDistance"),
             py::arg("radius"),
+            py::arg("height"),
             py::arg("head_position"),
             py::arg("head_velocity"),
             py::arg("shoulder_rotation_angle_z"),
@@ -101,7 +105,7 @@ void init_humanoid_model_v0(py::module_& m)
                 "position: {}, orientation: {}, journey_id: {}, stage_id: {},"
                 "velocity: {}, mass: {}, desiredSpeed: {},"
                 "reactionTime: {}, agentScale: {}, obstacleScale: {}, forceDistance: {},"
-                "radius: {}, head_position: {}, head_velocity: {}, shoulder_rotation_angle_z: {},"
+                "radius: {}, height: {}, head_position: {}, head_velocity: {}, shoulder_rotation_angle_z: {},"
                 "shoulder_rotation_velocity_z: {}, trunk_rotation_angle_x: {}, trunk_rotation_velocity_x: {},"
                 "trunk_rotation_angle_y: {}, trunk_rotation_velocity_y: {},"
                 "heel_right_position: {}, heel_right_velocity: {}, heel_left_position: {}, heel_left_velocity: {},",
@@ -117,6 +121,7 @@ void init_humanoid_model_v0(py::module_& m)
                 p.obstacleScale,
                 p.forceDistance,
                 p.radius,
+                p.height,
                 intoTuple(p.head_position),
                 intoTuple(p.head_velocity),
                 p.shoulder_rotation_angle_z,
@@ -214,6 +219,14 @@ void init_humanoid_model_v0(py::module_& m)
             },
             [](JPS_HumanoidModelV0State_Wrapper& w, double radius) {
                 JPS_HumanoidModelV0State_SetRadius(w.handle, radius);
+            })
+        .def_property(
+            "height",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return JPS_HumanoidModelV0State_GetHeight(w.handle);
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, double height) {
+                JPS_HumanoidModelV0State_SetHeight(w.handle, height);
             })
         .def_property(
             "head_position",

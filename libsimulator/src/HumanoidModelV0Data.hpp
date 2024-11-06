@@ -13,6 +13,8 @@ struct HumanoidModelV0Data {
     double obstacleScale{}; // A for obstacles
     double forceDistance{}; // B
     double radius{}; // r
+    // Humanoid model parameters
+    double height{}; // agents height
     // Humanoid model variables
     Point head_position{}; 
     Point head_velocity{}; 

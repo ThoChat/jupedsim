@@ -173,6 +173,21 @@ JPS_HumanoidModelV0State_SetRadius(JPS_HumanoidModelV0State handle, double radiu
     state->radius = radius;
 }
 
+JUPEDSIM_API double JPS_HumanoidModelV0State_GetHeight(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return state->height;
+}
+
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetHeight(JPS_HumanoidModelV0State handle, double height)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->height = height;
+}
+
 JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidModelV0State handle)
 {
     assert(handle);

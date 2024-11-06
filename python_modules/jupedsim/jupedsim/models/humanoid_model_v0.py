@@ -44,6 +44,19 @@ class HumanoidModelV0AgentParameters:
         obstacleScale: indicates how strong an agent is influenced by pushing forces from obstacles. [in N] (is called A)
         forceDistance: indicates how much the distance between an agent and obstacles or neighbors influences social forces. [in m] (is called B)
         radius: radius of the space an agent occupies. [in m] (is called r)
+        height: height of the agent. [in m]
+        head_position: Vector of the cartesian coordinates of the head position of this agent. [in m]
+        head_velocity: Velocity vector of the head this agent. [in m/s]
+        shoulder_rotation_angle_z: shoulder rotation angle along the longitudinal axis (z) of this agent. [in rad]
+        shoulder_rotation_velocity_z: shoulder rotation velocity along the longitudinal axis (z) of this agent. [in rad/s]
+        trunk_rotation_angle_x: trunk rotation angle along the frontal axis (x) of this agent. [in rad]
+        trunk_rotation_velocity_x: trunk rotation velocity along the frontal axis (x) of this agent. [in rad/s]
+        trunk_rotation_angle_y: trunk rotation angle along the frontal axis (x) of this agent. [in rad]
+        trunk_rotation_velocity_y: trunk rotation velocity along the sagittal axis (y) of this agent. [in rad/s]
+        heel_right_position: Vector of the cartesian coordinates of the right heel position of this agent. [in m]
+        heel_right_velocity: Velocity vector of the right heel this agent. [in m/s]
+        heel_left_position: Vector of the cartesian coordinates of the left heel position of this agent. [in m]
+        heel_left_velocity: Velocity vector of the left heel this agent. [in m/s]
     """
 
     # todo write force equation from paper
@@ -64,6 +77,8 @@ class HumanoidModelV0AgentParameters:
     radius: float = (
         0.3  # [m] in paper 2r is uniformy distibuted in interval [0.5 m, 0.7 m]
     )
+    ## Parameters for Humanoid body
+    height: float = 1.7
     ## Variables for Humanoid body
     head_position: tuple[float, float] = (0.0, 0.0)
     head_velocity: tuple[float, float] = (0.0, 0.0)
@@ -94,6 +109,7 @@ class HumanoidModelV0AgentParameters:
             obstacleScale=self.obstacleScale,
             forceDistance=self.forceDistance,
             radius=self.radius,
+            height=self.height,
             head_position=self.head_position,
             head_velocity=self.head_velocity,
             shoulder_rotation_angle_z=self.shoulder_rotation_angle_z,
@@ -184,6 +200,15 @@ class HumanoidModelV0State:
     @radius.setter
     def radius(self, radius):
         self._obj.radius = radius
+
+    @property
+    def height(self) -> float:
+        """height of this agent."""
+        return self._obj.height
+
+    @height.setter
+    def height(self, height):
+        self._obj.height = height
 
     @property
     def head_position(self) -> tuple[float, float]:

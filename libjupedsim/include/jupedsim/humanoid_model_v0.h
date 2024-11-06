@@ -168,6 +168,21 @@ JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetRadius(JPS_HumanoidModelV0State handle, double radius);
 
 /**
+ * Read height of this agent.
+ * @param handle of the Agent to access.
+ * @return height in m of this agent
+ */
+JUPEDSIM_API double JPS_HumanoidModelV0State_GetHeight(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write height of this agent.
+ * @param handle of the Agent to access.
+ * @param height in m of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetHeight(JPS_HumanoidModelV0State handle, double height);
+
+/**
  * Read head position of this agent.
  * @param handle of the Agent to access.
  * @return head position of this agent.
@@ -258,9 +273,9 @@ JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetTrunkRotationVelocityX(JPS_HumanoidModelV0State handle, double trunk_rotation_velocity_x);
 
 /**
- * Read trunk rotation angle along the sagittal axis (y) of this agent
+ * Read trunk rotation angle along the sagittal axis (y) of this agent.
  * @param handle of the Agent to access.
- * @return trunk rotation angle along sagittal axis (y) of this agent
+ * @return trunk rotation angle along sagittal axis (y) of this agent.
  */
 JUPEDSIM_API double JPS_HumanoidModelV0State_GetTrunkRotationAngleY(JPS_HumanoidModelV0State handle);
 
@@ -403,6 +418,10 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
      * radius of the agent
      */
     double radius = 0.3;
+    /**
+     * Humanoid model parameters
+     */
+    double height = 1.7;
     /**
      * Humanoid model variables
      */
