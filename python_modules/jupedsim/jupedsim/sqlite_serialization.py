@@ -318,24 +318,6 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                         agent.model.heel_left_position[0],
                         agent.model.heel_left_position[1],
                     )
-                    if str(type(agent.model))
-                    == "<class 'jupedsim.py_jupedsim.HumanoidModelV0State'>"
-                    else (
-                        frame,
-                        agent.id,
-                        agent.position[0],
-                        agent.position[1],
-                        agent.orientation[0],
-                        agent.orientation[1],
-                        "NULL",
-                        "NULL",
-                        "NULL",
-                        "NULL",
-                        "NULL",
-                        "NULL",
-                        "NULL",
-                        "NULL",
-                    )
                 )
                 for agent in simulation.agents()
             ]
