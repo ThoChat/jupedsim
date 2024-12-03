@@ -30,6 +30,10 @@ void init_humanoid_model_v0(py::module_& m)
                         double radius,
                         // humanoid body parameters
                         double height,
+                        // gait variables
+                        int step_timer,
+                        int stepping_foot_index,
+                        std::tuple<double, double> step_target,
                         // humanoid body variables
                         std::tuple<double, double> head_position, 
                         std::tuple<double, double> head_velocity,
@@ -59,6 +63,9 @@ void init_humanoid_model_v0(py::module_& m)
                     forceDistance,
                     radius, 
                     height,
+                    step_timer,
+                    stepping_foot_index,
+                    intoJPS_Point(step_target),
                     intoJPS_Point(head_position),
                     intoJPS_Point(head_velocity),
                     shoulder_rotation_angle_z,
@@ -87,6 +94,9 @@ void init_humanoid_model_v0(py::module_& m)
             py::arg("forceDistance"),
             py::arg("radius"),
             py::arg("height"),
+            py::arg("step_timer"),
+            py::arg("stepping_foot_index"),
+            py::arg("step_target"),
             py::arg("head_position"),
             py::arg("head_velocity"),
             py::arg("shoulder_rotation_angle_z"),
@@ -105,7 +115,8 @@ void init_humanoid_model_v0(py::module_& m)
                 "position: {}, orientation: {}, journey_id: {}, stage_id: {},"
                 "velocity: {}, mass: {}, desiredSpeed: {},"
                 "reactionTime: {}, agentScale: {}, obstacleScale: {}, forceDistance: {},"
-                "radius: {}, height: {}, head_position: {}, head_velocity: {}, shoulder_rotation_angle_z: {},"
+                "radius: {}, height: {}, step_timer: {}, stepping_foot_index: {}, step_target: {},"
+                "head_position: {}, head_velocity: {}, shoulder_rotation_angle_z: {},"
                 "shoulder_rotation_velocity_z: {}, trunk_rotation_angle_x: {}, trunk_rotation_velocity_x: {},"
                 "trunk_rotation_angle_y: {}, trunk_rotation_velocity_y: {},"
                 "heel_right_position: {}, heel_right_velocity: {}, heel_left_position: {}, heel_left_velocity: {},",
@@ -122,6 +133,9 @@ void init_humanoid_model_v0(py::module_& m)
                 p.forceDistance,
                 p.radius,
                 p.height,
+                p.step_timer,
+                p.stepping_foot_index,
+                intoTuple(p.step_target),
                 intoTuple(p.head_position),
                 intoTuple(p.head_velocity),
                 p.shoulder_rotation_angle_z,
@@ -227,6 +241,30 @@ void init_humanoid_model_v0(py::module_& m)
             },
             [](JPS_HumanoidModelV0State_Wrapper& w, double height) {
                 JPS_HumanoidModelV0State_SetHeight(w.handle, height);
+            })
+        .def_property(
+            "step_timer",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return JPS_HumanoidModelV0State_GetStepTimer(w.handle);
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, int step_timer) {
+                JPS_HumanoidModelV0State_SetStepTimer(w.handle, step_timer);
+            })
+        .def_property(
+            "stepping_foot_index",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return JPS_HumanoidModelV0State_GetSteppingFootIndex(w.handle);
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, int stepping_foot_index) {
+                JPS_HumanoidModelV0State_SetSteppingFootIndex(w.handle, stepping_foot_index);
+            })
+        .def_property(
+            "step_target",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return intoTuple(JPS_HumanoidModelV0State_GetStepTarget(w.handle));
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> step_target) {
+                JPS_HumanoidModelV0State_SetStepTarget(w.handle, intoJPS_Point(step_target));
             })
         .def_property(
             "head_position",

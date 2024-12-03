@@ -180,13 +180,55 @@ JUPEDSIM_API double JPS_HumanoidModelV0State_GetHeight(JPS_HumanoidModelV0State 
     return state->height;
 }
 
-JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetHeight(JPS_HumanoidModelV0State handle, double height)
+JUPEDSIM_API void JPS_HumanoidModelV0State_SetHeight(JPS_HumanoidModelV0State handle, double height)
 {
     assert(handle);
     const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
     state->height = height;
 }
+
+JUPEDSIM_API int JPS_HumanoidModelV0State_GetStepTimer (JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return state->step_timer;
+}
+
+JUPEDSIM_API void JPS_HumanoidModelV0State_SetStepTimer(JPS_HumanoidModelV0State handle, int step_timer)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->step_timer = step_timer;
+}
+
+JUPEDSIM_API int JPS_HumanoidModelV0State_GetSteppingFootIndex(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return state->stepping_foot_index;
+}
+
+JUPEDSIM_API void JPS_HumanoidModelV0State_SetSteppingFootIndex(JPS_HumanoidModelV0State handle, int stepping_foot_index)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->stepping_foot_index = stepping_foot_index;
+}
+
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetStepTarget(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return intoJPS_Point(state->step_target);
+}
+
+JUPEDSIM_API void JPS_HumanoidModelV0State_SetStepTarget(JPS_HumanoidModelV0State handle, JPS_Point step_target)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->step_target = intoPoint(step_target);
+}
+
 
 JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidModelV0State handle)
 {

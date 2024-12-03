@@ -78,8 +78,14 @@ class HumanoidModelV0AgentParameters:
         0.3  # [m] in paper 2r is uniformy distibuted in interval [0.5 m, 0.7 m]
     )
     ## Parameters for Humanoid body
-    height: float = 1.7
-    ## Variables for Humanoid body
+    height: float = 1.7  # [m]
+    ## Variables for gait
+    step_timer: int = 0  # [number of time steps]
+    stepping_foot_index: int = (
+        0  # -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
+    )
+    step_target: tuple[float, float] = (0.0, 0.0)
+    ## Variables for body parts
     head_position: tuple[float, float] = (0.0, 0.0)
     head_velocity: tuple[float, float] = (0.0, 0.0)
     shoulder_rotation_angle_z: float = 0.0
@@ -110,6 +116,9 @@ class HumanoidModelV0AgentParameters:
             forceDistance=self.forceDistance,
             radius=self.radius,
             height=self.height,
+            step_timer=self.step_timer,
+            stepping_foot_index=self.stepping_foot_index,
+            step_target=self.step_target,
             head_position=self.head_position,
             head_velocity=self.head_velocity,
             shoulder_rotation_angle_z=self.shoulder_rotation_angle_z,
@@ -209,6 +218,33 @@ class HumanoidModelV0State:
     @height.setter
     def height(self, height):
         self._obj.height = height
+
+    @property
+    def step_timer(self) -> int:
+        """number of time step before completing the current step."""
+        return self._obj.step_timer
+
+    @step_timer.setter
+    def step_timer(self, step_timer):
+        self._obj.step_timer = step_timer
+
+    @property
+    def stepping_foot_index(self) -> int:
+        """-1 == right foot stepping, 0 == double stance, 1 == left foot stepping."""
+        return self._obj.stepping_foot_index
+
+    @stepping_foot_index.setter
+    def stepping_foot_index(self, stepping_foot_index):
+        self._obj.stepping_foot_index = stepping_foot_index
+
+    @property
+    def step_target(self) -> tuple[float, float]:
+        """target position of the current stepping foot."""
+        return self._obj.step_target
+
+    @step_target.setter
+    def step_target(self, step_target):
+        self._obj.step_target = step_target
 
     @property
     def head_position(self) -> tuple[float, float]:

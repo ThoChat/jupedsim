@@ -8,6 +8,11 @@ struct HumanoidModelV0Update {
     Point position{};
     Point velocity{};
     // Humanoid model variables
+    // # gait variables
+    int step_timer{}; 
+    int stepping_foot_index{}; 
+    Point step_target{};
+    // # body motion variables
     // head
     Point head_position{};
     Point head_velocity{};
@@ -19,7 +24,6 @@ struct HumanoidModelV0Update {
     double trunk_rotation_velocity_x{};
     double trunk_rotation_angle_y{};
     double trunk_rotation_velocity_y{};
-
     // heels
     Point heel_right_position{};
     Point heel_right_velocity{};

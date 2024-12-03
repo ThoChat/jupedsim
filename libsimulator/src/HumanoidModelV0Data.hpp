@@ -16,6 +16,11 @@ struct HumanoidModelV0Data {
     // Humanoid model parameters
     double height{}; // agents height
     // Humanoid model variables
+    // # gait variables
+    int step_timer{};  // number of time step before completing the current step
+    int stepping_foot_index{}; //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
+    Point step_target{};  // target position of the current stepping foot
+    // # body motion variables
     Point head_position{}; 
     Point head_velocity{}; 
     double shoulder_rotation_angle_z{}; 
@@ -42,7 +47,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
     {
         return fmt::format_to(
             ctx.out(),
-            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, head_position={}, head_velocity={}, shoulder_rotation_angle_z={}, shoulder_rotation_velocity_z={}, trunk_rotation_angle_x={}, trunk_rotation_velocity_x={}, trunk_rotation_angle_y={}, trunk_rotation_velocity_y={}, heel_right_position={}, heel_right_velocity={}, heel_left_position={}, heel_left_velocity={} ])",
+            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, step_timer={}, stepping_foot_index{}, step_target={}, head_position={}, head_velocity={}, shoulder_rotation_angle_z={}, shoulder_rotation_velocity_z={}, trunk_rotation_angle_x={}, trunk_rotation_velocity_x={}, trunk_rotation_angle_y={}, trunk_rotation_velocity_y={}, heel_right_position={}, heel_right_velocity={}, heel_left_position={}, heel_left_velocity={} ])",
             m.velocity,
             m.mass,
             m.desiredSpeed,
@@ -51,6 +56,10 @@ struct fmt::formatter<HumanoidModelV0Data> {
             m.obstacleScale,
             m.forceDistance,
             m.radius,
+            m.height,
+            m.step_timer,
+            m.stepping_foot_index,
+            m.step_target,
             m.head_position,
             m.head_velocity,
             m.shoulder_rotation_angle_z,
@@ -63,7 +72,6 @@ struct fmt::formatter<HumanoidModelV0Data> {
             m.heel_right_velocity,
             m.heel_left_position,
             m.heel_left_velocity
-
-            );
+                        );
     }
 };

@@ -182,6 +182,53 @@ JUPEDSIM_API double JPS_HumanoidModelV0State_GetHeight(JPS_HumanoidModelV0State 
 JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetHeight(JPS_HumanoidModelV0State handle, double height);
 
+
+/**
+ * Read step timer of this agent.
+ * @param handle of the Agent to access.
+ * @return step timer of this agent.
+ */
+JUPEDSIM_API int JPS_HumanoidModelV0State_GetStepTimer(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write step timer of this agent.
+ * @param handle of the Agent to access.
+ * @param step timer of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetStepTimer(JPS_HumanoidModelV0State handle, int step_timer);
+
+/**
+ * Read stepping foot index of this agent.
+ * @param handle of the Agent to access.
+ * @return stepping foot index of this agent.
+ */
+JUPEDSIM_API int JPS_HumanoidModelV0State_GetSteppingFootIndex(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write stepping foot index of this agent.
+ * @param handle of the Agent to access.
+ * @param stepping foot index of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetSteppingFootIndex(JPS_HumanoidModelV0State handle, int stepping_foot_index);
+
+/**
+ * Read step target of this agent.
+ * @param handle of the Agent to access.
+ * @return step target of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetStepTarget(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write step target of this agent.
+ * @param handle of the Agent to access.
+ * @param step target of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetStepTarget(JPS_HumanoidModelV0State handle, JPS_Point step_target);
+
+
 /**
  * Read head position of this agent.
  * @param handle of the Agent to access.
@@ -424,6 +471,15 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
     double height = 1.7;
     /**
      * Humanoid model variables
+     */
+    /**
+     * gait variables
+     */
+    int step_timer = {0}; // number of time steps remaining to complete the current step
+    int stepping_foot_index = {0}; //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
+    JPS_Point step_target = {0, 0}; // target position of the current stepping foot
+    /**
+     * body variables
      */
     JPS_Point head_position = {0, 0}; // Position of the agent's head
     JPS_Point head_velocity = {0, 0}; // Velocity of the agent's head
