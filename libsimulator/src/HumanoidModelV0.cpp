@@ -46,7 +46,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         if(neighbor.id == ped.id) {
             continue;
         }
-        F_rep += AgentForce(ped, neighbor);
+        F_rep += AgentForce(ped, neighbor);  
     }
     forces += F_rep / model.mass;
     const auto& walls = geometry.LineSegmentsInApproxDistanceTo(ped.pos);
@@ -60,14 +60,103 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         });
     forces += obstacle_f / model.mass;
 
-    // creating update for the SFM navigation
+    // creating update of pelvis position based on the collision avoidance model
     update.velocity = model.velocity + forces * dT;
     update.position = ped.pos + update.velocity * dT;
+
+
+    /// #### Humanoid model #####
+    Point orientation = update.velocity.Normalized();
+    Point normal_to_orientation = orientation.Rotate90Deg();
+    const double max_step_lenght = model.height/2.5;
+
+    // Steps computation
+    if (model.step_timer == 0) {
+
+        // here we are in a double support configuration, the next step is computed based on the current walking speed
+
+
+        // # computation of the next step duration (step_timer is the step duration given as a number of time step)
+        // constant stepping time of 0.5 for an agent of 1.7m
+        update.step_timer = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
+    
+
+        // # update stepping foot as the further from the step target
+        const double distance_to_taget_right_heel = Distance(update.step_target,model.heel_right_position);
+        const double distance_to_taget_left_heel = Distance(update.step_target,model.heel_left_position);
+        
+        if (distance_to_taget_right_heel >= distance_to_taget_left_heel) {
+            update.stepping_foot_index = -1; 
+        } else {
+            update.stepping_foot_index = 1;
+            
+        }
+        //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
+
+        // # computation of the next step location
+        update.step_target=update.position + orientation * max_step_lenght + normal_to_orientation * update.stepping_foot_index*0.15*(model.height/1.7); 
+
+        // save the curent feet locations
+        update.heel_right_position=model.heel_right_position;
+        update.heel_left_position=model.heel_left_position;
+
+    } 
+    else if (model.step_timer == 1) {
+        // here we are in a single support configuration
+        // the stepping foot is in the air and will land on the target, while the next step is also comtuted
+
+        
+        // # stepping heel position meet the target
+        if (model.stepping_foot_index == -1) 
+        { 
+            update.heel_right_position=model.step_target;
+            update.heel_left_position=model.heel_left_position ;
+            update.stepping_foot_index = 1; // Changing the stepping foot
+        }
+        else 
+        { 
+            update.heel_left_position=model.step_target;
+            update.heel_right_position=model.heel_right_position ;
+            update.stepping_foot_index = -1; // Changing the stepping foot
+        }
+
+        // # computation of the next step location
+        // update.step_target=update.position + update.velocity * (2 * update.step_timer * dT) + normal_to_orientation * update.stepping_foot_index*0.15*(model.height/1.7); 
+        // # computation of the next step location using max steplength
+        update.step_target=update.position + orientation * max_step_lenght + normal_to_orientation * update.stepping_foot_index*0.15*(model.height/1.7); 
+
+        // the next step is computed based on the current walking speed
+        // # computation of the next step duration (step_timer is the step duration given as a number of time step)
+        update.step_timer = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
+        // constant stepping time of 0.5 for an agent of 1.7m
+
+    } 
+    else {
+        update.step_timer = model.step_timer - 1;
+    
+        // # computation of the target foot location step based on current velocity
+        update.step_target=model.step_target; 
+
+        // # stepping heel position is updated
+        if (model.stepping_foot_index == -1) 
+        { 
+            update.heel_right_position=model.heel_right_position + (model.step_target-model.heel_right_position) / (update.step_timer +1);
+            update.heel_left_position=model.heel_left_position ;
+            update.stepping_foot_index = -1;
+        }
+        else 
+        { 
+            update.heel_left_position=model.heel_left_position + (model.step_target-model.heel_left_position) / (update.step_timer + 1);
+            update.heel_right_position=model.heel_right_position ;
+            update.stepping_foot_index = 1;
+        }
+    }
+    
+
     // creating update for the Humanoid model
 
     // ## head 
-    Point NormalVelocity = model.velocity.Rotate90Deg()/model.velocity.Norm() ;
-    update.head_velocity = model.head_velocity + NormalVelocity*(0.05*Distance(update.position, ped.pos) * dT); 
+    update.head_velocity = model.head_velocity + normal_to_orientation*(0.1*Distance(update.position, ped.pos) * dT); 
     update.head_position = ped.pos + update.velocity * dT;
 
     // ## shoulders
@@ -82,16 +171,6 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     update.trunk_rotation_velocity_y = 0.0;
     update.trunk_rotation_angle_y = model.trunk_rotation_angle_y + update.trunk_rotation_velocity_y * dT;
 
-    // ### 
-    double step_width = 0.10; // parameter that needs to be added to the model
-    // ### right
-    update.heel_right_velocity = update.head_velocity;
-    update.heel_right_position = update.head_position - NormalVelocity * step_width;
-    // ### left
-    update.heel_left_velocity = update.head_velocity;
-    update.heel_left_position = update.head_position + NormalVelocity * step_width;
-
-
     return update;
 }
 
@@ -104,6 +183,13 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
     model.velocity = upd.velocity;
     agent.orientation = upd.velocity.Normalized();
     // update the Humanoid model
+    // # gait variables
+    model.step_timer = upd.step_timer;
+    model.stepping_foot_index = upd.stepping_foot_index;
+    model.step_target= upd.step_target;
+
+
+    // # body motion variables
     model.head_position = upd.head_position;
     model.head_velocity = upd.head_velocity;
     model.shoulder_rotation_angle_z = upd.shoulder_rotation_angle_z;
@@ -223,7 +309,7 @@ Point HumanoidModelV0::ForceBetweenPoints(
 {
     // todo reduce range of force to 180 degrees
     const double dist = (pt1 - pt2).Norm();
-    double pushing_force_length = PushingForceLength(A, B, radius, dist);
+    double pushing_force_length = PushingForceLength(A, B, radius, dist) * 0; // if this is 0 agents bumps into each other 
     double friction_force_length = 0;
     const Point n_ij = (pt1 - pt2).Normalized();
     const Point tangent = n_ij.Rotate90Deg();
