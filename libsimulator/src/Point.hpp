@@ -15,7 +15,7 @@ public:
     double y{};
 
 public:
-    Point(double x = 0, double y = 0) : x(x), y(y){};
+    Point(double x = 0, double y = 0) : x(x), y(y) {};
 
     /// Norm
     double Norm() const;
@@ -63,7 +63,8 @@ public:
     bool operator!=(const Point& p) const;
     /// Assignement
     Point& operator+=(const Point& p);
-
+    /// unary negation operator
+    Point operator-() const;
     bool operator<(const Point& rhs) const;
 
     bool operator>(const Point& rhs) const;
