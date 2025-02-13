@@ -74,6 +74,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     if (model.step_timer == 0) {
 
         // here we are in a double support configuration, the next step is computed based on the current walking speed
+        //test
 
 
         // # computation of the next step duration (step_timer is the step duration given as a number of time step)
