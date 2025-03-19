@@ -3,6 +3,7 @@
 #include "HumanoidModelV0.hpp"
 
 #include "Ellipse.hpp"
+#include "Polygon.hpp"
 #include "GenericAgent.hpp"
 #include "Macros.hpp"
 #include "Mathematics.hpp"
@@ -16,6 +17,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cmath> 
+
 
 HumanoidModelV0::HumanoidModelV0(double bodyForce_, double friction_)
     : bodyForce(bodyForce_), friction(friction_){};
@@ -162,7 +164,8 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
     // ## shoulders
     update.shoulder_rotation_velocity_z = 0.0;
-    update.shoulder_rotation_angle_z = model.shoulder_rotation_angle_z + update.shoulder_rotation_velocity_z * dT;
+    update.shoulder_rotation_angle_z = BodyRotation(ped, neighborhood);
+
 
     // ## trunk
     // ### along the frontal axis (x) of this agent
@@ -205,7 +208,6 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
     model.heel_left_velocity = upd.heel_left_velocity;
 
 }
-
 
 
 void HumanoidModelV0::CheckModelConstraint(
@@ -320,4 +322,73 @@ Point HumanoidModelV0::ForceBetweenPoints(
             this->friction * (radius - dist) * (velocity.ScalarProduct(tangent));
     }
     return n_ij * pushing_force_length + tangent * friction_force_length;
+}
+
+double HumanoidModelV0::BodyRotation(const GenericAgent& agent, 
+    const std::vector<GenericAgent>& neighborhood) const
+{
+    // This function compute the shoulder_rotation of to avoid possible collisions
+    // the angle is computed with regard of the speed capability of the agent.
+
+    // get the model variables of the considered agent
+    const auto& model = std::get<HumanoidModelV0Data>(agent.model);
+
+
+
+    //## Degug ## (passed)
+    // std::cout << "Agent " << agent.id.getID() << " have " << neighborhood.size() << " neighbors" << std::endl;
+    // std::cin.get(); // Pause for debugging (press enter to continue)
+    //###########
+
+    // Set with the neighboring agents to avoid
+    std::set<const GenericAgent*> agents_to_avoid;
+
+    // build agent's own polygon
+    Polygon agentPoly = BuildShouldeProjectionPolygon(0.5, agent); 
+
+    // for (const auto& neighborVal : neighbors) {
+    //     const auto& neighbor = neighborVal.get(); // or however you dereference to access the actual agent
+
+    //     // Skip self
+    //     if (&agent == &neighbor) continue;
+
+    //     const auto& neighborModel = std::get<HumanoidModelV0Data>(neighbor.model);
+
+    //     // build neighbor polygon
+    //     Polygon neighborPoly = BuildAgentPolygon(neighbor);
+
+    //     // Check for overlap
+    //     if (PolygonsOverlap(agentPoly, neighborPoly)) {
+    //         AgentsToAvoid.insert(&neighbor);
+    //     }
+    // }
+    //  //## Degug ##
+    //  std::cout << "Agent " << agent.id << " should avoid " << AgentsToAvoid.size() << " agents" << std::endl;
+    //  std::cin.get(); // Pause for debugging (press enter to continue)
+    //  //###########
+
+
+
+    return 0.0;
+
+}
+
+
+
+Polygon HumanoidModelV0::BuildShouldeProjectionPolygon(double anticipation_time, const GenericAgent& agent ) const
+{
+    // This function compute the projection of the shoulder of the agent
+    const auto& model = std::get<HumanoidModelV0Data>(agent.model);
+    const Point pos = agent.pos;
+    const Point orientation = agent.orientation;
+    const Point velocity = model.velocity;
+
+
+    // Build the polygon
+    std::vector<Point> points;
+    points.push_back(pos + orientation * model.height/2.5 + orientation.Rotate90Deg() * 0.15*(model.height/1.7));
+    points.push_back(pos + orientation * model.height/2.5 + orientation.Rotate90Deg() * 0.15*(model.height/1.7));
+    points.push_back(pos + orientation * model.height/2.5 + orientation.Rotate90Deg() * 0.15*(model.height/1.7));
+
+    return Polygon(points);
 }

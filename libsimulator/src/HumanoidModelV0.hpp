@@ -7,6 +7,7 @@
 #include "NeighborhoodSearch.hpp"
 #include "OperationalModel.hpp"
 #include "UniqueID.hpp"
+#include "Polygon.hpp"
 
 struct GenericAgent;
 
@@ -84,4 +85,9 @@ private:
      * @return length of pushing force between the two points
      */
     static double PushingForceLength(double A, double B, double r, double distance);
+    double BodyRotation(
+        const GenericAgent& agent, 
+        const std::vector<GenericAgent>& neighborhood) const;
+    Polygon BuildShouldeProjectionPolygon(double anticipation_time, const GenericAgent& agent ) const;
+
 };
