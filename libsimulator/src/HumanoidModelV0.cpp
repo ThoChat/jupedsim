@@ -122,7 +122,7 @@ namespace {
     // swing foot: p[25:28];
 
     std::pair<std::array<double, 6>, std::vector<std::array<double, 4>>> FuncMotion(
-        const std::array<double, 21>& link, char sf, const std::array<double, 6>& sp, double Gamma,
+        const std::array<double, 21>& link, char sf, const std::array<double, 3>& sp, double Gamma,
         const std::array<double, 6>& th, const std::array<double, 5>& phi, const std::array<double, 3>& Psi) {
         
         #ifndef PI
@@ -414,6 +414,176 @@ namespace {
     
         return {y, p};
     }
+
+
+    // Deg to rad
+    double deg2rad(double deg) {
+        return deg * PI / 180.0;
+    }
+
+
+    // This function is used to calculate the joint rotaion angles using the gait parameters like step length (sl), step width (sw), etc.
+    // and then pass them to the function of FuncMotion to calculate the position of the joints
+    // This function is utilized in the SINGLE support phase, which does not involve the switching of the support foot and swing foot
+    std::pair<std::array<double, 6>, std::vector<std::array<double, 4>>> GaitSS(
+        const std::string& sf, double R, double Gamma, double k, double sw,
+        double sw_sh, double sl, const std::array<double,6>& res, double d_min,
+        double H, double lean_angle, int index){
+
+
+            std::vector<double> link(21);
+            for (int i = 0; i < 21; ++i) {
+                link[i] = ANATOMY[i] * H;
+            }
+
+            double L_l = link[1] + link[2]; // leg length
+            double L_p = link[4];           // pelvis length
+            double L_sh = link[14];         // shoulder length
+
+            double psi_t, psi_s, theta, phi_a, phi_p;
+
+            // index = 1: walk with rotation; index = 0: walk without rotationb (turning)
+            // psi_t: plevis rotation angle, psi_s: shoulder rotation angle (relative to the pelvis) 
+            if (index == 0) {
+                psi_t = 0;
+                psi_s = psi_t;
+        
+                double tmp_1 = sl / (2 * L_l);
+                theta = asin(tmp_1);
+                double tmp_2 = (L_p - sw) / (2 * L_l);
+                phi_a = asin(tmp_2 + deg2rad(lean_angle));
+                phi_p = -deg2rad(lean_angle);
+            } else {
+                psi_t = index * acos(sw / L_p); 
+        
+                psi_s = index * acos(sw_sh / L_sh) - psi_t;
+                double psi_t_sin = sqrt(1 - pow(sw / L_p, 2));
+                double tmp_1 = (sl - L_p * psi_t_sin) / (2 * L_l);
+                theta = asin(tmp_1);
+                phi_a = deg2rad(lean_angle); // lean angle
+                phi_p = -phi_a;
+            }
+
+            // double sx = std::max(0.0, sl - d_min);
+
+            double psi_r = 0; // gamma in Fig.2(b) in Shang et al. 2025, indicating the target direction
+
+            double th1 = PI / 2 - theta;
+            double th3 = theta;
+            double th4 = PI + theta;
+            double th6 = -theta;
+            std::array<double, 6> th = {th1, 0, th3, th4, 0, th6};
+        
+            std::array<double, 5> phi;
+            if (sf.compare("L") == 0) {
+                phi = {-phi_a, (phi_a + phi_p), (PI / 2 + phi_a + phi_p), (-phi_a - phi_p), -phi_a};
+            } else if (sf.compare("R") == 0) {
+                phi = {phi_a, (-phi_a - phi_p), (-PI / 2 - phi_a - phi_p), (phi_a + phi_p), phi_a};
+            }
+        
+            std::array<double, 3> Psi = {psi_t + psi_r, -psi_t, psi_s};
+        
+            std::vector<double> v(res.begin(), res.end());
+
+            std::array<double, 3> sp = {v[3], v[4], v[5]};
+            std::array<double, 21> link_array;
+            std::copy(link.begin(), link.end(), link_array.begin());
+            return FuncMotion(link_array, sf[0], sp, Gamma, th, phi, Psi);
+
+            // std::array<double, 6> res;
+            // std::copy(funcMotionResult.first.begin(), funcMotionResult.first.end(), res.begin());
+            // std::vector<double> position;
+            // for (const auto& arr : funcMotionResult.second) {
+            //     position.insert(position.end(), arr.begin(), arr.end());
+            // }
+
+            // return {res, position};
+        }
+
+    // This function is used to calculate the joint rotaion angles using the gait parameters like step length (sl), step width (sw), etc.
+    // and then pass them to the function of FuncMotion to calculate the position of the joints
+    // This function is utilized in the DOUBLE support phase, which involves the switching of the support foot and swing foot
+    std::tuple<char, std::array<double, 6>, double, std::vector<std::array<double, 4>>> GaitDS(
+        const std::string& sf, double R, double Gamma, double k, double sw,
+        double sw_sh, double sl, const std::array<double,6>& res, double d_min,
+        double H, int index){
+
+
+            std::vector<double> link(21);
+            for (int i = 0; i < 21; ++i) {
+                link[i] = ANATOMY[i] * H;
+            }
+
+            double L_l = link[1] + link[2]; // leg length
+            double L_p = link[4];           // pelvis length
+            double L_sh = link[14];         // shoulder length
+
+            double psi_t, psi_s, theta, phi_a, phi_p;
+
+            // index = 1: walk with rotation; index = 0: walk without rotationb (turning)
+            // psi_t: plevis rotation angle, psi_s: shoulder rotation angle (relative to the pelvis) 
+            if (index == 0) {
+                psi_t = 0;
+                psi_s = psi_t;
+        
+                double tmp_1 = sl / (2 * L_l);
+                theta = asin(tmp_1);
+                double tmp_2 = (L_p - sw) / (2 * L_l);
+                phi_a = asin(tmp_2);
+                phi_p = 0;
+            } else {
+                psi_t = index * acos(sw / L_p); 
+        
+                psi_s = index * acos(sw_sh / L_sh) - psi_t;
+                double psi_t_sin = sqrt(1 - pow(sw / L_p, 2));
+                double tmp_1 = (sl - L_p * psi_t_sin) / (2 * L_l);
+                theta = asin(tmp_1);
+                phi_a = 0; // lean angle
+                phi_p = -phi_a;
+            }
+
+            // double sx = std::max(0.0, sl - d_min);
+
+            double psi_r = 0; // gamma in Fig.2(b) in Shang et al. 2025, indicating the target direction
+
+            double th1 = PI / 2 - theta;
+            double th3 = theta;
+            double th4 = PI + theta;
+            double th6 = -theta;
+            std::array<double, 6> th = {th1, 0, th3, th4, 0, th6};
+        
+            std::array<double, 5> phi;
+            if (sf.compare("L") == 0) {
+                phi = {-phi_a, (phi_a + phi_p), (PI / 2 + phi_a + phi_p), (-phi_a - phi_p), -phi_a};
+            } else if (sf.compare("R") == 0) {
+                phi = {phi_a, (-phi_a - phi_p), (-PI / 2 - phi_a - phi_p), (phi_a + phi_p), phi_a};
+            }
+        
+            std::array<double, 3> Psi = {psi_t + psi_r, -psi_t, psi_s};
+        
+            std::vector<double> v(res.begin(), res.end());
+
+            std::array<double, 3> sp = {v[3], v[4], v[5]};
+            std::array<double, 21> link_array;
+            std::copy(link.begin(), link.end(), link_array.begin());
+            auto funcMotionResult = FuncMotion(link_array, sf[0], sp, Gamma, th, phi, Psi);
+            auto res = funcMotionResult.first;
+            auto position = funcMotionResult.second;
+
+            // switch the support foot
+            std::string new_sf = (sf == "L") ? "R" : "L";
+
+            
+            Gamma += psi_r;
+            std::array<double, 6> res_array;
+            std::copy_n(res.begin(), 6, res_array.begin());
+
+            auto final_res = FuncFootDH(link_array, Gamma, res_array);
+        
+            return std::make_tuple(new_sf[0], final_res, Gamma, position);
+
+        }
+
 }
 
 
@@ -458,6 +628,12 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     Point orientation = update.velocity.Normalized();
     Point normal_to_orientation = orientation.Rotate90Deg();
     const double max_step_lenght = model.height/2.5;
+    std::string sf = "L";
+    double R = 0.0, Gamma = 0.0, k = 0.0, sw = 0.2, sw_sh = 0.45, sl = max_step_lenght, d_min = 0.0, H = model.height, la = 2, min_d = 0;
+    // index = 1: walk with rotation; index = 0: walk without rotationb (turning)
+    int index = 0;
+    const double step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
+    std::array<double, 6> res = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     // Steps computation
     if (model.step_timer == 0) {
@@ -468,78 +644,129 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
         // # computation of the next step duration (step_timer is the step duration given as a number of time step)
         // constant stepping time of 0.5 for an agent of 1.7m
-        update.step_timer = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
+        update.step_timer = step_duration;
     
 
-        // # update stepping foot as the further from the step target
-        const double distance_to_taget_right_heel = Distance(update.step_target,model.heel_right_position);
-        const double distance_to_taget_left_heel = Distance(update.step_target,model.heel_left_position);
+        // // # update stepping foot as the further from the step target
+        // const double distance_to_taget_right_heel = Distance(update.step_target,model.heel_right_position);
+        // const double distance_to_taget_left_heel = Distance(update.step_target,model.heel_left_position);
         
-        if (distance_to_taget_right_heel >= distance_to_taget_left_heel) {
-            update.stepping_foot_index = -1; 
-        } else {
-            update.stepping_foot_index = 1;
+        // if (distance_to_taget_right_heel >= distance_to_taget_left_heel) {
+        //     update.stepping_foot_index = -1; 
+        // } else {
+        //     update.stepping_foot_index = 1;
             
-        }
-        //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
+        // }
+        // //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
 
-        // # computation of the next step location
-        update.step_target=update.position + orientation * max_step_lenght + normal_to_orientation * update.stepping_foot_index*0.15*(model.height/1.7); 
+        // // # computation of the next step location
+        // update.step_target=update.position + orientation * max_step_lenght + normal_to_orientation * update.stepping_foot_index*0.15*(model.height/1.7); 
 
-        // save the curent feet locations
-        update.heel_right_position=model.heel_right_position;
-        update.heel_left_position=model.heel_left_position;
-
-    } 
-    else if (model.step_timer == 1) {
-        // here we are in a single support configuration
-        // the stepping foot is in the air and will land on the target, while the next step is also comtuted
+        // // save the curent feet locations
+        // update.heel_right_position=model.heel_right_position;
+        // update.heel_left_position=model.heel_left_position;
 
         
-        // # stepping heel position meet the target
-        if (model.stepping_foot_index == -1) 
-        { 
-            update.heel_right_position=model.step_target;
-            update.heel_left_position=model.heel_left_position ;
-            update.stepping_foot_index = 1; // Changing the stepping foot
-        }
-        else 
-        { 
-            update.heel_left_position=model.step_target;
-            update.heel_right_position=model.heel_right_position ;
-            update.stepping_foot_index = -1; // Changing the stepping foot
-        }
 
-        // # computation of the next step location
-        // update.step_target=update.position + update.velocity * (2 * update.step_timer * dT) + normal_to_orientation * update.stepping_foot_index*0.15*(model.height/1.7); 
-        // # computation of the next step location using max steplength
-        update.step_target=update.position + orientation * max_step_lenght + normal_to_orientation * update.stepping_foot_index*0.15*(model.height/1.7); 
-
-        // the next step is computed based on the current walking speed
-        // # computation of the next step duration (step_timer is the step duration given as a number of time step)
-        update.step_timer = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
-        // constant stepping time of 0.5 for an agent of 1.7m
-
+        // 调用 GaitDS
+        auto [output_sf, output_res, output_Gamma, output_position] = GaitDS(sf, R, Gamma, k, sw, sw_sh, sl, res, d_min, H, index);
+        Gamma = output_Gamma;
+        res = output_res;
+        sf = output_sf;
+        printf("res: %f, %f, %f, %f, %f, %f\n", res[0], res[1], res[2], res[3], res[4], res[5]);
+        printf("output_position: %f, %f, %f\n", output_position[0][0], output_position[0][1], output_position[0][2]);
     } 
-    else {
-        update.step_timer = model.step_timer - 1;
-    
-        // # computation of the target foot location step based on current velocity
-        update.step_target=model.step_target; 
+    // else if (model.step_timer == 1) {
+    //     // here we are in a single support configuration
+    //     // the stepping foot is in the air and will land on the target, while the next step is also comtuted
 
-        // # stepping heel position is updated
-        if (model.stepping_foot_index == -1) 
-        { 
-            update.heel_right_position=model.heel_right_position + (model.step_target-model.heel_right_position) / (update.step_timer +1);
-            update.heel_left_position=model.heel_left_position ;
-            update.stepping_foot_index = -1;
+        
+    //     // # stepping heel position meet the target
+    //     if (model.stepping_foot_index == -1) 
+    //     { 
+    //         update.heel_right_position=model.step_target;
+    //         update.heel_left_position=model.heel_left_position ;
+    //         update.stepping_foot_index = 1; // Changing the stepping foot
+    //     }
+    //     else 
+    //     { 
+    //         update.heel_left_position=model.step_target;
+    //         update.heel_right_position=model.heel_right_position ;
+    //         update.stepping_foot_index = -1; // Changing the stepping foot
+    //     }
+
+    //     // # computation of the next step location
+    //     // update.step_target=update.position + update.velocity * (2 * update.step_timer * dT) + normal_to_orientation * update.stepping_foot_index*0.15*(model.height/1.7); 
+    //     // # computation of the next step location using max steplength
+    //     update.step_target=update.position + orientation * max_step_lenght + normal_to_orientation * update.stepping_foot_index*0.15*(model.height/1.7); 
+
+    //     // the next step is computed based on the current walking speed
+    //     // # computation of the next step duration (step_timer is the step duration given as a number of time step)
+    //     update.step_timer = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
+    //     // constant stepping time of 0.5 for an agent of 1.7m
+
+    // } 
+    else {
+        
+        double sl_p, lean_angle, sw_p, sw_sh_p, R_p;
+        double tmp = update.step_timer/step_duration;
+
+        // index = 1: walk with rotation; index = 0: walk without rotationb (turning)
+        if (index != 0) {
+            if (update.step_timer <= step_duration/2) {
+
+                sl_p = 2 * std::pow(tmp, 2) * (max_step_lenght + max_step_lenght) - max_step_lenght;
+                lean_angle  =  2 * tmp * la;
+            }
+            else
+            {
+                sl_p = max_step_lenght - 2 * std::pow(1-tmp, 2) * (2 * max_step_lenght);
+                lean_angle  =  2 * la - 2 * tmp * la;
+            }
+        } 
+        else
+        {
+            if (update.step_timer <= step_duration/2) {
+
+                sl_p = 2 * std::pow(tmp, 2) * (max_step_lenght + max_step_lenght) - max_step_lenght;
+                lean_angle  =  2 * tmp * la;
+            }
+            else
+            {
+                sl_p = max_step_lenght - 2 * std::pow(1-tmp, 2) * (2 * max_step_lenght);
+                lean_angle  =  2 * la - 2 * tmp * la;
+            }
         }
-        else 
-        { 
-            update.heel_left_position=model.heel_left_position + (model.step_target-model.heel_left_position) / (update.step_timer + 1);
-            update.heel_right_position=model.heel_right_position ;
-            update.stepping_foot_index = 1;
+
+        auto [output_res, output_position] = GaitSS(sf, R, Gamma, k, sw, sw_sh, sl_p, res, min_d, H, lean_angle, index);
+        res = output_res;
+
+        if (sf.compare("L") == 0) {
+            update.heel_right_position = {res[0], res[1]};
+            update.heel_left_position = {res[3], res[4]};
+        } else if (sf.compare("R") == 0) {
+            update.heel_right_position = {res[3], res[4]};
+            update.heel_left_position = {res[0], res[1]};
         }
+
+
+        update.step_timer = model.step_timer - 1;
+        // # computation of the target foot location step based on current velocity
+        // update.step_target=model.step_target; 
+
+        // // # stepping heel position is updated
+        // if (model.stepping_foot_index == -1) 
+        // { 
+        //     update.heel_right_position=model.heel_right_position + (model.step_target-model.heel_right_position) / (update.step_timer +1);
+        //     update.heel_left_position=model.heel_left_position ;
+        //     update.stepping_foot_index = -1;
+        // }
+        // else 
+        // { 
+        //     update.heel_left_position=model.heel_left_position + (model.step_target-model.heel_left_position) / (update.step_timer + 1);
+        //     update.heel_right_position=model.heel_right_position ;
+        //     update.stepping_foot_index = 1;
+        // }
     }
     
 
