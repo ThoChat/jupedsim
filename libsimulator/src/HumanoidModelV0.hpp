@@ -8,6 +8,8 @@
 #include "OperationalModel.hpp"
 #include "UniqueID.hpp"
 
+#include <numbers>
+
 struct GenericAgent;
 
 class HumanoidModelV0 : public OperationalModel
@@ -84,4 +86,20 @@ private:
      * @return length of pushing force between the two points
      */
     static double PushingForceLength(double A, double B, double r, double distance);
+
+    /*#########################################################################
+    ###     Relative to the Humanoid Representation Paradigm of agents      ###
+    #########################################################################*/
+
+    // ### Constants ###
+
+    // Use std::numbers::pi for mathematical constant π
+    static constexpr double PI = std::numbers::pi;
+    
+    // # Anthropometric scaling factors #
+    /* The following parameters are multiplyed by agents height (HumanoidModelV0Data.height) 
+        to obtain the legth of the considered Limb.  */ 
+    static constexpr double ANKLE_SCALING_FACTOR = 0.0451;
+    
+
 };
