@@ -166,6 +166,9 @@ namespace {
         double Psi1 = Psi[0], Psi2 = Psi[1], Psi3 = Psi[2];
     
         // Body parameters
+        // ThoChat: what are l1 to l8? Are they the name of the length in the paper?
+        // but they seems to be repeating the same values as the other lengths (i.e.,l_hd, l_sh, l_tr..)
+        // Maybe I don't understan what the other lengths are?
         double l0 = link[0], l1 = link[1], l2 = link[2], l3 = link[3], l4 = link[4], l5 = link[5];
         double l6 = link[6], l7 = link[7], l8 = link[8], l_hd = link[13], l_sh = link[14];
         double l_tr = link[15], l_ft_for = link[16], l_ft_back = link[17], l_ft_inner = link[18], l_ft_outer = link[19], l_r = link[20];
@@ -714,10 +717,12 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     const double max_step_lenght = model.height/2.5;
     // R == 0: straight walk
 
+    // ThoChat: We need to change the naming of all these parameters
     double R = 0.0, Gamma = PI/2, k = 0.0, sw = 0.2, sw_sh = 0.45, sl = max_step_lenght, d_min = 0.0, H = model.height, la = 2, min_d = 0;
     // index = 1: walk with rotation; index = 0: walk without rotationb (turning)
     int index = 0;
     double step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
+        
     std::array<double, 6> res = {model.heel_right_position.x, model.heel_right_position.y, 0.0, model.heel_left_position.x, model.heel_left_position.y, 0.0};
 
     // Steps computation
