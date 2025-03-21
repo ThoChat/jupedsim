@@ -99,7 +99,15 @@ private:
     // # Anthropometric scaling factors #
     /* The following parameters are multiplyed by agents height (HumanoidModelV0Data.height) 
         to obtain the legth of the considered Limb.  */ 
+    static constexpr double HEAD_SCALING_FACTOR = 00000;
+    static constexpr double SHOULDER_SCALING_FACTOR = 00000;
+    static constexpr double TRUNK_SCALING_FACTOR = 00000;
+    static constexpr double PELVIS_SCALING_FACTOR = 00000;
+    static constexpr double LEG_SCALING_FACTOR = 00000;
     static constexpr double ANKLE_SCALING_FACTOR = 0.0451;
+    static constexpr double FOOT_SCALING_FACTOR = 00000;
+
+
     
 
 };
