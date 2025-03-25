@@ -866,7 +866,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         update.shoulder_right_position.x = output_position.shoulder_right[0];
         update.shoulder_right_position.y = output_position.shoulder_right[1];
         update.shoulder_right_position.z = output_position.shoulder_right[2];
-        printf("output_position: %f\n", output_position.head[2]);
+        printf("output_position: %f\n", output_position.shoulder_left[0]);
         // printf("output_position: %f, %f, %f\n", output_position.head[0], output_position.head[1], output_position.center_of_mass[0]);
         // printf("head_x: %f, head_y: %f\n", update.head_position.x, update.head_position.y);
         //support_foot: -1 == left foot support, 1 == right foot support
@@ -883,7 +883,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
             update.pelvis_left_position.x = output_position.hip_support[0];
             update.pelvis_left_position.y = output_position.hip_support[1];
             update.pelvis_left_position.z = output_position.hip_support[2];
-            
+
         } else {
             update.heel_right_position.x = output_foot_position[3];
             update.heel_right_position.y = output_foot_position[4];
@@ -910,7 +910,8 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     // ## head 
     update.head_velocity = model.head_velocity + normal_to_orientation*(0.1*Distance(update.position, ped.pos) * dT); 
     update.head_position = update.head_position;
-
+    // update.pelvis_left_position = update.pelvis_left_position;
+    // update.pelvis_right_position = update.pelvis_right_position;
     // ## shoulders
     update.shoulder_rotation_velocity_z = 0.0;
     update.shoulder_rotation_angle_z = model.shoulder_rotation_angle_z + update.shoulder_rotation_velocity_z * dT;
@@ -944,6 +945,10 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
 
     // # body motion variables
     model.head_position = upd.head_position;
+    model.pelvis_left_position = upd.pelvis_left_position;
+    model.pelvis_right_position = upd.pelvis_right_position;
+    model.shoulder_left_position = upd.shoulder_left_position;
+    model.shoulder_right_position = upd.shoulder_right_position;
     model.head_velocity = upd.head_velocity;
     model.shoulder_rotation_angle_z = upd.shoulder_rotation_angle_z;
     model.shoulder_rotation_velocity_z = upd.shoulder_rotation_velocity_z;
