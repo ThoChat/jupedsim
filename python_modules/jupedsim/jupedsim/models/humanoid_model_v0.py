@@ -46,6 +46,10 @@ class HumanoidModelV0AgentParameters:
         radius: radius of the space an agent occupies. [in m] (is called r)
         height: height of the agent. [in m]
         head_position: Vector of the cartesian coordinates of the head position of this agent. [in m]
+        pelvis_left_position: Vector of the cartesian coordinates of the left pelvis position of this agent. [in m]
+        pelvis_right_position: Vector of the cartesian coordinates of the right pelvis position of this agent. [in m]
+        shoulder_right_position: Vector of the cartesian coordinates of the right shoulder position of this agent. [in m]
+        shoulder_left_position: Vector of the cartesian coordinates of the left shoulder position of this agent. [in m]
         head_velocity: Velocity vector of the head this agent. [in m/s]
         shoulder_rotation_angle_z: shoulder rotation angle along the longitudinal axis (z) of this agent. [in rad]
         shoulder_rotation_velocity_z: shoulder rotation velocity along the longitudinal axis (z) of this agent. [in rad/s]
@@ -90,6 +94,10 @@ class HumanoidModelV0AgentParameters:
     step_target: tuple[float, float] = (0.0, 0.0)
     ## Variables for body parts
     head_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    pelvis_left_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    pelvis_right_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    shoulder_right_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    shoulder_left_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     head_velocity: tuple[float, float] = (0.0, 0.0)
     shoulder_rotation_angle_z: float = 0.0
     shoulder_rotation_velocity_z: float = 0.0
@@ -124,6 +132,10 @@ class HumanoidModelV0AgentParameters:
             support_foot=self.support_foot,
             step_target=self.step_target,
             head_position=self.head_position,
+            pelvis_left_position=self.pelvis_left_position,
+            pelvis_right_position=self.pelvis_right_position,
+            shoulder_right_position=self.shoulder_right_position,
+            shoulder_left_position=self.shoulder_left_position,
             head_velocity=self.head_velocity,
             shoulder_rotation_angle_z=self.shoulder_rotation_angle_z,
             shoulder_rotation_velocity_z=self.shoulder_rotation_velocity_z,
@@ -267,7 +279,43 @@ class HumanoidModelV0State:
     @head_position.setter
     def head_position(self, head_position):
         self._obj.head_position = head_position
+        
+    @property
+    def pelvis_left_position(self) -> tuple[float, float, float]:
+        """left pelvis position of this agent."""
+        return self._obj.pelvis_left_position
 
+    @pelvis_left_position.setter
+    def pelvis_left_position(self, pelvis_left_position):
+        self._obj.pelvis_left_position = pelvis_left_position
+                
+    @property
+    def pelvis_right_position(self) -> tuple[float, float, float]:
+        """right pelvis position of this agent."""
+        return self._obj.pelvis_right_position
+
+    @pelvis_right_position.setter
+    def pelvis_right_position(self, pelvis_right_position):
+        self._obj.pelvis_right_position = pelvis_right_position
+
+    @property
+    def shoulder_right_position(self) -> tuple[float, float, float]:
+        """right shoulder position of this agent."""
+        return self._obj.shoulder_right_position
+
+    @shoulder_right_position.setter
+    def shoulder_right_position(self, shoulder_right_position):
+        self._obj.shoulder_right_position = shoulder_right_position
+
+    @property
+    def shoulder_left_position(self) -> tuple[float, float, float]:
+        """left shoulder position of this agent."""
+        return self._obj.shoulder_left_position
+
+    @shoulder_left_position.setter
+    def shoulder_left_position(self, shoulder_left_position):
+        self._obj.shoulder_left_position = shoulder_left_position
+    
     @property
     def head_velocity(self) -> tuple[float, float]:
         """head velocity of this agent."""

@@ -723,7 +723,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     // delta_orientation == 0: straight walk
 
     // ThoChat: We need to change the naming of all these parameters
-    double delta_orientation = 0.0, Orientation = PI/2, k = 0.0, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height, lean_angle = 2/PI, min_d = 0;
+    double delta_orientation = 0.0, Orientation = PI/2, k = 0.0, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height, lean_angle = 2*PI/180.0, min_d = 0;
     // rotation_index = 1: walk with rotation; rotation_index = 0: walk without rotationb (turning)
     int rotation_index = 0;
     double step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
@@ -764,17 +764,41 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         update.head_position.x = output_position.head[0];
         update.head_position.y = output_position.head[1];
         update.head_position.z = output_position.head[2];
+        update.shoulder_left_position.x = output_position.shoulder_left[0];
+        update.shoulder_left_position.y = output_position.shoulder_left[1];
+        update.shoulder_left_position.z = output_position.shoulder_left[2];
+        update.shoulder_right_position.x = output_position.shoulder_right[0];
+        update.shoulder_right_position.y = output_position.shoulder_right[1];
+        update.shoulder_right_position.z = output_position.shoulder_right[2];
+        printf("output_position: %f\n", output_position.head[2]);
         //support_foot: -1 == left foot support, 1 == right foot support
         if (update.support_foot == -1) {
             update.heel_right_position.x = output_foot_position[0];
             update.heel_right_position.y = output_foot_position[1];
             update.heel_left_position.x = output_foot_position[3];
             update.heel_left_position.y = output_foot_position[4];
+
+            update.pelvis_right_position.x = output_position.hip_swing[0];
+            update.pelvis_right_position.y = output_position.hip_swing[1];
+            update.pelvis_right_position.z = output_position.hip_swing[2];
+
+            update.pelvis_left_position.x = output_position.hip_support[0];
+            update.pelvis_left_position.y = output_position.hip_support[1];
+            update.pelvis_left_position.z = output_position.hip_support[2];
+
         } else {
             update.heel_right_position.x = output_foot_position[3];
             update.heel_right_position.y = output_foot_position[4];
             update.heel_left_position.x = output_foot_position[0];
             update.heel_left_position.y = output_foot_position[1];
+
+            update.pelvis_left_position.x = output_position.hip_swing[0];
+            update.pelvis_left_position.y = output_position.hip_swing[1];
+            update.pelvis_left_position.z = output_position.hip_swing[2];
+
+            update.pelvis_right_position.x = output_position.hip_support[0];
+            update.pelvis_right_position.y = output_position.hip_support[1];
+            update.pelvis_right_position.z = output_position.hip_support[2];
         }
         
     } 
@@ -835,8 +859,15 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         update.position.y = output_position.center_of_mass[1];
         update.head_position.x = output_position.head[0];
         update.head_position.y = output_position.head[1];
-        update.head_position.z = output_position.head[3];
-        printf("output_position: %f, %f, %f\n", output_position.head[0], output_position.head[1], output_position.center_of_mass[0]);
+        update.head_position.z = output_position.head[2];
+        update.shoulder_left_position.x = output_position.shoulder_left[0];
+        update.shoulder_left_position.y = output_position.shoulder_left[1];
+        update.shoulder_left_position.z = output_position.shoulder_left[2];
+        update.shoulder_right_position.x = output_position.shoulder_right[0];
+        update.shoulder_right_position.y = output_position.shoulder_right[1];
+        update.shoulder_right_position.z = output_position.shoulder_right[2];
+        printf("output_position: %f\n", output_position.head[2]);
+        // printf("output_position: %f, %f, %f\n", output_position.head[0], output_position.head[1], output_position.center_of_mass[0]);
         // printf("head_x: %f, head_y: %f\n", update.head_position.x, update.head_position.y);
         //support_foot: -1 == left foot support, 1 == right foot support
         if (model.support_foot == -1) {
@@ -844,11 +875,28 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
             update.heel_right_position.y = output_foot_position[1];
             update.heel_left_position.x = output_foot_position[3];
             update.heel_left_position.y = output_foot_position[4];
+
+            update.pelvis_right_position.x = output_position.hip_swing[0];
+            update.pelvis_right_position.y = output_position.hip_swing[1];
+            update.pelvis_right_position.z = output_position.hip_swing[2];
+
+            update.pelvis_left_position.x = output_position.hip_support[0];
+            update.pelvis_left_position.y = output_position.hip_support[1];
+            update.pelvis_left_position.z = output_position.hip_support[2];
+            
         } else {
             update.heel_right_position.x = output_foot_position[3];
             update.heel_right_position.y = output_foot_position[4];
             update.heel_left_position.x = output_foot_position[0];
             update.heel_left_position.y = output_foot_position[1];
+
+            update.pelvis_left_position.x = output_position.hip_swing[0];
+            update.pelvis_left_position.y = output_position.hip_swing[1];
+            update.pelvis_left_position.z = output_position.hip_swing[2];
+
+            update.pelvis_right_position.x = output_position.hip_support[0];
+            update.pelvis_right_position.y = output_position.hip_support[1];
+            update.pelvis_right_position.z = output_position.hip_support[2];
         }
 
 

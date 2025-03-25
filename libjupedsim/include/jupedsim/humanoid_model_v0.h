@@ -261,6 +261,66 @@ JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetHeadPosition(JPS_HumanoidModelV0State handle, JPS_Point3D head_position);
 
 /**
+ * Read left pelvis position of this agent.
+ * @param handle of the Agent to access.
+ * @return head position of this agent.
+ */
+JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetPelvisLeftPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write left pelvis position of this agent.
+ * @param handle of the Agent to access.
+ * @param head position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetPelvisLeftPosition(JPS_HumanoidModelV0State handle, JPS_Point3D pelvis_left_position);
+
+/**
+ * Read right pelvis position of this agent.
+ * @param handle of the Agent to access.
+ * @return head position of this agent.
+ */
+JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetPelvisRightPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write right pelvis position of this agent.
+ * @param handle of the Agent to access.
+ * @param head position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetPelvisRightPosition(JPS_HumanoidModelV0State handle, JPS_Point3D pelvis_right_position);
+
+/**
+ * Read right shoulder position of this agent.
+ * @param handle of the Agent to access.
+ * @return head position of this agent.
+ */
+JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetShoulderRightPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write right shoulder position of this agent.
+ * @param handle of the Agent to access.
+ * @param head position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetShoulderRightPosition(JPS_HumanoidModelV0State handle, JPS_Point3D shoulder_right_position);
+
+/**
+ * Read left shoulder position of this agent.
+ * @param handle of the Agent to access.
+ * @return head position of this agent.
+ */
+JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetShoulderLeftPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write left shoulder position of this agent.
+ * @param handle of the Agent to access.
+ * @param head position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetShoulderLeftPosition(JPS_HumanoidModelV0State handle, JPS_Point3D shoulder_left_position);
+
+/**
  * Read head velocity of this agent.
  * @param handle of the Agent to access.
  * @return head velocity of this agent.
@@ -499,6 +559,10 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
      * body variables
      */
     JPS_Point3D head_position = {0, 0, 0}; // Position of the agent's head
+    JPS_Point3D pelvis_left_position = {0, 0, 0}; // Position of the agent's left pelvis
+    JPS_Point3D pelvis_right_position = {0, 0, 0}; // Position of the agent's right pelvis
+    JPS_Point3D shoulder_right_position = {0, 0, 0}; // Position of the agent's right shoulder
+    JPS_Point3D shoulder_left_position = {0, 0, 0}; // Position of the agent's left shoulder
     JPS_Point head_velocity = {0, 0}; // Velocity of the agent's head
     double shoulder_rotation_angle_z = 0.0; // shoulder rotation angle along the longitudinal axis (z)
     double shoulder_rotation_velocity_z = 0.0; // shoulder rotation velocity along the longitudinal axis (z)

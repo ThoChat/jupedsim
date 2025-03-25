@@ -16,6 +16,10 @@ struct HumanoidModelV0Update {
     // # body motion variables
     // head
     Point3D head_position{};
+    Point3D pelvis_left_position{};
+    Point3D pelvis_right_position{};
+    Point3D shoulder_right_position{};
+    Point3D shoulder_left_position{};
     Point head_velocity{};
     // shoulder rotation
     double shoulder_rotation_angle_z{};
