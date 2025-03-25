@@ -15,7 +15,7 @@
 #include <Logger.hpp>
 #include <iostream>
 #include <stdexcept>
-// #include <cmath> 
+#include <Eigen/Dense>
 
 HumanoidModelV0::HumanoidModelV0(double bodyForce_, double friction_)
     : bodyForce(bodyForce_), friction(friction_){};

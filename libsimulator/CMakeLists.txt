@@ -91,6 +91,8 @@ add_library(simulator STATIC
 target_compile_options(simulator PRIVATE
     ${COMMON_COMPILE_OPTIONS}
 )
+find_package(Eigen3 REQUIRED)
+
 target_compile_definitions(simulator PUBLIC
     JPSCORE_VERSION="${PROJECT_VERSION}"
 )
@@ -100,6 +102,7 @@ target_link_libraries(simulator PUBLIC
     CGAL::CGAL
     build_info
     glm::glm
+    Eigen3::Eigen 
 )
 target_link_options(simulator PUBLIC
     $<$<AND:$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>,$<BOOL:${BUILD_WITH_ASAN}>>:-fsanitize=address>
