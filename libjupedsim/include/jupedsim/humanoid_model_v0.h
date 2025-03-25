@@ -226,7 +226,7 @@ JUPEDSIM_API int JPS_HumanoidModelV0State_GetSF(JPS_HumanoidModelV0State handle)
  * @param stepping foot index of this agent.
  */
 JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetSF(JPS_HumanoidModelV0State handle, int sf);
+JPS_HumanoidModelV0State_SetSF(JPS_HumanoidModelV0State handle, int support_foot);
 
 /**
  * Read step target of this agent.
@@ -250,7 +250,7 @@ JPS_HumanoidModelV0State_SetStepTarget(JPS_HumanoidModelV0State handle, JPS_Poin
  * @param handle of the Agent to access.
  * @return head position of this agent.
  */
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidModelV0State handle);
+JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidModelV0State handle);
 
 /**
  * Write head position of this agent.
@@ -258,7 +258,7 @@ JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidMode
  * @param head position of this agent.
  */
 JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetHeadPosition(JPS_HumanoidModelV0State handle, JPS_Point head_position);
+JPS_HumanoidModelV0State_SetHeadPosition(JPS_HumanoidModelV0State handle, JPS_Point3D head_position);
 
 /**
  * Read head velocity of this agent.
@@ -493,12 +493,12 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
      */
     int step_timer = {0}; // number of time steps remaining to complete the current step
     int stepping_foot_index = {0}; //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
-    int sf = {1}; //-1 == left foot support, 1 == right foot support
+    int support_foot = {1}; //-1 == left foot support, 1 == right foot support
     JPS_Point step_target = {0, 0}; // target position of the current stepping foot
     /**
      * body variables
      */
-    JPS_Point head_position = {0, 0}; // Position of the agent's head
+    JPS_Point3D head_position = {0, 0, 0}; // Position of the agent's head
     JPS_Point head_velocity = {0, 0}; // Velocity of the agent's head
     double shoulder_rotation_angle_z = 0.0; // shoulder rotation angle along the longitudinal axis (z)
     double shoulder_rotation_velocity_z = 0.0; // shoulder rotation velocity along the longitudinal axis (z)

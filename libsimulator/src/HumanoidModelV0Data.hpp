@@ -3,6 +3,8 @@
 #pragma once
 
 #include "Point.hpp"
+#include "Point3D.hpp"
+
 struct HumanoidModelV0Data {
     // SFM parameter, for navigation
     Point velocity{}; // v
@@ -19,10 +21,10 @@ struct HumanoidModelV0Data {
     // # gait variables
     int step_timer{};  // number of time step before completing the current step
     int stepping_foot_index{}; //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
-    int sf{}; //-1 == left foot support, 1 == right foot support
+    int support_foot{}; //-1 == left foot support, 1 == right foot support
     Point step_target{};  // target position of the current stepping foot
     // # body motion variables
-    Point head_position{}; 
+    Point3D head_position{}; 
     Point head_velocity{}; 
     double shoulder_rotation_angle_z{}; 
     double shoulder_rotation_velocity_z{}; 
@@ -48,7 +50,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
     {
         return fmt::format_to(
             ctx.out(),
-            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, step_timer={}, stepping_foot_index{}, sf{}, step_target={}, head_position={}, head_velocity={}, shoulder_rotation_angle_z={}, shoulder_rotation_velocity_z={}, trunk_rotation_angle_x={}, trunk_rotation_velocity_x={}, trunk_rotation_angle_y={}, trunk_rotation_velocity_y={}, heel_right_position={}, heel_right_velocity={}, heel_left_position={}, heel_left_velocity={} ])",
+            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, step_timer={}, stepping_foot_index{}, support_foot{}, step_target={}, head_position={}, head_velocity={}, shoulder_rotation_angle_z={}, shoulder_rotation_velocity_z={}, trunk_rotation_angle_x={}, trunk_rotation_velocity_x={}, trunk_rotation_angle_y={}, trunk_rotation_velocity_y={}, heel_right_position={}, heel_right_velocity={}, heel_left_position={}, heel_left_velocity={} ])",
             m.velocity,
             m.mass,
             m.desiredSpeed,
@@ -60,7 +62,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
             m.height,
             m.step_timer,
             m.stepping_foot_index,
-            m.sf,
+            m.support_foot,
             m.step_target,
             m.head_position,
             m.head_velocity,
@@ -74,6 +76,6 @@ struct fmt::formatter<HumanoidModelV0Data> {
             m.heel_right_velocity,
             m.heel_left_position,
             m.heel_left_velocity
-                        );
+            );
     }
 };

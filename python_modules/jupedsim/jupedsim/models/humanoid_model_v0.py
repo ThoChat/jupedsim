@@ -84,12 +84,12 @@ class HumanoidModelV0AgentParameters:
     stepping_foot_index: int = (
         0  # -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
     )
-    sf: int = (
+    support_foot: int = (
         1  # 1 == right foot support, -1 == left foot support
     )
     step_target: tuple[float, float] = (0.0, 0.0)
     ## Variables for body parts
-    head_position: tuple[float, float] = (0.0, 0.0)
+    head_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     head_velocity: tuple[float, float] = (0.0, 0.0)
     shoulder_rotation_angle_z: float = 0.0
     shoulder_rotation_velocity_z: float = 0.0
@@ -121,7 +121,7 @@ class HumanoidModelV0AgentParameters:
             height=self.height,
             step_timer=self.step_timer,
             stepping_foot_index=self.stepping_foot_index,
-            sf=self.sf,
+            support_foot=self.support_foot,
             step_target=self.step_target,
             head_position=self.head_position,
             head_velocity=self.head_velocity,
@@ -242,13 +242,13 @@ class HumanoidModelV0State:
         self._obj.stepping_foot_index = stepping_foot_index
         
     @property
-    def sf(self) -> int:
+    def support_foot(self) -> int:
         """1 == right foot support, -1 == left foot support."""
-        return self._obj.sf
+        return self._obj.support_foot
 
-    @sf.setter
-    def sf(self, sf):
-        self._obj.sf = sf
+    @support_foot.setter
+    def support_foot(self, support_foot):
+        self._obj.support_foot = support_foot
 
     @property
     def step_target(self) -> tuple[float, float]:
@@ -260,7 +260,7 @@ class HumanoidModelV0State:
         self._obj.step_target = step_target
 
     @property
-    def head_position(self) -> tuple[float, float]:
+    def head_position(self) -> tuple[float, float, float]:
         """head position of this agent."""
         return self._obj.head_position
 

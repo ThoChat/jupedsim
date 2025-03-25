@@ -14,6 +14,9 @@ using jupedsim::detail::intoJPS_Point;
 using jupedsim::detail::intoPoint;
 using jupedsim::detail::intoTuple;
 
+using jupedsim::detail::intoJPS_Point3D;
+using jupedsim::detail::intoPoint3D;
+using jupedsim::detail::intoTuple3D;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// HumanoidModelV0 Model Builder
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -219,14 +222,14 @@ JUPEDSIM_API int JPS_HumanoidModelV0State_GetSF(JPS_HumanoidModelV0State handle)
 {
     assert(handle);
     const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
-    return state->sf;
+    return state->support_foot;
 }
 
-JUPEDSIM_API void JPS_HumanoidModelV0State_SetSF(JPS_HumanoidModelV0State handle, int sf)
+JUPEDSIM_API void JPS_HumanoidModelV0State_SetSF(JPS_HumanoidModelV0State handle, int support_foot)
 {
     assert(handle);
     const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
-    state->sf = sf;
+    state->support_foot = support_foot;
 }
 
 JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetStepTarget(JPS_HumanoidModelV0State handle)
@@ -244,19 +247,19 @@ JUPEDSIM_API void JPS_HumanoidModelV0State_SetStepTarget(JPS_HumanoidModelV0Stat
 }
 
 
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidModelV0State handle)
+JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidModelV0State handle)
 {
     assert(handle);
     const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
-    return intoJPS_Point(state->head_position);
+    return intoJPS_Point3D(state->head_position);
 }
 
 JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetHeadPosition(JPS_HumanoidModelV0State handle, JPS_Point head_position)
+JPS_HumanoidModelV0State_SetHeadPosition(JPS_HumanoidModelV0State handle, JPS_Point3D head_position)
 {
     assert(handle);
     const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
-    state->head_position = intoPoint(head_position);
+    state->head_position = intoPoint3D(head_position);
 }
 
 JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadVelocity(JPS_HumanoidModelV0State handle)
