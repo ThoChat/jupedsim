@@ -48,6 +48,7 @@ namespace {
     };
 
     // Denavit-Hartenberg (DH) convention
+    // ThoChat: Convert DH convetion vector into Cartesian coordinates?
     std::array<std::array<double, 4>, 4> DHMat(double theta, double d, double a, double alpha) {
         return {{
             {cos(theta), -sin(theta) * cos(alpha), sin(theta) * sin(alpha), a * cos(theta)},
@@ -70,6 +71,7 @@ namespace {
         return result;
     }
 
+
     // matrix(size:4*4) * vector(size:4*1)
     std::array<double, 4> MatMul(const std::array<std::array<double, 4>, 4>& mat, const std::array<double, 4>& vec) {
         std::array<double, 4> result = {0, 0, 0, 0};
@@ -80,6 +82,14 @@ namespace {
         }
         return result;
     }
+
+    //  ThoChat: MatMul and MatMul4x4 can be replaced using Eigen library
+    // Vector4d MatMul(const Matrix4d& mat, const Vector4d& vec) {
+    //     return mat * vec;
+    // }
+    // Matrix4d MatMul4x4(const Matrix4d& mat1, const Matrix4d& mat2) {
+    //     return mat1 * mat2;
+    // }
 
     // This function is used to switch position of the support foot and swing foot
     // should be used in the double support phase, after using the function of FuncMotion
