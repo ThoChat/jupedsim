@@ -215,19 +215,6 @@ JUPEDSIM_API void JPS_HumanoidModelV0State_SetSteppingFootIndex(JPS_HumanoidMode
     state->stepping_foot_index = stepping_foot_index;
 }
 
-JUPEDSIM_API int JPS_HumanoidModelV0State_GetSF(JPS_HumanoidModelV0State handle)
-{
-    assert(handle);
-    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
-    return state->sf;
-}
-
-JUPEDSIM_API void JPS_HumanoidModelV0State_SetSF(JPS_HumanoidModelV0State handle, int sf)
-{
-    assert(handle);
-    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
-    state->sf = sf;
-}
 
 JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetStepTarget(JPS_HumanoidModelV0State handle)
 {

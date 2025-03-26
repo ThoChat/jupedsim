@@ -11,7 +11,6 @@ struct HumanoidModelV0Update {
     // # gait variables
     int step_timer{}; 
     int stepping_foot_index{}; 
-    int sf{};
     Point step_target{};
     // # body motion variables
     // head

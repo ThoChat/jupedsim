@@ -82,10 +82,7 @@ class HumanoidModelV0AgentParameters:
     ## Variables for gait
     step_timer: int = 0  # [number of time steps]
     stepping_foot_index: int = (
-        0  # -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
-    )
-    sf: int = (
-        1  # 1 == right foot support, -1 == left foot support
+        0  # -1 == right foot stepping/left foot support, 0 == double stance, 1 == left foot stepping/right foot support
     )
     step_target: tuple[float, float] = (0.0, 0.0)
     ## Variables for body parts
@@ -121,7 +118,6 @@ class HumanoidModelV0AgentParameters:
             height=self.height,
             step_timer=self.step_timer,
             stepping_foot_index=self.stepping_foot_index,
-            sf=self.sf,
             step_target=self.step_target,
             head_position=self.head_position,
             head_velocity=self.head_velocity,
@@ -234,21 +230,14 @@ class HumanoidModelV0State:
 
     @property
     def stepping_foot_index(self) -> int:
-        """-1 == right foot stepping, 0 == double stance, 1 == left foot stepping."""
+        """-1 == right foot stepping/left foot support,
+        0 == double stance,
+        1 == left foot stepping/right foot support."""
         return self._obj.stepping_foot_index
 
     @stepping_foot_index.setter
     def stepping_foot_index(self, stepping_foot_index):
         self._obj.stepping_foot_index = stepping_foot_index
-        
-    @property
-    def sf(self) -> int:
-        """1 == right foot support, -1 == left foot support."""
-        return self._obj.sf
-
-    @sf.setter
-    def sf(self, sf):
-        self._obj.sf = sf
 
     @property
     def step_target(self) -> tuple[float, float]:
