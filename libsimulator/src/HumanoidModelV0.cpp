@@ -82,14 +82,14 @@ namespace {
     // should be used in the double support phase, after using the function of FuncMotion
 
     // Input: feet_position: the position of the feet, [x_swing, y_swing, 0, x_support, y_support, 0];
-    //        Orientation: the orientation of the support foot;
-    std::array<double, 6> FuncFootDH(const std::array<double, 12>& link, double Orientation, const std::array<double, 6>& feet_position) {
+    //        support_foot_orientation: the orientation of the support foot;
+    std::array<double, 6> FuncFootDH(const std::array<double, 12>& link, double support_foot_orientation, const std::array<double, 6>& feet_position) {
         double length_ankle = link[0];
         std::array<double, 4> tmp = {feet_position[0], feet_position[1], feet_position[2], 1.0};
 
         std::array<std::array<double, 4>, 4> W = {{
-            {-sin(Orientation), 0, cos(Orientation), 0},
-            {cos(Orientation), 0, sin(Orientation), 0},
+            {-sin(support_foot_orientation), 0, cos(support_foot_orientation), 0},
+            {cos(support_foot_orientation), 0, sin(support_foot_orientation), 0},
             {0, 1, 0, length_ankle},
             {0, 0, 0, 1}
         }};
@@ -108,7 +108,7 @@ namespace {
     //                                  0 == double support,
     //                                  1 == left foot stepping/right foot support,
     //        sp: the position of the support foot, [x, y, z];
-    //        Orientation: the orientation of the support foot;
+    //        support_foot_orientation: the orientation of the support foot;
     //        th: the joint angles, [th1, th2, th3, th4, th5, th6];
     //        phi: the joint angles, [phi1, phi2, phi3, phi4, phi5];
     //        Psi: the joint angles, [Psi1, Psi2, Psi3];
@@ -155,7 +155,7 @@ namespace {
     };
 
     std::pair<std::array<double, 6>, P> FuncMotion(
-        const std::array<double, 12>& link, int stepping_foot_index, const std::array<double, 3>& support_foot_position, double Orientation,
+        const std::array<double, 12>& link, int stepping_foot_index, const std::array<double, 3>& support_foot_position, double support_foot_orientation,
         const std::array<double, 6>& th, const std::array<double, 5>& phi, const std::array<double, 3>& Psi) {
         
         #ifndef PI
@@ -177,10 +177,10 @@ namespace {
         
         std::array<double, 4> tmp = {support_foot_position[0], support_foot_position[1], support_foot_position[2], 1.0};
 
-        // Orientation
+        // support_foot_orientation
         std::array<std::array<double, 4>, 4> W = {{
-            {-sin(Orientation), 0, cos(Orientation), 0},
-            {cos(Orientation), 0, sin(Orientation), 0},
+            {-sin(support_foot_orientation), 0, cos(support_foot_orientation), 0},
+            {cos(support_foot_orientation), 0, sin(support_foot_orientation), 0},
             {0, 1, 0, length_ankle},
             {0, 0, 0, 1}
         }};
@@ -512,7 +512,7 @@ namespace {
     std::pair<std::array<double, 6>, P> GaitSS(
         int stepping_foot_index, 
         double delta_orientation, 
-        double Orientation, 
+        double support_foot_orientation, 
         double step_width,
         double width_shoulder_rotation, 
         double step_length, 
@@ -555,7 +555,7 @@ namespace {
                 phi_p = -phi_a;
             }
             
-            Orientation += delta_orientation; // Orientation in Fig.2(b) in Shang et al. 2025, indicating the target direction
+            support_foot_orientation += delta_orientation; // support_foot_orientation in Fig.2(b) in Shang et al. 2025, indicating the target direction
             double th1 = PI / 2 - theta;
             double th3 = theta;
             double th4 = PI + theta;
@@ -577,7 +577,7 @@ namespace {
             std::array<double, 12> link_array;
             std::copy(link.begin(), link.end(), link_array.begin());
 
-            return FuncMotion(link_array, stepping_foot_index, support_foot_position, Orientation, th, phi, Psi);
+            return FuncMotion(link_array, stepping_foot_index, support_foot_position, support_foot_orientation, th, phi, Psi);
 
         }
 
@@ -587,7 +587,7 @@ namespace {
     std::tuple<int, std::array<double, 6>, double, P> GaitDS(
         int stepping_foot_index,
         double delta_orientation, 
-        double Orientation, 
+        double support_foot_orientation, 
         double step_width,
         double width_shoulder_rotation, 
         double step_length, 
@@ -628,7 +628,7 @@ namespace {
                 phi_p = -phi_a;
             }
 
-            Orientation += delta_orientation; // Orientation in Fig.2(b) in Shang et al. 2025, indicating the target direction
+            support_foot_orientation += delta_orientation; // support_foot_orientation in Fig.2(b) in Shang et al. 2025, indicating the target direction
 
 
             double th1 = PI / 2 - theta;
@@ -651,7 +651,7 @@ namespace {
             std::array<double, 3> sp = {v[3], v[4], v[5]};
             std::array<double, 12> link_array;
             std::copy(link.begin(), link.end(), link_array.begin());
-            auto funcMotionResult = FuncMotion(link_array, stepping_foot_index, sp, Orientation, th, phi, Psi);
+            auto funcMotionResult = FuncMotion(link_array, stepping_foot_index, sp, support_foot_orientation, th, phi, Psi);
             auto motionResult = funcMotionResult.first; 
             auto position = funcMotionResult.second;
 
@@ -668,11 +668,11 @@ namespace {
             std::array<double, 6> feet_pos;
             std::copy_n(motionResult.begin(), 6, feet_pos.begin());
 
-            auto final_res = FuncFootDH(link_array, Orientation, feet_pos);
+            auto final_res = FuncFootDH(link_array, support_foot_orientation, feet_pos);
         
            
 
-            return std::make_tuple(new_stepping_foot_index, final_res, Orientation, position);
+            return std::make_tuple(new_stepping_foot_index, final_res, support_foot_orientation, position);
 
         }
 
@@ -723,7 +723,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     // delta_orientation == 0: straight walk
 
     // ThoChat: We need to change the naming of all these parameters
-    double delta_orientation = 0.0, Orientation = PI/2, k = 0.0, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height, lean_angle = 2/PI, min_d = 0;
+    double delta_orientation = 0.0, support_foot_orientation = PI/2, k = 0.0, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height, lean_angle = 2/PI, min_d = 0;
     // rotation_index = 1: walk with rotation; rotation_index = 0: walk without rotationb (turning)
     int rotation_index = 0;
     double step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
@@ -754,9 +754,9 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
             feet_position[5] = 0;
         }
 
-        auto [output_stepping_foot_index, output_foot_position, output_Gamma, output_position] = GaitDS(model.stepping_foot_index, delta_orientation, Orientation, step_width, width_shoulder_rotation, step_length, feet_position, H, rotation_index);
+        auto [output_stepping_foot_index, output_foot_position, output_support_foot_orientation, output_position] = GaitDS(model.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, step_length, feet_position, H, rotation_index);
         
-        Orientation = output_Gamma;
+        support_foot_orientation = output_support_foot_orientation;
 
         update.stepping_foot_index = output_stepping_foot_index;
         update.position.x = output_position.center_of_mass[0];
@@ -829,7 +829,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
             feet_position[4] = model.heel_right_position.y;
             feet_position[5] = 0;
         }
-        auto [output_foot_position, output_position] = GaitSS(update.stepping_foot_index, delta_orientation, Orientation, step_width, width_shoulder_rotation, sl_p, feet_position, H, lean_angle, rotation_index);
+        auto [output_foot_position, output_position] = GaitSS(update.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, sl_p, feet_position, H, lean_angle, rotation_index);
    
         update.position.x = output_position.center_of_mass[0];
         update.position.y = output_position.center_of_mass[1];
