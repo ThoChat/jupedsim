@@ -723,7 +723,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     // delta_orientation == 0: straight walk
 
     // ThoChat: We need to change the naming of all these parameters
-    double delta_orientation = 0.0, support_foot_orientation = PI/2, k = 0.0, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height, lean_angle = 2/PI, min_d = 0;
+    double delta_orientation = 0.0, support_foot_orientation = PI/2, k = 0.0, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height, lean_angle = 2*PI/180.0, min_d = 0;
     // rotation_index = 1: walk with rotation; rotation_index = 0: walk without rotationb (turning)
     int rotation_index = 0;
     double step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
