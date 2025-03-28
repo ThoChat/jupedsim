@@ -283,8 +283,6 @@ namespace {
         auto O10_0w = MatMul(W, O10_0);
         for (int i = 0; i < 4; ++i) O10_0w[i] += heel_support[i];
 
-        double tip_x = O10_0w[0];
-        double tip_y = O10_0w[1];
         
         std::array<double, 4> pf_0_1_w, pf_0_2_w, pf_0_3_w, pf_0_4_w;
         std::array<double, 4> pf_10_1_w, pf_10_2_w, pf_10_3_w, pf_10_4_w;
@@ -435,20 +433,21 @@ namespace {
         auto head = MatMul(W, MatMul(T11_0, {0, 0, length_trunk + length_neck, 1}));
         for (int i = 0; i < 4; ++i) head[i] += heel_support[i]; // head point
 
-        std::array<double, 6> y = {tip_x, tip_y, 0, O0_0w[0], O0_0w[1], 0};
+        std::array<double, 6> y = {O10_0w[0], O10_0w[1], 0, O0_0w[0], O0_0w[1], 0};
         
 
         // All joint positions of the skeleton
         P p;
 
-        // Support leg
+        ///////////// Support leg///////////////
         //// heel
         p.heel_support = heel_support; 
 
 
         //// Ankle
+
         // O0_0w and O1_0w are the same, that means O0_0w = O1_0w
-        // We can ignore O0_0w or O1_0w when we just want to get the position of the ankle
+        // We can ignore O0_0w OR O1_0w when we just want to get the position of the ankle
         // But both of them are necessary for the calculation
 
         // p.O0_0w = O0_0w;
@@ -456,36 +455,47 @@ namespace {
 
 
         //// pelvis
- 
+
+        // O2_0w = O3_0w = O4_0w
+
         p.hip_support = O2_0w;
-        // p.O3_0w = O3_0w;
+        // p.O3_0w = O3_0w; 
         // p.O4_0w = O4_0w;
         
-        // Swing leg
 
-        //// 
+        ////////// Swing leg////////////
+
+        //// pelvis
+
+        // O5_0w = O6_0w = O7_0w
 
         p.hip_swing = O5_0w;
         // p.O6_0w = O6_0w;
         // p.O7_0w = O7_0w;
 
-
+        // O8_0w = O9_0w
         p.ankle_swing = O8_0w;
         // p.O9_0w = O9_0w;
-        // p.heel_swing = O10_0w;
 
-        // CoM
+        p.heel_swing = O10_0w;
+
+        ////////////// CoM //////////////////
         p.center_of_mass = O11_0w;   
+
+
+        ////////////// Shoulder /////////////
 
         // Left shoulder
         p.shoulder_left = O12_0w;
         // Right shoulder
         p.shoulder_right = O13_0w;
-
-
-
         // Center of the shoulder
         p.center_of_shoulder = center_of_shoulder; 
+
+        // The center of the two small circles
+        // used when representing the agent body as a three-circled shape
+        p.O14_0w = O14_0w;
+        p.O15_0w = O15_0w;
 
         // head
         p.head = head; 
@@ -493,7 +503,7 @@ namespace {
         // CoM
         // p.pc = pc; 
 
-        // The four corners of the foot * 2
+        ///////////// The four corners of the foot * 2 /////////////////////
         // Support foot
         p.pf_0_1_w = pf_0_1_w;
         p.pf_0_2_w = pf_0_2_w;
@@ -505,10 +515,6 @@ namespace {
         p.pf_10_3_w = pf_10_3_w;
         p.pf_10_4_w = pf_10_4_w;
 
-        // The center of the two small circles
-        // used when representing the agent body as a three-circled shape
-        p.O14_0w = O14_0w;
-        p.O15_0w = O15_0w;
 
    
         return {y, p};
