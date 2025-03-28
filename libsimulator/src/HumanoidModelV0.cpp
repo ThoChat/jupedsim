@@ -85,7 +85,7 @@ namespace {
     //        support_foot_orientation: the orientation of the support foot;
     std::array<double, 6> FuncFootDH(const std::array<double, 12>& link, double support_foot_orientation, const std::array<double, 6>& feet_position) {
         double length_ankle = link[0];
-        std::array<double, 4> tmp = {feet_position[0], feet_position[1], feet_position[2], 1.0};
+        std::array<double, 4> heel_support = {feet_position[0], feet_position[1], feet_position[2], 1.0};
 
         std::array<std::array<double, 4>, 4> W = {{
             {-sin(support_foot_orientation), 0, cos(support_foot_orientation), 0},
@@ -97,7 +97,7 @@ namespace {
         std::array<double, 4> O = {0, 0, 0, 1};
         std::array<double, 4> O0_0 = O;
         std::array<double, 4> O0_0w = MatMul(W, O0_0);
-        for (int i = 0; i < 4; ++i) O0_0w[i] += tmp[i];
+        for (int i = 0; i < 4; ++i) O0_0w[i] += heel_support[i];
 
         return {feet_position[3], feet_position[4], 0, O0_0w[0], O0_0w[1], 0};
     }
@@ -137,21 +137,21 @@ namespace {
         std::array<double, 4> head;
         std::array<double, 4> pc;
         std::array<double, 4> O0_0w;
+        std::array<double, 4> O3_0w;
         std::array<double, 4> O4_0w;
-        std::array<double, 4> O5_0w;
+        std::array<double, 4> O6_0w;
         std::array<double, 4> O7_0w;
-        std::array<double, 4> O8_0w;
-        std::array<double, 4> O11_0w;
+        std::array<double, 4> O9_0w;
         std::array<double, 4> pf_0_1_w;
         std::array<double, 4> pf_0_2_w;
         std::array<double, 4> pf_0_3_w;
         std::array<double, 4> pf_0_4_w;
-        std::array<double, 4> pf_12_1_w;
-        std::array<double, 4> pf_12_2_w;
-        std::array<double, 4> pf_12_3_w;
-        std::array<double, 4> pf_12_4_w;
-        std::array<double, 4> O19_0w;
-        std::array<double, 4> O20_0w;
+        std::array<double, 4> pf_10_1_w;
+        std::array<double, 4> pf_10_2_w;
+        std::array<double, 4> pf_10_3_w;
+        std::array<double, 4> pf_10_4_w;
+        std::array<double, 4> O14_0w;
+        std::array<double, 4> O15_0w;
     };
 
     std::pair<std::array<double, 6>, P> FuncMotion(
@@ -175,7 +175,7 @@ namespace {
         double length_neck = link[4], length_shoulder = link[5];
         double length_trunk = link[6], length_foot_forward = link[7], length_foot_backward = link[8], length_foot_inner = link[9], length_foot_outer = link[10], l_r = link[11];
         
-        std::array<double, 4> tmp = {support_foot_position[0], support_foot_position[1], support_foot_position[2], 1.0};
+        std::array<double, 4> heel_support = {support_foot_position[0], support_foot_position[1], support_foot_position[2], 1.0};
 
         // support_foot_orientation
         std::array<std::array<double, 4>, 4> W = {{
@@ -190,104 +190,104 @@ namespace {
     
       
         std::array<double, 4> O0_0w = MatMul(W, O);
-        for (int i = 0; i < 4; ++i) O0_0w[i] += tmp[i];
+        for (int i = 0; i < 4; ++i) O0_0w[i] += heel_support[i];
     
         auto B1 = DHMat(phi1 + PI / 2, 0, 0, PI / 2);
         auto T1_0 = B1;
         auto O1_0 = MatMul(T1_0, O);
         auto O1_0w = MatMul(W, O1_0);
-        for (int i = 0; i < 4; ++i) O1_0w[i] += tmp[i];
+        for (int i = 0; i < 4; ++i) O1_0w[i] += heel_support[i];
    
         auto B2 = DHMat(-th1 + PI / 2, 0, length_shin + length_thigh, 0);
         auto T2_0 = MatMul4x4(T1_0, B2);
         auto O2_0 = MatMul(T2_0, O);
         auto O2_0w = MatMul(W, O2_0);
-        for (int i = 0; i < 4; ++i) O2_0w[i] += tmp[i];
+        for (int i = 0; i < 4; ++i) O2_0w[i] += heel_support[i];
     
-        auto B4 = DHMat(-th3, 0, 0, -PI / 2);
-        auto T4_0 = MatMul4x4(T2_0, B4);
-        auto O4_0 = MatMul(T4_0, O);
-        auto O4_0w = MatMul(W, O4_0);
-        for (int i = 0; i < 4; ++i) O4_0w[i] += tmp[i];
+        auto B3 = DHMat(-th3, 0, 0, -PI / 2);
+        auto T3_0 = MatMul4x4(T2_0, B3);
+        auto O3_0 = MatMul(T3_0, O);
+        auto O3_0w = MatMul(W, O3_0);
+        for (int i = 0; i < 4; ++i) O3_0w[i] += heel_support[i];
      
-        auto B5 = DHMat(phi2, 0, 0, 0);
+        auto B4 = DHMat(phi2, 0, 0, 0);
         std::array<std::array<double, 4>, 4> rotMat = {{
             {0, 0, 1, 0},
             {1, 0, 0, 0},
             {0, 1, 0, 0},
             {0, 0, 0, 1}
         }};
-        auto T5_0 = MatMul4x4(MatMul4x4(T4_0, B5), rotMat);
+        auto T4_0 = MatMul4x4(MatMul4x4(T3_0, B4), rotMat);
+        auto O4_0 = MatMul(T4_0, O);
+        auto O4_0w = MatMul(W, O4_0);
+        for (int i = 0; i < 4; ++i) O4_0w[i] += heel_support[i];
+    
+        std::array<std::array<double, 4>, 4> B5;
+
+        if (stepping_foot_index == -1) {
+            B5 = DHMat(Psi1, 0, length_pelvis, 0);
+        } else if (stepping_foot_index == 1) {
+            B5 = DHMat(Psi1 + PI, 0, length_pelvis, 0);
+        }
+        auto T5_0 = MatMul4x4(T4_0, B5);
         auto O5_0 = MatMul(T5_0, O);
         auto O5_0w = MatMul(W, O5_0);
-        for (int i = 0; i < 4; ++i) O5_0w[i] += tmp[i];
-    
+        for (int i = 0; i < 4; ++i) O5_0w[i] += heel_support[i];
+     
         std::array<std::array<double, 4>, 4> B6;
-
+        std::array<std::array<double, 4>, 4> T6_0;
         if (stepping_foot_index == -1) {
-            B6 = DHMat(Psi1, 0, length_pelvis, 0);
+            B6 = DHMat(Psi2, 0, 0, -PI / 2);
+            std::array<std::array<double, 4>, 4> transMat = {{
+                {1, 0, 0, 0},
+                {0, 1, 0, 0},
+                {0, 0, 1, 0},
+                {0, 0, 0, 1}
+            }};
+            T6_0 = MatMul4x4(MatMul4x4(T5_0, B6), transMat);
         } else if (stepping_foot_index == 1) {
-            B6 = DHMat(Psi1 + PI, 0, length_pelvis, 0);
+            B6 = DHMat(Psi2, 0, 0, PI / 2);
+            std::array<std::array<double, 4>, 4> transMat = {{
+                {1, 0, 0, 0},
+                {0, 1, 0, 0},
+                {0, 0, 1, 0},
+                {0, 0, 0, 1}
+            }};
+            T6_0 = MatMul4x4(MatMul4x4(T5_0, B6), transMat);
         }
-        auto T6_0 = MatMul4x4(T5_0, B6);
         auto O6_0 = MatMul(T6_0, O);
         auto O6_0w = MatMul(W, O6_0);
-        for (int i = 0; i < 4; ++i) O6_0w[i] += tmp[i];
-     
-        std::array<std::array<double, 4>, 4> B7;
-        std::array<std::array<double, 4>, 4> T7_0;
-        if (stepping_foot_index == -1) {
-            B7 = DHMat(Psi2, 0, 0, -PI / 2);
-            std::array<std::array<double, 4>, 4> transMat = {{
-                {1, 0, 0, 0},
-                {0, 1, 0, 0},
-                {0, 0, 1, 0},
-                {0, 0, 0, 1}
-            }};
-            T7_0 = MatMul4x4(MatMul4x4(T6_0, B7), transMat);
-        } else if (stepping_foot_index == 1) {
-            B7 = DHMat(Psi2, 0, 0, PI / 2);
-            std::array<std::array<double, 4>, 4> transMat = {{
-                {1, 0, 0, 0},
-                {0, 1, 0, 0},
-                {0, 0, 1, 0},
-                {0, 0, 0, 1}
-            }};
-            T7_0 = MatMul4x4(MatMul4x4(T6_0, B7), transMat);
-        }
+        for (int i = 0; i < 4; ++i) O6_0w[i] += heel_support[i];
+
+        auto B7 = DHMat(phi3, 0, 0, -PI / 2);
+        auto T7_0 = MatMul4x4(T6_0, B7);
         auto O7_0 = MatMul(T7_0, O);
         auto O7_0w = MatMul(W, O7_0);
-        for (int i = 0; i < 4; ++i) O7_0w[i] += tmp[i];
+        for (int i = 0; i < 4; ++i) O7_0w[i] += heel_support[i];
 
-        auto B8 = DHMat(phi3, 0, 0, -PI / 2);
+        auto B8 = DHMat(-th4 + PI, 0, length_shin + length_thigh, 0);
         auto T8_0 = MatMul4x4(T7_0, B8);
         auto O8_0 = MatMul(T8_0, O);
         auto O8_0w = MatMul(W, O8_0);
-        for (int i = 0; i < 4; ++i) O8_0w[i] += tmp[i];
+        for (int i = 0; i < 4; ++i) O8_0w[i] += heel_support[i];
 
-        auto B9 = DHMat(-th4 + PI, 0, length_shin + length_thigh, 0);
+        auto B9 = DHMat(-th6, 0, 0, PI / 2);
         auto T9_0 = MatMul4x4(T8_0, B9);
         auto O9_0 = MatMul(T9_0, O);
         auto O9_0w = MatMul(W, O9_0);
-        for (int i = 0; i < 4; ++i) O9_0w[i] += tmp[i];
+        for (int i = 0; i < 4; ++i) O9_0w[i] += heel_support[i];
 
-        auto B11 = DHMat(-th6, 0, 0, PI / 2);
-        auto T11_0 = MatMul4x4(T9_0, B11);
-        auto O11_0 = MatMul(T11_0, O);
-        auto O11_0w = MatMul(W, O11_0);
-        for (int i = 0; i < 4; ++i) O11_0w[i] += tmp[i];
+        auto B10 = DHMat(phi4, 0, length_ankle, 0);
+        auto T10_0 = MatMul4x4(T9_0, B10);
+        auto O10_0 = MatMul(T10_0, O);
+        auto O10_0w = MatMul(W, O10_0);
+        for (int i = 0; i < 4; ++i) O10_0w[i] += heel_support[i];
 
-        auto B12 = DHMat(phi4, 0, length_ankle, 0);
-        auto T12_0 = MatMul4x4(T11_0, B12);
-        auto O12_0 = MatMul(T12_0, O);
-        auto O12_0w = MatMul(W, O12_0);
-        for (int i = 0; i < 4; ++i) O12_0w[i] += tmp[i];
-
-        double tip_x = O12_0w[0];
-        double tip_y = O12_0w[1];
+        double tip_x = O10_0w[0];
+        double tip_y = O10_0w[1];
         
         std::array<double, 4> pf_0_1_w, pf_0_2_w, pf_0_3_w, pf_0_4_w;
-        std::array<double, 4> pf_12_1_w, pf_12_2_w, pf_12_3_w, pf_12_4_w;
+        std::array<double, 4> pf_10_1_w, pf_10_2_w, pf_10_3_w, pf_10_4_w;
         if (stepping_foot_index == -1) {
             // the support foot
             std::array<double, 4> pf_0_1 = {length_foot_outer, -length_ankle, length_foot_forward, 1.0};
@@ -301,29 +301,29 @@ namespace {
             std::array<double, 4> pf_0_4_w = MatMul(W, pf_0_4);
 
             for (int i = 0; i < 4; ++i) {
-                pf_0_1_w[i] += tmp[i];
-                pf_0_2_w[i] += tmp[i];
-                pf_0_3_w[i] += tmp[i];
-                pf_0_4_w[i] += tmp[i];
+                pf_0_1_w[i] += heel_support[i];
+                pf_0_2_w[i] += heel_support[i];
+                pf_0_3_w[i] += heel_support[i];
+                pf_0_4_w[i] += heel_support[i];
             }
 
 
             // the swing foot
-            auto pf_12_1 = MatMul(T12_0, {0, length_foot_inner, length_foot_forward, 1});
-            auto pf_12_2 = MatMul(T12_0, {0, -length_foot_outer, length_foot_forward, 1});
-            auto pf_12_3 = MatMul(T12_0, {0, -length_foot_outer, -length_foot_backward, 1});
-            auto pf_12_4 = MatMul(T12_0, {0, length_foot_inner, -length_foot_backward, 1});
+            auto pf_10_1 = MatMul(T10_0, {0, length_foot_inner, length_foot_forward, 1});
+            auto pf_10_2 = MatMul(T10_0, {0, -length_foot_outer, length_foot_forward, 1});
+            auto pf_10_3 = MatMul(T10_0, {0, -length_foot_outer, -length_foot_backward, 1});
+            auto pf_10_4 = MatMul(T10_0, {0, length_foot_inner, -length_foot_backward, 1});
 
-            std::array<double, 4> pf_12_1_w = MatMul(W, pf_12_1);
-            std::array<double, 4> pf_12_2_w = MatMul(W, pf_12_2);
-            std::array<double, 4> pf_12_3_w = MatMul(W, pf_12_3);
-            std::array<double, 4> pf_12_4_w = MatMul(W, pf_12_4);
+            std::array<double, 4> pf_10_1_w = MatMul(W, pf_10_1);
+            std::array<double, 4> pf_10_2_w = MatMul(W, pf_10_2);
+            std::array<double, 4> pf_10_3_w = MatMul(W, pf_10_3);
+            std::array<double, 4> pf_10_4_w = MatMul(W, pf_10_4);
 
             for (int i = 0; i < 4; ++i) {
-                pf_12_1_w[i] += tmp[i];
-                pf_12_2_w[i] += tmp[i];
-                pf_12_3_w[i] += tmp[i];
-                pf_12_4_w[i] += tmp[i];
+                pf_10_1_w[i] += heel_support[i];
+                pf_10_2_w[i] += heel_support[i];
+                pf_10_3_w[i] += heel_support[i];
+                pf_10_4_w[i] += heel_support[i];
             }
 
         } else if (stepping_foot_index == 1) {
@@ -340,100 +340,100 @@ namespace {
             std::array<double, 4> pf_0_4_w = MatMul(W, pf_0_4);
 
             for (int i = 0; i < 4; ++i) {
-                pf_0_1_w[i] += tmp[i];
-                pf_0_2_w[i] += tmp[i];
-                pf_0_3_w[i] += tmp[i];
-                pf_0_4_w[i] += tmp[i];
+                pf_0_1_w[i] += heel_support[i];
+                pf_0_2_w[i] += heel_support[i];
+                pf_0_3_w[i] += heel_support[i];
+                pf_0_4_w[i] += heel_support[i];
             }
     
 
             // the swing foot
-            auto pf_12_1 = MatMul(T12_0, {0, length_foot_outer, length_foot_forward, 1});
-            auto pf_12_2 = MatMul(T12_0, {0, -length_foot_inner, length_foot_forward, 1});
-            auto pf_12_3 = MatMul(T12_0, {0, -length_foot_inner, -length_foot_backward, 1});
-            auto pf_12_4 = MatMul(T12_0, {0, length_foot_outer, -length_foot_backward, 1});
+            auto pf_10_1 = MatMul(T10_0, {0, length_foot_outer, length_foot_forward, 1});
+            auto pf_10_2 = MatMul(T10_0, {0, -length_foot_inner, length_foot_forward, 1});
+            auto pf_10_3 = MatMul(T10_0, {0, -length_foot_inner, -length_foot_backward, 1});
+            auto pf_10_4 = MatMul(T10_0, {0, length_foot_outer, -length_foot_backward, 1});
 
-            std::array<double, 4> pf_12_1_w = MatMul(W, pf_12_1);
-            std::array<double, 4> pf_12_2_w = MatMul(W, pf_12_2);
-            std::array<double, 4> pf_12_3_w = MatMul(W, pf_12_3);
-            std::array<double, 4> pf_12_4_w = MatMul(W, pf_12_4);
+            std::array<double, 4> pf_10_1_w = MatMul(W, pf_10_1);
+            std::array<double, 4> pf_10_2_w = MatMul(W, pf_10_2);
+            std::array<double, 4> pf_10_3_w = MatMul(W, pf_10_3);
+            std::array<double, 4> pf_10_4_w = MatMul(W, pf_10_4);
 
             for (int i = 0; i < 4; ++i) {
-                pf_12_1_w[i] += tmp[i];
-                pf_12_2_w[i] += tmp[i];
-                pf_12_3_w[i] += tmp[i];
-                pf_12_4_w[i] += tmp[i];
+                pf_10_1_w[i] += heel_support[i];
+                pf_10_2_w[i] += heel_support[i];
+                pf_10_3_w[i] += heel_support[i];
+                pf_10_4_w[i] += heel_support[i];
             }
 
         }
 
       
-        std::array<std::array<double, 4>, 4> B18 = {{{1, 0, 0, -length_pelvis/2}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}};
-        B18 = MatMul4x4(B18, DHMat(Psi3, 0, 0, 0));
-        auto T18_0 = MatMul4x4(T6_0, B18);
-        auto O18_0 = MatMul(T18_0, O);
-        auto O18_0w = MatMul(W, O18_0);
-        for (int i = 0; i < 4; ++i) O18_0w[i] += tmp[i];
+        std::array<std::array<double, 4>, 4> B11 = {{{1, 0, 0, -length_pelvis/2}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}};
+        B11 = MatMul4x4(B11, DHMat(Psi3, 0, 0, 0));
+        auto T11_0 = MatMul4x4(T5_0, B11);
+        auto O11_0 = MatMul(T11_0, O);
+        auto O11_0w = MatMul(W, O11_0);
+        for (int i = 0; i < 4; ++i) O11_0w[i] += heel_support[i];
     
 
-        std::array<std::array<double, 4>, 4> T13_18;
+        std::array<std::array<double, 4>, 4> T12_11;
         if (stepping_foot_index == -1) {
-            T13_18 = {{{0, 0, -1, -length_shoulder/2}, {0, 1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
+            T12_11 = {{{0, 0, -1, -length_shoulder/2}, {0, 1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
         } else if (stepping_foot_index == 1) {
-            T13_18 = {{{0, 0, 1, length_shoulder/2}, {0, -1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
+            T12_11 = {{{0, 0, 1, length_shoulder/2}, {0, -1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
         }
-        auto T13_0 = MatMul4x4(T18_0, T13_18);
-        auto O13_0 = MatMul(T13_0, O);
-        auto O13_0w = MatMul(W, O13_0);
-        for (int i = 0; i < 4; ++i) O13_0w[i] += tmp[i];
+        auto T12_0 = MatMul4x4(T11_0, T12_11);
+        auto O12_0 = MatMul(T12_0, O);
+        auto O12_0w = MatMul(W, O12_0);
+        for (int i = 0; i < 4; ++i) O12_0w[i] += heel_support[i];
      
 
-        std::array<std::array<double, 4>, 4> T17_18;
+        std::array<std::array<double, 4>, 4> T13_11;
         if (stepping_foot_index == -1) {
-            T17_18 = {{{0, 0, -1, length_shoulder/2}, {0, 1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
+            T13_11 = {{{0, 0, -1, length_shoulder/2}, {0, 1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
         } else if (stepping_foot_index == 1) {
-            T17_18 = {{{0, 0, 1, -length_shoulder/2}, {0, -1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
+            T13_11 = {{{0, 0, 1, -length_shoulder/2}, {0, -1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
         }
-        auto T17_0 = MatMul4x4(T18_0, T17_18);
-        auto O17_0 = MatMul(T17_0, O);
-        auto O17_0w = MatMul(W, O17_0);
-        for (int i = 0; i < 4; ++i) O17_0w[i] += tmp[i];
+        auto T13_0 = MatMul4x4(T11_0, T13_11);
+        auto O13_0 = MatMul(T13_0, O);
+        auto O13_0w = MatMul(W, O13_0);
+        for (int i = 0; i < 4; ++i) O13_0w[i] += heel_support[i];
 
-        std::array<std::array<double, 4>, 4> T19_18;
+        std::array<std::array<double, 4>, 4> T14_11;
         if (stepping_foot_index == -1) {
-            T19_18 = {{{0, 0, -1, -l_r/2}, {0, 1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
+            T14_11 = {{{0, 0, -1, -l_r/2}, {0, 1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
         } else if (stepping_foot_index == 1) {
-            T19_18 = {{{0, 0, 1, l_r/2}, {0, -1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
-        }
-
-
-        auto T19_0 = MatMul4x4(T18_0, T19_18);
-        auto O19_0 = MatMul(T19_0, O);
-        auto O19_0w = MatMul(W, O19_0);
-        for (int i = 0; i < 4; ++i) O19_0w[i] += tmp[i];
-
-        std::array<std::array<double, 4>, 4> T20_18;
-        if (stepping_foot_index == -1) {
-            T20_18 = {{{0, 0, -1, l_r/2}, {0, 1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
-        } else if (stepping_foot_index == 1) {
-            T20_18 = {{{0, 0, 1, -l_r/2}, {0, -1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
+            T14_11 = {{{0, 0, 1, l_r/2}, {0, -1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
         }
 
-        auto T20_0 = MatMul4x4(T18_0, T20_18);
-        auto O20_0 = MatMul(T20_0, O);
-        auto O20_0w = MatMul(W, O20_0);
-        for (int i = 0; i < 4; ++i) O20_0w[i] += tmp[i];
 
-        std::array<double, 4> pc;
+        auto T14_0 = MatMul4x4(T11_0, T14_11);
+        auto O14_0 = MatMul(T14_0, O);
+        auto O14_0w = MatMul(W, O14_0);
+        for (int i = 0; i < 4; ++i) O14_0w[i] += heel_support[i];
+
+        std::array<std::array<double, 4>, 4> T15_11;
+        if (stepping_foot_index == -1) {
+            T15_11 = {{{0, 0, -1, l_r/2}, {0, 1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
+        } else if (stepping_foot_index == 1) {
+            T15_11 = {{{0, 0, 1, -l_r/2}, {0, -1, 0, 0}, {1, 0, 0, length_trunk}, {0, 0, 0, 1}}};
+        }
+
+        auto T15_0 = MatMul4x4(T11_0, T15_11);
+        auto O15_0 = MatMul(T15_0, O);
+        auto O15_0w = MatMul(W, O15_0);
+        for (int i = 0; i < 4; ++i) O15_0w[i] += heel_support[i];
+
+        // std::array<double, 4> pc;
+        // for (int i = 0; i < 4; ++i) {
+        //     pc[i] = (O4_0w[i] + O5_0w[i]) / 2;
+        // } // pelvis point
+        std::array<double, 4> center_of_shoulder;
         for (int i = 0; i < 4; ++i) {
-            pc[i] = (O5_0w[i] + O6_0w[i]) / 2;
-        } // pelvis point
-        std::array<double, 4> pn;
-        for (int i = 0; i < 4; ++i) {
-            pn[i] = (O13_0w[i] + O17_0w[i]) / 2;
+            center_of_shoulder[i] = (O12_0w[i] + O13_0w[i]) / 2;
         } // neck point
-        auto pt = MatMul(W, MatMul(T18_0, {0, 0, length_trunk + length_neck, 1}));
-        for (int i = 0; i < 4; ++i) pt[i] += tmp[i]; // head point
+        auto head = MatMul(W, MatMul(T11_0, {0, 0, length_trunk + length_neck, 1}));
+        for (int i = 0; i < 4; ++i) head[i] += heel_support[i]; // head point
 
         std::array<double, 6> y = {tip_x, tip_y, 0, O0_0w[0], O0_0w[1], 0};
         
@@ -443,40 +443,55 @@ namespace {
 
         // Support leg
         //// heel
-        p.heel_support = tmp; 
-        //// ankle
-        p.O0_0w = O0_0w;
+        p.heel_support = heel_support; 
+
+
+        //// Ankle
+        // O0_0w and O1_0w are the same, that means O0_0w = O1_0w
+        // We can ignore O0_0w or O1_0w when we just want to get the position of the ankle
+        // But both of them are necessary for the calculation
+
+        // p.O0_0w = O0_0w;
         p.ankle_support = O1_0w;
+
+
         //// pelvis
+ 
         p.hip_support = O2_0w;
-        p.O4_0w = O4_0w;
-        p.O5_0w = O5_0w;
+        // p.O3_0w = O3_0w;
+        // p.O4_0w = O4_0w;
         
         // Swing leg
+
         //// 
-        p.hip_swing = O6_0w;
-        p.O7_0w = O7_0w;
-        p.O8_0w = O8_0w;
-        p.ankle_swing = O9_0w;
-        p.O11_0w = O11_0w;
-        p.heel_swing = O12_0w;
-        
-        // Left shoulder
-        p.shoulder_left = O13_0w;
-        // Right shoulder
-        p.shoulder_right = O17_0w;
+
+        p.hip_swing = O5_0w;
+        // p.O6_0w = O6_0w;
+        // p.O7_0w = O7_0w;
+
+
+        p.ankle_swing = O8_0w;
+        // p.O9_0w = O9_0w;
+        // p.heel_swing = O10_0w;
 
         // CoM
-        p.center_of_mass = O18_0w;
+        p.center_of_mass = O11_0w;   
+
+        // Left shoulder
+        p.shoulder_left = O12_0w;
+        // Right shoulder
+        p.shoulder_right = O13_0w;
+
+
 
         // Center of the shoulder
-        p.center_of_shoulder = pn; 
+        p.center_of_shoulder = center_of_shoulder; 
 
         // head
-        p.head = pt; 
+        p.head = head; 
 
         // CoM
-        p.pc = pc; 
+        // p.pc = pc; 
 
         // The four corners of the foot * 2
         // Support foot
@@ -485,15 +500,15 @@ namespace {
         p.pf_0_3_w = pf_0_3_w;
         p.pf_0_4_w = pf_0_4_w;
         // Swing foot
-        p.pf_12_1_w = pf_12_1_w;
-        p.pf_12_2_w = pf_12_2_w;
-        p.pf_12_3_w = pf_12_3_w;
-        p.pf_12_4_w = pf_12_4_w;
+        p.pf_10_1_w = pf_10_1_w;
+        p.pf_10_2_w = pf_10_2_w;
+        p.pf_10_3_w = pf_10_3_w;
+        p.pf_10_4_w = pf_10_4_w;
 
         // The center of the two small circles
         // used when representing the agent body as a three-circled shape
-        p.O19_0w = O19_0w;
-        p.O20_0w = O20_0w;
+        p.O14_0w = O14_0w;
+        p.O15_0w = O15_0w;
 
    
         return {y, p};
@@ -542,8 +557,8 @@ namespace {
                 double tmp_1 = step_length / (2 * length_leg);
                 theta = asin(tmp_1);
                 double tmp_2 = (length_pelvis - step_width) / (2 * length_leg);
-                phi_a = asin(tmp_2 + lean_angle);
-                phi_p = -lean_angle;
+                phi_a = asin(tmp_2 + lean_angle*PI/180);
+                phi_p = -lean_angle*PI/180;
             } else {
                 psi_t = rotation_index * acos(step_width / length_pelvis); 
         
@@ -551,7 +566,7 @@ namespace {
                 double psi_t_sin = sqrt(1 - pow(step_width / length_pelvis, 2));
                 double tmp_1 = (step_length - length_pelvis * psi_t_sin) / (2 * length_leg);
                 theta = asin(tmp_1);
-                phi_a = lean_angle; // lean angle
+                phi_a = lean_angle*PI/180; // lean angle
                 phi_p = -phi_a;
             }
             
@@ -723,7 +738,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     // delta_orientation == 0: straight walk
 
     // ThoChat: We need to change the naming of all these parameters
-    double delta_orientation = 0.0, support_foot_orientation = PI/2, k = 0.0, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height, lean_angle = 2*PI/180.0, min_d = 0;
+    double delta_orientation = 0.0, support_foot_orientation = PI/2, k = 0.0, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height, lean_angle = 2, min_d = 0;
     // rotation_index = 1: walk with rotation; rotation_index = 0: walk without rotationb (turning)
     int rotation_index = 0;
     double step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
@@ -811,7 +826,9 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
                 lean_angle  =  2 * lean_angle - 2 * tmp * lean_angle;
             }
         }
-        
+        printf("tmp: %f\n", tmp);
+        printf("lean_angle: %f\n", lean_angle);
+
         //stepping_foot_index: -1 == left foot support, 1 == right foot support
 
         if (model.stepping_foot_index == -1) {
