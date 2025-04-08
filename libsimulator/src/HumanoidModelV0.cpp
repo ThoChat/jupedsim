@@ -32,8 +32,18 @@ namespace {
     // Body parameters used in "Development and experimental validation of a humanoid pedestrian model that captures stepping behavior and body rotation"
     // i.e., leg length, trunk height, shoulder width, etc.
     constexpr std::array<double, 12> ANATOMY = {
-        0.0451, 0.2522, 0.2269, 0.2/1.7, 0.1396, 0.45/1.7, 0.3495, 0.1470/2,
-        0.1470/4, 0.1470*8/50, 0.1470*8/50, 0.25/1.7
+        0.0451, 
+        0.2522, 
+        0.2269, 
+        0.2/1.7, 
+        0.1396, 
+        0.45/1.7, 
+        0.3495, 
+        0.1470/2,
+        0.1470/4, 
+        0.1470*8/50, 
+        0.1470*8/50, 
+        0.25/1.7
     };
 
     // // feet position

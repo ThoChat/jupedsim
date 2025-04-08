@@ -8,7 +8,6 @@
 #include "OperationalModel.hpp"
 #include "UniqueID.hpp"
 
-#include <numbers>
 
 struct GenericAgent;
 
@@ -93,8 +92,8 @@ private:
 
     // ### Constants ###
 
-    // Use std::numbers::pi for mathematical constant π
-    static constexpr double PI = std::numbers::pi;
+    // Mathematical constant π
+    static constexpr double PI = 3.14159265358979323846;
     
     // # Anthropometric scaling factors #
     /* The following parameters are multiplyed by agents height (HumanoidModelV0Data.height) 
