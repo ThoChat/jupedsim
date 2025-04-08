@@ -56,7 +56,7 @@ namespace {
     
     // matrix(size:4*4) * matrix(size:4*4)
     std::array<std::array<double, 4>, 4> MatMul4x4(const std::array<std::array<double, 4>, 4>& mat1, const std::array<std::array<double, 4>, 4>& mat2) {
-        std::array<std::array<double, 4>, 4> result = {0};
+        std::array<std::array<double, 4>, 4> result = {};
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
                 for (int k = 0; k < 4; ++k) {
@@ -744,7 +744,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     // delta_orientation == 0: straight walk
 
     // ThoChat: We need to change the naming of all these parameters
-    double delta_orientation = 0.0, support_foot_orientation = PI/2, k = 0.0, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height, lean_angle = 2, min_d = 0;
+    double delta_orientation = 0.0, support_foot_orientation = PI/2, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height;
     // rotation_index = 1: walk with rotation; rotation_index = 0: walk without rotationb (turning)
     int rotation_index = 0;
     double step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
@@ -801,7 +801,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     } 
     else {
         
-        double sl_p, lean_angle, sw_p, sw_sh_p, R_p;
+        double sl_p, lean_angle = 2 ;
         update.step_timer = model.step_timer;
         update.stepping_foot_index = model.stepping_foot_index;
         double tmp = 1 - update.step_timer/step_duration;
