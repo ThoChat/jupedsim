@@ -13,6 +13,7 @@
 #include <Logger.hpp>
 #include <iostream>
 #include <stdexcept>
+#include <cmath>
 #include <Eigen/Dense>
 
 HumanoidModelV0::HumanoidModelV0(double bodyForce_, double friction_)
@@ -28,7 +29,16 @@ std::unique_ptr<OperationalModel> HumanoidModelV0::Clone() const
     return std::make_unique<HumanoidModelV0>(*this);
 }
 
+
 namespace {
+
+    // Mathematical constant π      
+    // #ifndef PI
+    // #define PI 3.14159
+    // #endif
+   
+
+    
     // Body parameters used in "Development and experimental validation of a humanoid pedestrian model that captures stepping behavior and body rotation"
     // i.e., leg length, trunk height, shoulder width, etc.
     constexpr std::array<double, 12> ANATOMY = {
@@ -168,9 +178,7 @@ namespace {
         const std::array<double, 12>& link, int stepping_foot_index, const std::array<double, 3>& support_foot_position, double support_foot_orientation,
         const std::array<double, 6>& th, const std::array<double, 5>& phi, const std::array<double, 3>& Psi) {
         
-        #ifndef PI
-        #define PI 3.14159
-        #endif
+        
 
         // Joint angles
         double th1 = th[0], th3 = th[2], th4 = th[3], th6 = th[5];
@@ -202,19 +210,20 @@ namespace {
         std::array<double, 4> O0_0w = MatMul(W, O);
         for (int i = 0; i < 4; ++i) O0_0w[i] += heel_support[i];
     
-        auto B1 = DHMat(phi1 + PI / 2, 0, 0, PI / 2);
+
+        auto B1 = DHMat(phi1 + M_PI / 2, 0, 0, M_PI / 2);
         auto T1_0 = B1;
         auto O1_0 = MatMul(T1_0, O);
         auto O1_0w = MatMul(W, O1_0);
         for (int i = 0; i < 4; ++i) O1_0w[i] += heel_support[i];
    
-        auto B2 = DHMat(-th1 + PI / 2, 0, length_shin + length_thigh, 0);
+        auto B2 = DHMat(-th1 + M_PI / 2, 0, length_shin + length_thigh, 0);
         auto T2_0 = MatMul4x4(T1_0, B2);
         auto O2_0 = MatMul(T2_0, O);
         auto O2_0w = MatMul(W, O2_0);
         for (int i = 0; i < 4; ++i) O2_0w[i] += heel_support[i];
     
-        auto B3 = DHMat(-th3, 0, 0, -PI / 2);
+        auto B3 = DHMat(-th3, 0, 0, -M_PI / 2);
         auto T3_0 = MatMul4x4(T2_0, B3);
         auto O3_0 = MatMul(T3_0, O);
         auto O3_0w = MatMul(W, O3_0);
@@ -237,7 +246,7 @@ namespace {
         if (stepping_foot_index == -1) {
             B5 = DHMat(Psi1, 0, length_pelvis, 0);
         } else if (stepping_foot_index == 1) {
-            B5 = DHMat(Psi1 + PI, 0, length_pelvis, 0);
+            B5 = DHMat(Psi1 + M_PI, 0, length_pelvis, 0);
         }
         auto T5_0 = MatMul4x4(T4_0, B5);
         auto O5_0 = MatMul(T5_0, O);
@@ -247,7 +256,7 @@ namespace {
         std::array<std::array<double, 4>, 4> B6;
         std::array<std::array<double, 4>, 4> T6_0;
         if (stepping_foot_index == -1) {
-            B6 = DHMat(Psi2, 0, 0, -PI / 2);
+            B6 = DHMat(Psi2, 0, 0, -M_PI / 2);
             std::array<std::array<double, 4>, 4> transMat = {{
                 {1, 0, 0, 0},
                 {0, 1, 0, 0},
@@ -256,7 +265,7 @@ namespace {
             }};
             T6_0 = MatMul4x4(MatMul4x4(T5_0, B6), transMat);
         } else if (stepping_foot_index == 1) {
-            B6 = DHMat(Psi2, 0, 0, PI / 2);
+            B6 = DHMat(Psi2, 0, 0, M_PI / 2);
             std::array<std::array<double, 4>, 4> transMat = {{
                 {1, 0, 0, 0},
                 {0, 1, 0, 0},
@@ -269,19 +278,19 @@ namespace {
         auto O6_0w = MatMul(W, O6_0);
         for (int i = 0; i < 4; ++i) O6_0w[i] += heel_support[i];
 
-        auto B7 = DHMat(phi3, 0, 0, -PI / 2);
+        auto B7 = DHMat(phi3, 0, 0, -M_PI / 2);
         auto T7_0 = MatMul4x4(T6_0, B7);
         auto O7_0 = MatMul(T7_0, O);
         auto O7_0w = MatMul(W, O7_0);
         for (int i = 0; i < 4; ++i) O7_0w[i] += heel_support[i];
 
-        auto B8 = DHMat(-th4 + PI, 0, length_shin + length_thigh, 0);
+        auto B8 = DHMat(-th4 + M_PI, 0, length_shin + length_thigh, 0);
         auto T8_0 = MatMul4x4(T7_0, B8);
         auto O8_0 = MatMul(T8_0, O);
         auto O8_0w = MatMul(W, O8_0);
         for (int i = 0; i < 4; ++i) O8_0w[i] += heel_support[i];
 
-        auto B9 = DHMat(-th6, 0, 0, PI / 2);
+        auto B9 = DHMat(-th6, 0, 0, M_PI / 2);
         auto T9_0 = MatMul4x4(T8_0, B9);
         auto O9_0 = MatMul(T9_0, O);
         auto O9_0w = MatMul(W, O9_0);
@@ -533,7 +542,7 @@ namespace {
 
     // // Deg to rad
     // double deg2rad(double deg) {
-    //     return deg * PI / 180.0;
+    //     return deg * M_PI / 180.0;
     // }
 
 
@@ -573,8 +582,8 @@ namespace {
                 double tmp_1 = step_length / (2 * length_leg);
                 theta = asin(tmp_1);
                 double tmp_2 = (length_pelvis - step_width) / (2 * length_leg);
-                phi_a = asin(tmp_2 + lean_angle*PI/180);
-                phi_p = -lean_angle*PI/180;
+                phi_a = asin(tmp_2 + lean_angle*M_PI/180);
+                phi_p = -lean_angle*M_PI/180;
             } else {
                 psi_t = rotation_index * acos(step_width / length_pelvis); 
         
@@ -582,22 +591,22 @@ namespace {
                 double psi_t_sin = sqrt(1 - pow(step_width / length_pelvis, 2));
                 double tmp_1 = (step_length - length_pelvis * psi_t_sin) / (2 * length_leg);
                 theta = asin(tmp_1);
-                phi_a = lean_angle*PI/180; // lean angle
+                phi_a = lean_angle*M_PI/180; // lean angle
                 phi_p = -phi_a;
             }
             
             support_foot_orientation += delta_orientation; // support_foot_orientation in Fig.2(b) in Shang et al. 2025, indicating the target direction
-            double th1 = PI / 2 - theta;
+            double th1 = M_PI / 2 - theta;
             double th3 = theta;
-            double th4 = PI + theta;
+            double th4 = M_PI + theta;
             double th6 = -theta;
             std::array<double, 6> th = {th1, 0, th3, th4, 0, th6};
         
             std::array<double, 5> phi;
             if (stepping_foot_index == -1) {
-                phi = {-phi_a, (phi_a + phi_p), (PI / 2 + phi_a + phi_p), (-phi_a - phi_p), -phi_a};
+                phi = {-phi_a, (phi_a + phi_p), (M_PI / 2 + phi_a + phi_p), (-phi_a - phi_p), -phi_a};
             } else if (stepping_foot_index == 1) {
-                phi = {phi_a, (-phi_a - phi_p), (-PI / 2 - phi_a - phi_p), (phi_a + phi_p), phi_a};
+                phi = {phi_a, (-phi_a - phi_p), (-M_PI / 2 - phi_a - phi_p), (phi_a + phi_p), phi_a};
             }
         
             std::array<double, 3> Psi = {psi_t + delta_orientation, -psi_t, psi_s};
@@ -662,17 +671,17 @@ namespace {
             support_foot_orientation += delta_orientation; // support_foot_orientation in Fig.2(b) in Shang et al. 2025, indicating the target direction
 
 
-            double th1 = PI / 2 - theta;
+            double th1 = M_PI / 2 - theta;
             double th3 = theta;
-            double th4 = PI + theta;
+            double th4 = M_PI + theta;
             double th6 = -theta;
             std::array<double, 6> th = {th1, 0, th3, th4, 0, th6};
         
             std::array<double, 5> phi;
             if (stepping_foot_index == -1) {
-                phi = {-phi_a, (phi_a + phi_p), (PI / 2 + phi_a + phi_p), (-phi_a - phi_p), -phi_a};
+                phi = {-phi_a, (phi_a + phi_p), (M_PI / 2 + phi_a + phi_p), (-phi_a - phi_p), -phi_a};
             } else if (stepping_foot_index == 1) {
-                phi = {phi_a, (-phi_a - phi_p), (-PI / 2 - phi_a - phi_p), (phi_a + phi_p), phi_a};
+                phi = {phi_a, (-phi_a - phi_p), (-M_PI / 2 - phi_a - phi_p), (phi_a + phi_p), phi_a};
             }
         
             std::array<double, 3> Psi = {psi_t + delta_orientation, -psi_t, psi_s};
@@ -754,7 +763,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     // delta_orientation == 0: straight walk
 
     // ThoChat: We need to change the naming of all these parameters
-    double delta_orientation = 0.0, support_foot_orientation = PI/2, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height;
+    double delta_orientation = 0.0, support_foot_orientation = M_PI/2, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height;
     // rotation_index = 1: walk with rotation; rotation_index = 0: walk without rotationb (turning)
     int rotation_index = 0;
     double step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
