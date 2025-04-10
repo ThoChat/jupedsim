@@ -31,29 +31,22 @@ std::unique_ptr<OperationalModel> HumanoidModelV0::Clone() const
 
 
 namespace {
-
-    // Mathematical constant π      
-    // #ifndef PI
-    // #define PI 3.14159
-    // #endif
-   
-
     
     // Body parameters used in "Development and experimental validation of a humanoid pedestrian model that captures stepping behavior and body rotation"
     // i.e., leg length, trunk height, shoulder width, etc.
     constexpr std::array<double, 12> ANATOMY = {
-        0.0451, 
-        0.2522, 
-        0.2269, 
-        0.2/1.7, 
-        0.1396, 
-        0.45/1.7, 
-        0.3495, 
-        0.1470/2,
-        0.1470/4, 
-        0.1470*8/50, 
-        0.1470*8/50, 
-        0.25/1.7
+        0.0451, // ankle
+        0.2522, // shank
+        0.2269, // thigh
+        0.2/1.7, // pelvis width
+        0.1396, // neck
+        0.45/1.7, // shoulder width
+        0.3495, // trunk
+        0.1470/2, //length_foot_forward
+        0.1470/4, //length_foot_forward
+        0.1470*8/50, // foot inner width
+        0.1470*8/50, // foot outer width
+        0.25/1.7 // l_r, renamed into trunk width
     };
 
     // // feet position
@@ -103,7 +96,12 @@ namespace {
 
     // Input: feet_position: the position of the feet, [x_swing, y_swing, 0, x_support, y_support, 0];
     //        support_foot_orientation: the orientation of the support foot;
-    std::array<double, 6> FuncFootDH(const std::array<double, 12>& link, double support_foot_orientation, const std::array<double, 6>& feet_position) {
+    std::array<double, 6> FuncFootDH(
+        const std::array<double, 12>& link, 
+        double support_foot_orientation, 
+        const std::array<double, 
+        6>& feet_position) {
+
         double length_ankle = link[0];
         std::array<double, 4> heel_support = {feet_position[0], feet_position[1], feet_position[2], 1.0};
 
@@ -175,8 +173,13 @@ namespace {
     };
 
     std::pair<std::array<double, 6>, P> FuncMotion(
-        const std::array<double, 12>& link, int stepping_foot_index, const std::array<double, 3>& support_foot_position, double support_foot_orientation,
-        const std::array<double, 6>& th, const std::array<double, 5>& phi, const std::array<double, 3>& Psi) {
+        const std::array<double, 12>& link, 
+        int stepping_foot_index, 
+        const std::array<double, 3>& support_foot_position, 
+        double support_foot_orientation,
+        const std::array<double, 6>& th, 
+        const std::array<double, 5>& phi, 
+        const std::array<double, 3>& Psi) {
         
         
 
@@ -186,9 +189,6 @@ namespace {
         double Psi1 = Psi[0], Psi2 = Psi[1], Psi3 = Psi[2];
     
         // Body parameters
-        // ThoChat: what are l1 to l8? Are they the name of the length in the paper?
-        // but they seems to be repeating the same values as the other lengths (i.e.,l_hd, l_sh, l_tr..)
-        // Maybe I don't understan what the other lengths are?
         double length_ankle = link[0], length_shin = link[1], length_thigh = link[2], length_pelvis = link[3];
         double length_neck = link[4], length_shoulder = link[5];
         double length_trunk = link[6], length_foot_forward = link[7], length_foot_backward = link[8], length_foot_inner = link[9], length_foot_outer = link[10], l_r = link[11];
