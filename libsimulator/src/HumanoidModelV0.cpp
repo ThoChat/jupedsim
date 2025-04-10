@@ -57,6 +57,19 @@ namespace {
     //     Point position;
     // };
 
+    /*** Matrix opperators using Eigen ***/
+    // Denavit-Hartenberg (DH) convention
+    // Eigen::Matrix4d Denavit_Hartenberg_Matrix(double theta, double d, double a, double alpha) {
+    //     Eigen::Matrix4d mat;
+    //     mat << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha), a*cos(theta),
+    //             sin(theta), cos(theta)*cos(alpha), -cos(theta)*sin(alpha), a*sin(theta),
+    //             0, sin(alpha), cos(alpha), d,
+    //             0, 0, 0, 1;
+    //     return mat;
+    // }
+
+
+
     // Denavit-Hartenberg (DH) convention
     std::array<std::array<double, 4>, 4> DHMat(double theta, double d, double a, double alpha) {
         return {{
@@ -66,6 +79,8 @@ namespace {
             {0, 0, 0, 1}
         }};
     }
+
+
     
     // matrix(size:4*4) * matrix(size:4*4)
     std::array<std::array<double, 4>, 4> MatMul4x4(const std::array<std::array<double, 4>, 4>& mat1, const std::array<std::array<double, 4>, 4>& mat2) {
@@ -103,21 +118,17 @@ namespace {
         6>& feet_position) {
 
         double length_ankle = link[0];
-        std::array<double, 4> heel_support = {feet_position[0], feet_position[1], feet_position[2], 1.0};
-
-        std::array<std::array<double, 4>, 4> W = {{
-            {-sin(support_foot_orientation), 0, cos(support_foot_orientation), 0},
-            {cos(support_foot_orientation), 0, sin(support_foot_orientation), 0},
-            {0, 1, 0, length_ankle},
-            {0, 0, 0, 1}
-        }};
-
-        std::array<double, 4> O = {0, 0, 0, 1};
-        std::array<double, 4> O0_0 = O;
-        std::array<double, 4> O0_0w = MatMul(W, O0_0);
-        for (int i = 0; i < 4; ++i) O0_0w[i] += heel_support[i];
-
+        Eigen::Vector4d heel_support = {feet_position[0], feet_position[1], feet_position[2], 1.0};;
+        Eigen::Matrix4d W_eigen ;
+        W_eigen << -sin(support_foot_orientation), 0, cos(support_foot_orientation), 0,
+                    cos(support_foot_orientation), 0, sin(support_foot_orientation), 0,
+                    0, 1, 0, length_ankle,
+                    0, 0, 0, 1;
+        Eigen::Vector4d O0_0 = {0, 0, 0, 1}; 
+        Eigen::Vector4d O0_0w = W_eigen * O0_0;
+        O0_0w = O0_0w + heel_support;
         return {feet_position[3], feet_position[4], 0, O0_0w[0], O0_0w[1], 0};
+
     }
 
     // This function is used to calculate the position of the joints;
@@ -851,8 +862,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
                 lean_angle  =  2 * lean_angle - 2 * tmp * lean_angle;
             }
         }
-        printf("tmp: %f\n", tmp);
-        printf("lean_angle: %f\n", lean_angle);
+
 
         //stepping_foot_index: -1 == left foot support, 1 == right foot support
 
@@ -878,7 +888,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         update.head_position.x = output_position.head[0];
         update.head_position.y = output_position.head[1];
         // update.head_position.z = output_position.head[2];
-        printf("output_position: %f, %f, %f\n", output_position.head[0], output_position.head[1], output_position.center_of_mass[0]);
+        // printf("output_position: %f, %f, %f\n", output_position.head[0], output_position.head[1], output_position.center_of_mass[0]);
         // printf("head_x: %f, head_y: %f\n", update.head_position.x, update.head_position.y);
         //stepping_foot_index: -1 == left foot support, 1 == right foot support
         if (model.stepping_foot_index == -1) {
