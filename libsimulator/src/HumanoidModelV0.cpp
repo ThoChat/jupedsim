@@ -56,7 +56,9 @@ namespace {
     //     std::array<double, 6> feet_position;
     //     Point position;
     // };
-
+    #ifndef M_PI
+    #define M_PI 3.14159265358979323846
+    #endif
     /*** Matrix opperators using Eigen ***/
     // Denavit-Hartenberg (DH) convention
     Eigen::Matrix4d Denavit_Hartenberg_Matrix(double theta, double d, double a, double alpha) {
