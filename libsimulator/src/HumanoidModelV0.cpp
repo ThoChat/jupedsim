@@ -79,7 +79,7 @@ namespace {
     // Input: feet_position: the position of the feet, [x_swing, y_swing, 0, x_support, y_support, 0];
     //        support_foot_orientation: the orientation of the support foot;
     std::array<double, 6> FuncFootDH(
-        const std::array<double, 12>& link, 
+        Eigen:: VectorXd link, 
         double support_foot_orientation, 
         const std::array<double, 
         6>& feet_position) {
@@ -151,20 +151,23 @@ namespace {
     };
 
     std::pair<std::array<double, 6>, P> FuncMotion(
-        const std::array<double, 12>& link, 
+        Eigen:: VectorXd link, 
         int stepping_foot_index, 
-        const std::array<double, 3>& support_foot_position, 
+        Eigen:: Vector3d support_foot_position_eigen, 
         double support_foot_orientation,
-        const std::array<double, 6>& th, 
-        const std::array<double, 5>& phi, 
-        const std::array<double, 3>& Psi) {
+        // const std::array<double, 6>& th, 
+        // const std::array<double, 5>& phi, 
+        // const std::array<double, 3>& Psi
+        Eigen::VectorXd theta_eigen,
+        Eigen::VectorXd phi_eigen, 
+        Eigen::Vector3d Psi_eigen) {
         
         
 
         // Joint angles
-        double th1 = th[0], th3 = th[2], th4 = th[3], th6 = th[5];
-        double phi1 = phi[0], phi2 = phi[1], phi3 = phi[2], phi4 = phi[3];
-        double Psi1 = Psi[0], Psi2 = Psi[1], Psi3 = Psi[2];
+        double th1 = theta_eigen[0], th3 = theta_eigen[2], th4 = theta_eigen[3], th6 = theta_eigen[5];
+        double phi1 = phi_eigen[0], phi2 = phi_eigen[1], phi3 = phi_eigen[2], phi4 = phi_eigen[3];
+        double Psi1 = Psi_eigen[0], Psi2 = Psi_eigen[1], Psi3 = Psi_eigen[2];
     
         // Body parameters
         double length_ankle = link[0], length_shank = link[1], length_thigh = link[2], length_pelvis = link[3];
@@ -174,7 +177,7 @@ namespace {
         //## Rewriting fuction using Eigen ##
 
         // support_foot_orientation
-        Eigen::Vector4d heel_support_eigen = {support_foot_position[0], support_foot_position[1], support_foot_position[2], 1.0};
+        Eigen::Vector4d heel_support_eigen = {support_foot_position_eigen[0], support_foot_position_eigen[1], support_foot_position_eigen[2], 1.0};
         Eigen::Matrix4d W_eigen ;
         W_eigen <<      -sin(support_foot_orientation), 0, cos(support_foot_orientation), 0,
                         cos(support_foot_orientation), 0, sin(support_foot_orientation), 0,
@@ -510,14 +513,14 @@ namespace {
         int rotation_index){
 
 
-            std::vector<double> link(12);
+            Eigen::VectorXd link_eigen(12);
             for (int i = 0; i < 12; ++i) {
-                link[i] = ANATOMY[i] * Height;
+                link_eigen[i] = ANATOMY[i] * Height;
             }
 
-            double length_leg = link[1] + link[2]; // leg length
-            double length_pelvis = link[3];           // pelvis length
-            double length_shoulder = link[5];         // shoulder length
+            double length_leg = link_eigen[1] + link_eigen[2]; // leg length
+            double length_pelvis = link_eigen[3];           // pelvis length
+            double length_shoulder = link_eigen[5];         // shoulder length
 
             double psi_t, psi_s, theta, phi_a, phi_p;
 
@@ -548,24 +551,28 @@ namespace {
             double th3 = theta;
             double th4 = M_PI + theta;
             double th6 = -theta;
-            std::array<double, 6> th = {th1, 0, th3, th4, 0, th6};
-        
-            std::array<double, 5> phi;
+
+            
+            Eigen::VectorXd theta_eigen(6);
+            theta_eigen << th1, 0, th3, th4, 0, th6; 
+    
+
+            Eigen::VectorXd phi_eigen(5);
             if (stepping_foot_index == -1) {
-                phi = {-phi_a, (phi_a + phi_p), (M_PI / 2 + phi_a + phi_p), (-phi_a - phi_p), -phi_a};
+                phi_eigen << -phi_a, (phi_a + phi_p), (M_PI / 2 + phi_a + phi_p), (-phi_a - phi_p), -phi_a;
             } else if (stepping_foot_index == 1) {
-                phi = {phi_a, (-phi_a - phi_p), (-M_PI / 2 - phi_a - phi_p), (phi_a + phi_p), phi_a};
+                phi_eigen << phi_a, (-phi_a - phi_p), (-M_PI / 2 - phi_a - phi_p), (phi_a + phi_p), phi_a;
             }
         
-            std::array<double, 3> Psi = {psi_t + delta_orientation, -psi_t, psi_s};
-        
-            std::vector<double> v(feet_position.begin(), feet_position.end());
 
-            std::array<double, 3> support_foot_position = {v[3], v[4], v[5]};
-            std::array<double, 12> link_array;
-            std::copy(link.begin(), link.end(), link_array.begin());
+            Eigen::Vector3d Psi_eigen = {psi_t + delta_orientation, -psi_t, psi_s};
+            // std::vector<double> v(feet_position.begin(), feet_position.end());
 
-            return FuncMotion(link_array, stepping_foot_index, support_foot_position, support_foot_orientation, th, phi, Psi);
+            Eigen::Vector3d support_foot_position_eigen = {feet_position[3], feet_position[4], feet_position[5]};
+            // std::array<double, 12> link_array;
+            // std::copy(link.begin(), link.end(), link_array.begin());
+
+            return FuncMotion(link_eigen, stepping_foot_index, support_foot_position_eigen, support_foot_orientation, theta_eigen, phi_eigen, Psi_eigen);
 
         }
 
@@ -583,14 +590,14 @@ namespace {
         double Height, 
         int rotation_index){
 
-            std::vector<double> link(12);
+            Eigen::VectorXd link_eigen(12);
             for (int i = 0; i < 12; ++i) {
-                link[i] = ANATOMY[i] * Height;
+                link_eigen[i] = ANATOMY[i] * Height;
             }
 
-            double length_leg = link[1] + link[2]; // leg length
-            double length_pelvis = link[3];           // pelvis length
-            double length_shoulder = link[5];         // shoulder length
+            double length_leg = link_eigen[1] + link_eigen[2]; // leg length
+            double length_pelvis = link_eigen[3];           // pelvis length
+            double length_shoulder = link_eigen[5];         // shoulder length
 
             double psi_t, psi_s, theta, phi_a, phi_p;
 
@@ -623,23 +630,24 @@ namespace {
             double th3 = theta;
             double th4 = M_PI + theta;
             double th6 = -theta;
-            std::array<double, 6> th = {th1, 0, th3, th4, 0, th6};
+
+            Eigen::VectorXd theta_eigen(6);
+            theta_eigen << th1, 0, th3, th4, 0, th6; 
         
-            std::array<double, 5> phi;
+            Eigen::VectorXd phi_eigen(5);
             if (stepping_foot_index == -1) {
-                phi = {-phi_a, (phi_a + phi_p), (M_PI / 2 + phi_a + phi_p), (-phi_a - phi_p), -phi_a};
+                phi_eigen << -phi_a, (phi_a + phi_p), (M_PI / 2 + phi_a + phi_p), (-phi_a - phi_p), -phi_a;
             } else if (stepping_foot_index == 1) {
-                phi = {phi_a, (-phi_a - phi_p), (-M_PI / 2 - phi_a - phi_p), (phi_a + phi_p), phi_a};
+                phi_eigen << phi_a, (-phi_a - phi_p), (-M_PI / 2 - phi_a - phi_p), (phi_a + phi_p), phi_a;
             }
         
-            std::array<double, 3> Psi = {psi_t + delta_orientation, -psi_t, psi_s};
+            Eigen:: Vector3d Psi_eigen = {psi_t + delta_orientation, -psi_t, psi_s};
         
-            std::vector<double> v(feet_position.begin(), feet_position.end());
+            // std::vector<double> v(feet_position.begin(), feet_position.end());
 
-            std::array<double, 3> sp = {v[3], v[4], v[5]};
-            std::array<double, 12> link_array;
-            std::copy(link.begin(), link.end(), link_array.begin());
-            auto funcMotionResult = FuncMotion(link_array, stepping_foot_index, sp, support_foot_orientation, th, phi, Psi);
+            Eigen:: Vector3d support_foot_position_eigen = {feet_position[3], feet_position[4], feet_position[5]};
+    
+            auto funcMotionResult = FuncMotion(link_eigen, stepping_foot_index, support_foot_position_eigen, support_foot_orientation, theta_eigen, phi_eigen, Psi_eigen);
             auto motionResult = funcMotionResult.first; 
             auto position = funcMotionResult.second;
 
@@ -656,7 +664,7 @@ namespace {
             std::array<double, 6> feet_pos;
             std::copy_n(motionResult.begin(), 6, feet_pos.begin());
 
-            auto final_res = FuncFootDH(link_array, support_foot_orientation, feet_pos);
+            auto final_res = FuncFootDH(link_eigen, support_foot_orientation, feet_pos);
         
            
 
