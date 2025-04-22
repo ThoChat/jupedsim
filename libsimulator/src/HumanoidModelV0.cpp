@@ -719,15 +719,22 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     Point orientation = update.velocity.Normalized();
     Point normal_to_orientation = orientation.Rotate90Deg();
     const double max_step_lenght = model.height/2.5;
-    // delta_orientation == 0: straight walk
+    
+    double delta_orientation = 0.0;
+    double support_foot_orientation = M_PI/2;
+    double step_width = 0.2;
+    double width_shoulder_rotation = 0.45;
+    double step_length = max_step_lenght;
+    double H = model.height;
 
-    // ThoChat: We need to change the naming of all these parameters
-    double delta_orientation = 0.0, support_foot_orientation = M_PI/2, step_width = 0.2, width_shoulder_rotation = 0.45, step_length = max_step_lenght, H = model.height;
-    // rotation_index = 1: walk with rotation; rotation_index = 0: walk without rotationb (turning)
+    // rotation_index = 1: walk with rotation; 
+    // rotation_index = 0: walk without rotation (turning)
+    // delta_orientation == 0: straight walk
     int rotation_index = 0;
     double step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
         
-    std::array<double, 6> feet_position = {model.heel_right_position.x, model.heel_right_position.y, 0.0, model.heel_left_position.x, model.heel_left_position.y, 0.0};
+    std::array<double, 6> feet_position ;
+
 
     // Steps computation
     if (model.step_timer == 0) {
@@ -755,8 +762,8 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
         auto [output_stepping_foot_index, output_foot_position, output_support_foot_orientation, output_position] = GaitDoubleSupports(model.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, step_length, feet_position, H, rotation_index);
         
-        support_foot_orientation = output_support_foot_orientation;
 
+        support_foot_orientation = output_support_foot_orientation;
         update.stepping_foot_index = output_stepping_foot_index;
         update.position.x = output_position.center_of_mass[0];
         update.position.y = output_position.center_of_mass[1];
@@ -780,13 +787,12 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     else {
         
         double sl_p, lean_angle = 2 ;
-        update.step_timer = model.step_timer;
         update.stepping_foot_index = model.stepping_foot_index;
-        double tmp = 1 - update.step_timer/step_duration;
+        double tmp = 1 - model.step_timer/step_duration; 
 
         // rotation_index = 1: walk with rotation; rotation_index = 0: walk without rotationb (turning)
         if (rotation_index != 0) {
-            if (update.step_timer > step_duration/2) {
+            if (model.step_timer > step_duration/2) {
 
                 sl_p = 2 * std::pow(tmp, 2) * (max_step_lenght + max_step_lenght) - max_step_lenght;
                 lean_angle  =  2 * tmp * lean_angle;
@@ -799,7 +805,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         } 
         else
         {
-            if (update.step_timer > step_duration/2) {
+            if (model.step_timer > step_duration/2) {
 
                 sl_p = 2 * std::pow(tmp, 2) * (max_step_lenght + max_step_lenght) - max_step_lenght;
                 lean_angle  =  2 * tmp * lean_angle;
