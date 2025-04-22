@@ -56,9 +56,12 @@ namespace {
     //     std::array<double, 6> feet_position;
     //     Point position;
     // };
-    #ifndef M_PI
-    #define M_PI 3.14159265358979323846
-    #endif
+    // #ifndef M_PI
+    // #define M_PI 3.14159265358979323846
+    // #endif
+
+
+
     /*** Matrix opperators using Eigen ***/
     // Denavit-Hartenberg (DH) convention
     Eigen::Matrix4d Denavit_Hartenberg_Matrix(double theta, double d, double a, double alpha) {
@@ -500,7 +503,7 @@ namespace {
     // This function is used to calculate the joint rotaion angles using the gait parameters like step length (step_length), step width (step_width), etc.
     // and then pass them to the function of FuncMotion to calculate the position of the joints
     // This function is utilized in the SINGLE support phase, which does not involve the switching of the support foot and swing foot
-    std::pair<std::array<double, 6>, P> GaitSS(
+    std::pair<std::array<double, 6>, P> GaitSingleSupport(
         int stepping_foot_index, 
         double delta_orientation, 
         double support_foot_orientation, 
@@ -579,7 +582,7 @@ namespace {
     // This function is used to calculate the joint rotaion angles using the gait parameters like step length (step_length), step width (step_width), etc.
     // and then pass them to the function of FuncMotion to calculate the position of the joints
     // This function is utilized in the DOUBLE support phase, which involves the switching of the support foot and swing foot
-    std::tuple<int, std::array<double, 6>, double, P> GaitDS(
+    std::tuple<int, std::array<double, 6>, double, P> GaitDoubleSupports(
         int stepping_foot_index,
         double delta_orientation, 
         double support_foot_orientation, 
@@ -750,7 +753,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
             feet_position[5] = 0;
         }
 
-        auto [output_stepping_foot_index, output_foot_position, output_support_foot_orientation, output_position] = GaitDS(model.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, step_length, feet_position, H, rotation_index);
+        auto [output_stepping_foot_index, output_foot_position, output_support_foot_orientation, output_position] = GaitDoubleSupports(model.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, step_length, feet_position, H, rotation_index);
         
         support_foot_orientation = output_support_foot_orientation;
 
@@ -826,7 +829,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
             feet_position[4] = model.heel_right_position.y;
             feet_position[5] = 0;
         }
-        auto [output_foot_position, output_position] = GaitSS(update.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, sl_p, feet_position, H, lean_angle, rotation_index);
+        auto [output_foot_position, output_position] = GaitSingleSupport(update.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, sl_p, feet_position, H, lean_angle, rotation_index);
    
         update.position.x = output_position.center_of_mass[0];
         update.position.y = output_position.center_of_mass[1];
