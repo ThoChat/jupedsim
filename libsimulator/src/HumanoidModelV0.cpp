@@ -34,20 +34,20 @@ namespace {
     
     // Body parameters used in "Development and experimental validation of a humanoid pedestrian model that captures stepping behavior and body rotation"
     // i.e., leg length, trunk height, shoulder width, etc.
-    constexpr std::array<double, 12> ANATOMY = {
-        0.0451, // ankle
-        0.2522, // shank
-        0.2269, // thigh
-        0.2/1.7, // pelvis width
-        0.1396, // neck
-        0.45/1.7, // shoulder width
-        0.3495, // trunk
-        0.1470/2, //length_foot_forward
-        0.1470/4, //length_foot_forward
-        0.1470*8/50, // foot inner width
-        0.1470*8/50, // foot outer width
-        0.25/1.7 // l_r, renamed into trunk width
-    };
+    // constexpr std::array<double, 12> ANATOMY = {
+    //     0.0451, // ankle
+    //     0.2522, // shank
+    //     0.2269, // thigh
+    //     0.2/1.7, // pelvis width
+    //     0.1396, // neck
+    //     0.45/1.7, // shoulder width
+    //     0.3495, // trunk
+    //     0.1470/2, //foot_forward_length
+    //     0.1470/4, //foot_forward_length
+    //     0.1470*8/50, // foot inner width
+    //     0.1470*8/50, // foot outer width
+    //     0.25/1.7 // l_r, renamed into trunk width
+    // };
 
     // // feet position
     // // feet_position[0:2] = [x, y, z]: position of the swing foot, feet_position[3:5] = [x, y, z]: position of the support foot
@@ -82,17 +82,16 @@ namespace {
     // Input: feet_position: the position of the feet, [x_swing, y_swing, 0, x_support, y_support, 0];
     //        support_foot_orientation: the orientation of the support foot;
     std::array<double, 6> FuncFootDH(
-        Eigen:: VectorXd link, 
+        double ankle_length, 
         double support_foot_orientation, 
         const std::array<double, 
         6>& feet_position) {
 
-        double length_ankle = link[0];
         Eigen::Vector4d heel_support = {feet_position[0], feet_position[1], feet_position[2], 1.0};
         Eigen::Matrix4d W ;
         W <<    -sin(support_foot_orientation), 0, cos(support_foot_orientation), 0,
                 cos(support_foot_orientation), 0, sin(support_foot_orientation), 0,
-                0, 1, 0, length_ankle,
+                0, 1, 0, ankle_length,
                 0, 0, 0, 1;
         Eigen::Vector4d O0_0 = {0, 0, 0, 1}; 
         Eigen::Vector4d O0_0w = W * O0_0;
@@ -154,13 +153,23 @@ namespace {
     };
 
     std::pair<std::array<double, 6>, P> FuncMotion(
-        Eigen:: VectorXd link, 
+        
+        double ankle_length,
+        double leg_length ,
+        double pelvis_length ,
+        double neck_length ,
+        double shoulder_length ,
+        double trunk_length ,
+        double trunk_width ,
+        double foot_forward_length ,
+        double foot_backward_length ,
+        double foot_inner_length ,
+        double foot_outer_length ,
+        
+
         int stepping_foot_index, 
         Eigen:: Vector3d support_foot_position_eigen, 
         double support_foot_orientation,
-        // const std::array<double, 6>& th, 
-        // const std::array<double, 5>& phi, 
-        // const std::array<double, 3>& Psi
         Eigen::VectorXd theta_eigen,
         Eigen::VectorXd phi_eigen, 
         Eigen::Vector3d Psi_eigen) {
@@ -172,10 +181,7 @@ namespace {
         double phi1 = phi_eigen[0], phi2 = phi_eigen[1], phi3 = phi_eigen[2], phi4 = phi_eigen[3];
         double Psi1 = Psi_eigen[0], Psi2 = Psi_eigen[1], Psi3 = Psi_eigen[2];
     
-        // Body parameters
-        double length_ankle = link[0], length_shank = link[1], length_thigh = link[2], length_pelvis = link[3];
-        double length_neck = link[4], length_shoulder = link[5];
-        double length_trunk = link[6], length_foot_forward = link[7], length_foot_backward = link[8], length_foot_inner = link[9], length_foot_outer = link[10], l_r = link[11];
+
         
         //## Rewriting fuction using Eigen ##
 
@@ -184,7 +190,7 @@ namespace {
         Eigen::Matrix4d W_eigen ;
         W_eigen <<      -sin(support_foot_orientation), 0, cos(support_foot_orientation), 0,
                         cos(support_foot_orientation), 0, sin(support_foot_orientation), 0,
-                        0, 1, 0, length_ankle,
+                        0, 1, 0, ankle_length,
                         0, 0, 0, 1;
         
         Eigen::Vector4d O0_0_eigen = {0, 0, 0, 1}; 
@@ -200,7 +206,7 @@ namespace {
         O1_0w_eigen = O1_0w_eigen + heel_support_eigen;
         
 
-        Eigen::Matrix4d B2_eigen = Denavit_Hartenberg_Matrix(-th1 + M_PI / 2, 0, length_shank + length_thigh, 0);
+        Eigen::Matrix4d B2_eigen = Denavit_Hartenberg_Matrix(-th1 + M_PI / 2, 0, leg_length, 0);
         Eigen::Matrix4d T2_0_eigen = T1_0_eigen * B2_eigen;
         Eigen::Vector4d O2_0_eigen = T2_0_eigen * O0_0_eigen;
         Eigen::Vector4d O2_0w_eigen = W_eigen * O2_0_eigen;
@@ -226,9 +232,9 @@ namespace {
 
         Eigen::Matrix4d B5_eigen;
         if (stepping_foot_index == -1) {
-            B5_eigen = Denavit_Hartenberg_Matrix(Psi1, 0, length_pelvis, 0);
+            B5_eigen = Denavit_Hartenberg_Matrix(Psi1, 0, pelvis_length, 0);
         } else if (stepping_foot_index == 1) {
-            B5_eigen = Denavit_Hartenberg_Matrix(Psi1 + M_PI, 0, length_pelvis, 0);
+            B5_eigen = Denavit_Hartenberg_Matrix(Psi1 + M_PI, 0, pelvis_length, 0);
         }
         Eigen::Matrix4d T5_0_eigen = T4_0_eigen * B5_eigen;
         Eigen::Vector4d O5_0_eigen = T5_0_eigen * O0_0_eigen;
@@ -260,7 +266,7 @@ namespace {
         Eigen::Vector4d O7_0w_eigen = W_eigen * O7_0_eigen;
         O7_0w_eigen = O7_0w_eigen + heel_support_eigen;
         
-        Eigen::Matrix4d B8_eigen = Denavit_Hartenberg_Matrix(-th4 + M_PI, 0, length_shank + length_thigh, 0);
+        Eigen::Matrix4d B8_eigen = Denavit_Hartenberg_Matrix(-th4 + M_PI, 0, leg_length, 0);
         Eigen::Matrix4d T8_0_eigen = T7_0_eigen * B8_eigen;
         Eigen::Vector4d O8_0_eigen = T8_0_eigen * O0_0_eigen;
         Eigen::Vector4d O8_0w_eigen = W_eigen * O8_0_eigen;
@@ -272,17 +278,17 @@ namespace {
         Eigen::Vector4d O9_0w_eigen = W_eigen * O9_0_eigen;
         O9_0w_eigen = O9_0w_eigen + heel_support_eigen;
 
-        Eigen::Matrix4d B10_eigen = Denavit_Hartenberg_Matrix(phi4, 0, length_ankle, 0);
+        Eigen::Matrix4d B10_eigen = Denavit_Hartenberg_Matrix(phi4, 0, ankle_length, 0);
         Eigen::Matrix4d T10_0_eigen = T9_0_eigen * B10_eigen;
         Eigen::Vector4d O10_0_eigen = T10_0_eigen * O0_0_eigen;
         Eigen::Vector4d O10_0w_eigen = W_eigen * O10_0_eigen;
         O10_0w_eigen = O10_0w_eigen + heel_support_eigen;
 
         // support foot
-        Eigen::Vector4d pf_0_1_eigen = {length_foot_outer, -length_ankle, length_foot_forward, 1.0};
-        Eigen::Vector4d pf_0_2_eigen = {-length_foot_inner, -length_ankle, length_foot_forward, 1.0};
-        Eigen::Vector4d pf_0_3_eigen = {-length_foot_inner, -length_ankle, -length_foot_backward, 1.0};
-        Eigen::Vector4d pf_0_4_eigen = {length_foot_outer, -length_ankle, -length_foot_backward, 1.0};
+        Eigen::Vector4d pf_0_1_eigen = {foot_outer_length, -ankle_length, foot_forward_length, 1.0};
+        Eigen::Vector4d pf_0_2_eigen = {-foot_inner_length, -ankle_length, foot_forward_length, 1.0};
+        Eigen::Vector4d pf_0_3_eigen = {-foot_inner_length, -ankle_length, -foot_backward_length, 1.0};
+        Eigen::Vector4d pf_0_4_eigen = {foot_outer_length, -ankle_length, -foot_backward_length, 1.0};
         Eigen::Vector4d pf_0_1_w_eigen = W_eigen * pf_0_1_eigen;
         Eigen::Vector4d pf_0_2_w_eigen = W_eigen * pf_0_2_eigen;
         Eigen::Vector4d pf_0_3_w_eigen = W_eigen * pf_0_3_eigen;
@@ -293,10 +299,10 @@ namespace {
         pf_0_4_w_eigen = pf_0_4_w_eigen + heel_support_eigen;
 
         // swing foot
-        Eigen::Vector4d pf_10_1_eigen = {0, length_foot_inner, length_foot_forward, 1.0};
-        Eigen::Vector4d pf_10_2_eigen = {0, -length_foot_outer, length_foot_forward, 1.0};
-        Eigen::Vector4d pf_10_3_eigen = {0, -length_foot_outer, -length_foot_backward, 1.0};
-        Eigen::Vector4d pf_10_4_eigen = {0, length_foot_inner, -length_foot_backward, 1.0};
+        Eigen::Vector4d pf_10_1_eigen = {0, foot_inner_length, foot_forward_length, 1.0};
+        Eigen::Vector4d pf_10_2_eigen = {0, -foot_outer_length, foot_forward_length, 1.0};
+        Eigen::Vector4d pf_10_3_eigen = {0, -foot_outer_length, -foot_backward_length, 1.0};
+        Eigen::Vector4d pf_10_4_eigen = {0, foot_inner_length, -foot_backward_length, 1.0};
         Eigen::Vector4d pf_10_1_w_eigen = W_eigen * pf_10_1_eigen;
         Eigen::Vector4d pf_10_2_w_eigen = W_eigen * pf_10_2_eigen;
         Eigen::Vector4d pf_10_3_w_eigen = W_eigen * pf_10_3_eigen;
@@ -307,7 +313,7 @@ namespace {
         pf_10_4_w_eigen = pf_10_4_w_eigen + heel_support_eigen;
 
         Eigen::Matrix4d B11_eigen;
-        B11_eigen <<    1, 0, 0, -length_pelvis/2,
+        B11_eigen <<    1, 0, 0, -pelvis_length/2,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
                         0, 0, 0, 1; 
@@ -321,14 +327,14 @@ namespace {
         // To Do: gather all if condition uder one if condition
         Eigen::Matrix4d T12_11_eigen;
         if (stepping_foot_index == -1) {
-            T12_11_eigen << 0, 0, -1, -length_shoulder/2,
+            T12_11_eigen << 0, 0, -1, -shoulder_length/2,
                             0, 1, 0, 0,
-                            1, 0, 0, length_trunk,
+                            1, 0, 0, trunk_length,
                             0, 0, 0, 1;
         } else if (stepping_foot_index == 1) {
-            T12_11_eigen << 0, 0, 1, length_shoulder/2,
+            T12_11_eigen << 0, 0, 1, shoulder_length/2,
                             0, -1, 0, 0,
-                            1, 0, 0, length_trunk,
+                            1, 0, 0, trunk_length,
                             0, 0, 0, 1;
         }
 
@@ -340,14 +346,14 @@ namespace {
 
         Eigen::Matrix4d T13_11_eigen;
         if (stepping_foot_index == -1) {
-            T13_11_eigen << 0, 0, -1, length_shoulder/2,
+            T13_11_eigen << 0, 0, -1, shoulder_length/2,
                             0, 1, 0, 0,
-                            1, 0, 0, length_trunk,
+                            1, 0, 0, trunk_length,
                             0, 0, 0, 1;
         } else if (stepping_foot_index == 1) {
-            T13_11_eigen << 0, 0, 1, -length_shoulder/2,
+            T13_11_eigen << 0, 0, 1, -shoulder_length/2,
                             0, -1, 0, 0,
-                            1, 0, 0, length_trunk,
+                            1, 0, 0, trunk_length,
                             0, 0, 0, 1;
         }
         Eigen::Matrix4d T13_0_eigen = T11_0_eigen * T13_11_eigen;
@@ -357,14 +363,14 @@ namespace {
 
         Eigen::Matrix4d T14_11_eigen;
         if (stepping_foot_index == -1) {
-            T14_11_eigen << 0, 0, -1, -l_r/2,
+            T14_11_eigen << 0, 0, -1, -trunk_width/2,
                             0, 1, 0, 0,
-                            1, 0, 0, length_trunk,
+                            1, 0, 0, trunk_length,
                             0, 0, 0, 1;
         } else if (stepping_foot_index == 1) {
-            T14_11_eigen << 0, 0, 1, l_r/2,
+            T14_11_eigen << 0, 0, 1, trunk_width/2,
                             0, -1, 0, 0,
-                            1, 0, 0, length_trunk,
+                            1, 0, 0, trunk_length,
                             0, 0, 0, 1;
         }
         Eigen::Matrix4d T14_0_eigen = T11_0_eigen * T14_11_eigen;
@@ -374,14 +380,14 @@ namespace {
 
         Eigen::Matrix4d T15_11_eigen;
         if (stepping_foot_index == -1) {
-            T15_11_eigen << 0, 0, -1, l_r/2,
+            T15_11_eigen << 0, 0, -1, trunk_width/2,
                             0, 1, 0, 0,
-                            1, 0, 0, length_trunk,
+                            1, 0, 0, trunk_length,
                             0, 0, 0, 1;
         } else if (stepping_foot_index == 1) {
-            T15_11_eigen << 0, 0, 1, -l_r/2,
+            T15_11_eigen << 0, 0, 1, -trunk_width/2,
                             0, -1, 0, 0,
-                            1, 0, 0, length_trunk,
+                            1, 0, 0, trunk_length,
                             0, 0, 0, 1;
         }
         Eigen::Matrix4d T15_0_eigen = T11_0_eigen * T15_11_eigen;
@@ -397,7 +403,7 @@ namespace {
             (O12_0w_eigen[3] + O13_0w_eigen[3]) / 2,
         };
 
-        Eigen::Vector4d head_eigen = W_eigen * (T11_0_eigen * Eigen::Vector4d{0, 0, length_trunk + length_neck, 1});
+        Eigen::Vector4d head_eigen = W_eigen * (T11_0_eigen * Eigen::Vector4d{0, 0, trunk_length + neck_length, 1});
         head_eigen = head_eigen + heel_support_eigen;
 
         Eigen::VectorXd y_eigen(6);
@@ -504,6 +510,18 @@ namespace {
     // and then pass them to the function of FuncMotion to calculate the position of the joints
     // This function is utilized in the SINGLE support phase, which does not involve the switching of the support foot and swing foot
     std::pair<std::array<double, 6>, P> GaitSingleSupport(
+        double ankle_length,
+        double leg_length ,
+        double pelvis_length ,
+        double neck_length ,
+        double shoulder_length ,
+        double trunk_length ,
+        double trunk_width ,
+        double foot_forward_length ,
+        double foot_backward_length ,
+        double foot_inner_length ,
+        double foot_outer_length ,
+
         int stepping_foot_index, 
         double delta_orientation, 
         double support_foot_orientation, 
@@ -511,19 +529,12 @@ namespace {
         double width_shoulder_rotation, 
         double step_length, 
         const std::array<double,6>& feet_position, 
-        double Height, 
         double lean_angle, 
         int rotation_index){
 
 
-            Eigen::VectorXd link_eigen(12);
-            for (int i = 0; i < 12; ++i) {
-                link_eigen[i] = ANATOMY[i] * Height;
-            }
+ 
 
-            double length_leg = link_eigen[1] + link_eigen[2]; // leg length
-            double length_pelvis = link_eigen[3];           // pelvis length
-            double length_shoulder = link_eigen[5];         // shoulder length
 
             double psi_t, psi_s, theta, phi_a, phi_p;
 
@@ -533,17 +544,17 @@ namespace {
                 psi_t = 0;
                 psi_s = psi_t;
         
-                double tmp_1 = step_length / (2 * length_leg);
+                double tmp_1 = step_length / (2 * leg_length);
                 theta = asin(tmp_1);
-                double tmp_2 = (length_pelvis - step_width) / (2 * length_leg);
+                double tmp_2 = (pelvis_length - step_width) / (2 * leg_length);
                 phi_a = asin(tmp_2 + lean_angle*M_PI/180);
                 phi_p = -lean_angle*M_PI/180;
             } else {
-                psi_t = rotation_index * acos(step_width / length_pelvis); 
+                psi_t = rotation_index * acos(step_width / pelvis_length); 
         
-                psi_s = rotation_index * acos(width_shoulder_rotation / length_shoulder) - psi_t;
-                double psi_t_sin = sqrt(1 - pow(step_width / length_pelvis, 2));
-                double tmp_1 = (step_length - length_pelvis * psi_t_sin) / (2 * length_leg);
+                psi_s = rotation_index * acos(width_shoulder_rotation / shoulder_length) - psi_t;
+                double psi_t_sin = sqrt(1 - pow(step_width / pelvis_length, 2));
+                double tmp_1 = (step_length - pelvis_length * psi_t_sin) / (2 * leg_length);
                 theta = asin(tmp_1);
                 phi_a = lean_angle*M_PI/180; // lean angle
                 phi_p = -phi_a;
@@ -572,10 +583,22 @@ namespace {
             // std::vector<double> v(feet_position.begin(), feet_position.end());
 
             Eigen::Vector3d support_foot_position_eigen = {feet_position[3], feet_position[4], feet_position[5]};
-            // std::array<double, 12> link_array;
-            // std::copy(link.begin(), link.end(), link_array.begin());
 
-            return FuncMotion(link_eigen, stepping_foot_index, support_foot_position_eigen, support_foot_orientation, theta_eigen, phi_eigen, Psi_eigen);
+            return FuncMotion( 
+                ankle_length, 
+                leg_length ,
+                pelvis_length ,
+                neck_length ,
+                shoulder_length ,
+                trunk_length ,
+                trunk_width ,
+                foot_forward_length ,
+                foot_backward_length ,
+                foot_inner_length ,
+                foot_outer_length ,
+                
+                
+                stepping_foot_index, support_foot_position_eigen, support_foot_orientation, theta_eigen, phi_eigen, Psi_eigen);
 
         }
 
@@ -583,6 +606,18 @@ namespace {
     // and then pass them to the function of FuncMotion to calculate the position of the joints
     // This function is utilized in the DOUBLE support phase, which involves the switching of the support foot and swing foot
     std::tuple<int, std::array<double, 6>, double, P> GaitDoubleSupports(
+        double ankle_length,
+        double leg_length ,
+        double pelvis_length ,
+        double neck_length ,
+        double shoulder_length ,
+        double trunk_length ,
+        double trunk_width ,
+        double foot_forward_length ,
+        double foot_backward_length ,
+        double foot_inner_length ,
+        double foot_outer_length ,
+        
         int stepping_foot_index,
         double delta_orientation, 
         double support_foot_orientation, 
@@ -590,17 +625,10 @@ namespace {
         double width_shoulder_rotation, 
         double step_length, 
         const std::array<double,6>& feet_position,
-        double Height, 
+
+        
         int rotation_index){
 
-            Eigen::VectorXd link_eigen(12);
-            for (int i = 0; i < 12; ++i) {
-                link_eigen[i] = ANATOMY[i] * Height;
-            }
-
-            double length_leg = link_eigen[1] + link_eigen[2]; // leg length
-            double length_pelvis = link_eigen[3];           // pelvis length
-            double length_shoulder = link_eigen[5];         // shoulder length
 
             double psi_t, psi_s, theta, phi_a, phi_p;
 
@@ -610,17 +638,17 @@ namespace {
                 psi_t = 0;
                 psi_s = psi_t;
         
-                double tmp_1 = step_length / (2 * length_leg);
+                double tmp_1 = step_length / (2 * leg_length);
                 theta = asin(tmp_1);
-                double tmp_2 = (length_pelvis - step_width) / (2 * length_leg);
+                double tmp_2 = (pelvis_length - step_width) / (2 * leg_length);
                 phi_a = asin(tmp_2);
                 phi_p = 0;
             } else {
-                psi_t = rotation_index * acos(step_width / length_pelvis); 
+                psi_t = rotation_index * acos(step_width / pelvis_length); 
         
-                psi_s = rotation_index * acos(width_shoulder_rotation / length_shoulder) - psi_t;
-                double psi_t_sin = sqrt(1 - pow(step_width / length_pelvis, 2));
-                double tmp_1 = (step_length - length_pelvis * psi_t_sin) / (2 * length_leg);
+                psi_s = rotation_index * acos(width_shoulder_rotation / shoulder_length) - psi_t;
+                double psi_t_sin = sqrt(1 - pow(step_width / pelvis_length, 2));
+                double tmp_1 = (step_length - pelvis_length * psi_t_sin) / (2 * leg_length);
                 theta = asin(tmp_1);
                 phi_a = 0; // lean angle
                 phi_p = -phi_a;
@@ -650,7 +678,21 @@ namespace {
 
             Eigen:: Vector3d support_foot_position_eigen = {feet_position[3], feet_position[4], feet_position[5]};
     
-            auto funcMotionResult = FuncMotion(link_eigen, stepping_foot_index, support_foot_position_eigen, support_foot_orientation, theta_eigen, phi_eigen, Psi_eigen);
+            auto funcMotionResult = FuncMotion(
+                ankle_length, 
+                leg_length ,
+                pelvis_length ,
+                neck_length ,
+                shoulder_length ,
+                trunk_length ,
+                trunk_width ,
+                foot_forward_length ,
+                foot_backward_length ,
+                foot_inner_length ,
+                foot_outer_length ,
+                
+
+                 stepping_foot_index, support_foot_position_eigen, support_foot_orientation, theta_eigen, phi_eigen, Psi_eigen);
             auto motionResult = funcMotionResult.first; 
             auto position = funcMotionResult.second;
 
@@ -666,8 +708,8 @@ namespace {
             
             std::array<double, 6> feet_pos;
             std::copy_n(motionResult.begin(), 6, feet_pos.begin());
-
-            auto final_res = FuncFootDH(link_eigen, support_foot_orientation, feet_pos);
+            
+            auto final_res = FuncFootDH(ankle_length, support_foot_orientation, feet_pos);
         
            
 
@@ -725,7 +767,6 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     double step_width = 0.2;
     double width_shoulder_rotation = 0.45;
     double step_length = max_step_lenght;
-    double H = model.height;
 
     // rotation_index = 1: walk with rotation; 
     // rotation_index = 0: walk without rotation (turning)
@@ -734,6 +775,36 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     double step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
         
     std::array<double, 6> feet_position ;
+
+
+
+    // body segments length
+
+    double ankle_length = model.height * HumanoidModelV0::ANKLE_SCALING_FACTOR;
+    double leg_length = model.height * HumanoidModelV0::LEG_SCALING_FACTOR;
+    double pelvis_length = model.height * HumanoidModelV0::PELVIS_WIDTH_SCALING_FACTOR;
+    double neck_length = model.height * HumanoidModelV0::NECK_SCALING_FACTOR;
+    double shoulder_length = model.height * HumanoidModelV0::SHOULDER_WIDTH_SCALING_FACTOR;
+    double trunk_length = model.height * HumanoidModelV0::TRUNK_HEIGHT_SCALING_FACTOR;
+    double trunk_width = model.height * HumanoidModelV0::TRUNK_WIDTH_SCALING_FACTOR;
+    double foot_forward_length = model.height * HumanoidModelV0::FOOT_FORWARD_SCALING_FACTOR;
+    double foot_backward_length = model.height * HumanoidModelV0::FOOT_BACKWARD_SCALING_FACTOR;
+    double foot_inner_length = model.height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
+    double foot_outer_length = model.height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
+
+    // Print all variables after declaration
+    // std::cout << "Ankle Length: " << ankle_length <<  " -- Ankle Length true: " << 0.0451 * model.height << std::endl;
+    // std::cout << "Leg Length: " << leg_length << " -- Leg Length true: " << (0.2522 + 0.2269) * model.height << std::endl;
+    // std::cout << "Pelvis Length: " << pelvis_length << " -- Pelvis Length true: " << 0.2 / 1.7 * model.height << std::endl;
+    // std::cout << "Neck Length: " << neck_length << " -- Neck Length true: " << 0.1396 * model.height << std::endl;
+    // std::cout << "Shoulder Length: " << shoulder_length << " -- Shoulder Length true: " << (0.45 / 1.7) * model.height << std::endl;
+    // std::cout << "Trunk Length: " << trunk_length << " -- Trunk Length true: " << 0.3495 * model.height << std::endl;
+    // std::cout << "Trunk Width: " << trunk_width << " -- Trunk Width true: " << (0.25 / 1.7) * model.height << std::endl;
+    // std::cout << "Foot Forward Length: " << foot_forward_length << " -- Foot Forward Length true: " << (0.1470 / 2) * model.height << std::endl;
+    // std::cout << "Foot Backward Length: " << foot_backward_length << " -- Foot Backward Length true: " << (0.1470 / 4) * model.height << std::endl;
+    // std::cout << "Foot Inner Length: " << foot_inner_length << " -- Foot Inner Length true: " << (0.1470 * 8 / 50) * model.height << std::endl;
+    // std::cout << "Foot Outer Length: " << foot_outer_length << " -- Foot Outer Length true: " << (0.1470 * 8 / 50) * model.height << std::endl;
+
 
 
     // Steps computation
@@ -760,13 +831,31 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
             feet_position[5] = 0;
         }
 
-        auto [output_stepping_foot_index, output_foot_position, output_support_foot_orientation, output_position] = GaitDoubleSupports(model.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, step_length, feet_position, H, rotation_index);
+        auto [output_stepping_foot_index, output_foot_position, output_support_foot_orientation, output_position] = GaitDoubleSupports(
+                ankle_length, 
+                leg_length ,
+                pelvis_length ,
+                neck_length ,
+                shoulder_length ,
+                trunk_length ,
+                trunk_width ,
+                foot_forward_length ,
+                foot_backward_length ,
+                foot_inner_length ,
+                foot_outer_length ,
+                model.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, step_length, feet_position, rotation_index);
         
 
         support_foot_orientation = output_support_foot_orientation;
         update.stepping_foot_index = output_stepping_foot_index;
+
+        // Update the position using the center of mass
         update.position.x = output_position.center_of_mass[0];
         update.position.y = output_position.center_of_mass[1];
+
+        // Print the center of mass position
+        // std::cout << "D Center of Mass Position (X, Y): (" << output_position.center_of_mass[0] << ", " << output_position.center_of_mass[1] << ")" << std::endl;
+
         update.head_position.x = output_position.head[0];
         update.head_position.y = output_position.head[1];
         // update.head_position.z = output_position.head[2];
@@ -835,10 +924,24 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
             feet_position[4] = model.heel_right_position.y;
             feet_position[5] = 0;
         }
-        auto [output_foot_position, output_position] = GaitSingleSupport(update.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, sl_p, feet_position, H, lean_angle, rotation_index);
+        auto [output_foot_position, output_position] = GaitSingleSupport(
+                ankle_length, 
+                leg_length ,
+                pelvis_length ,
+                neck_length ,
+                shoulder_length ,
+                trunk_length ,
+                trunk_width ,
+                foot_forward_length ,
+                foot_backward_length ,
+                foot_inner_length ,
+                foot_outer_length ,
+                update.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, sl_p, feet_position, lean_angle, rotation_index);
    
         update.position.x = output_position.center_of_mass[0];
         update.position.y = output_position.center_of_mass[1];
+        // std::cout << "S Center of Mass Position (X, Y): (" << output_position.center_of_mass[0] << ", " << output_position.center_of_mass[1] << ")" << std::endl;
+        // std::cin.get();
         update.head_position.x = output_position.head[0];
         update.head_position.y = output_position.head[1];
         // update.head_position.z = output_position.head[2];
