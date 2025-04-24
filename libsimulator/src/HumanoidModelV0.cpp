@@ -73,33 +73,6 @@ namespace {
         return mat;
     }
 
-
-
-
-    // This function is used to switch position of the support foot and swing foot
-    // should be used in the double support phase, after using the function of FuncMotion
-
-    // Input: feet_position: the position of the feet, [x_swing, y_swing, 0, x_support, y_support, 0];
-    //        support_foot_orientation: the orientation of the support foot;
-    std::array<double, 6> FuncFootDH(
-        double ankle_length, 
-        double support_foot_orientation, 
-        const std::array<double, 
-        6>& feet_position) {
-
-        Eigen::Vector4d heel_support = {feet_position[0], feet_position[1], feet_position[2], 1.0};
-        Eigen::Matrix4d W ;
-        W <<    -sin(support_foot_orientation), 0, cos(support_foot_orientation), 0,
-                cos(support_foot_orientation), 0, sin(support_foot_orientation), 0,
-                0, 1, 0, ankle_length,
-                0, 0, 0, 1;
-        Eigen::Vector4d O0_0 = {0, 0, 0, 1}; 
-        Eigen::Vector4d O0_0w = W * O0_0;
-        O0_0w = O0_0w + heel_support;
-        return {feet_position[3], feet_position[4], 0, O0_0w[0], O0_0w[1], 0};
-
-    }
-
     // This function is used to calculate the position of the joints;
     // Input: link: the body parameters, see ANATOMY;
     //        stepping_foot_index:      -1 == right foot stepping/left foot support,
@@ -709,8 +682,18 @@ namespace {
             std::array<double, 6> feet_pos;
             std::copy_n(motionResult.begin(), 6, feet_pos.begin());
             
-            auto final_res = FuncFootDH(ankle_length, support_foot_orientation, feet_pos);
-        
+            // switch position of the support foot and swing foot
+            //  used in the double support phase, after using the function of FuncMotion
+            Eigen::Vector4d heel_support = {feet_pos[0], feet_pos[1], feet_pos[2], 1.0};
+            Eigen::Matrix4d W ;
+            W <<    -sin(support_foot_orientation), 0, cos(support_foot_orientation), 0,
+                    cos(support_foot_orientation), 0, sin(support_foot_orientation), 0,
+                    0, 1, 0, ankle_length,
+                    0, 0, 0, 1;
+            Eigen::Vector4d O0_0 = {0, 0, 0, 1}; 
+            Eigen::Vector4d O0_0w = W * O0_0;
+            O0_0w = O0_0w + heel_support;
+            std::array<double, 6> final_res =  {feet_pos[3], feet_pos[4], 0, O0_0w[0], O0_0w[1], 0};
            
 
             return std::make_tuple(new_stepping_foot_index, final_res, support_foot_orientation, position);
