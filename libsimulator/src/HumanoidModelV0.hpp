@@ -93,7 +93,7 @@ private:
     // ### Constants ###
 
 
-    
+    public: // should be remove went the namespace wil be deleted
     // # Anthropometric scaling factors #
     /* The following parameters are multiplyed by agents height (HumanoidModelV0Data.height) 
         to obtain the legth of the considered Limb.  */ 

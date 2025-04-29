@@ -31,35 +31,10 @@ std::unique_ptr<OperationalModel> HumanoidModelV0::Clone() const
 
 
 namespace {
-    
-    // Body parameters used in "Development and experimental validation of a humanoid pedestrian model that captures stepping behavior and body rotation"
-    // i.e., leg length, trunk height, shoulder width, etc.
-    // constexpr std::array<double, 12> ANATOMY = {
-    //     0.0451, // ankle
-    //     0.2522, // shank
-    //     0.2269, // thigh
-    //     0.2/1.7, // pelvis width
-    //     0.1396, // neck
-    //     0.45/1.7, // shoulder width
-    //     0.3495, // trunk
-    //     0.1470/2, //foot_forward_length
-    //     0.1470/4, //foot_forward_length
-    //     0.1470*8/50, // foot inner width
-    //     0.1470*8/50, // foot outer width
-    //     0.25/1.7 // l_r, renamed into trunk width
-    // };
 
-    // // feet position
-    // // feet_position[0:2] = [x, y, z]: position of the swing foot, feet_position[3:5] = [x, y, z]: position of the support foot
-    // // feet_position[2,5] = 0
-    // struct GaitResult {
-    //     std::array<double, 6> feet_position;
-    //     Point position;
-    // };
-    // #ifndef M_PI
-    // #define M_PI 3.14159265358979323846
-    // #endif
 
+    #include "HumanoidModelV0Data.hpp"
+   
 
 
     /*** Matrix opperators using Eigen ***/
@@ -106,7 +81,6 @@ namespace {
         std::array<double, 4> shoulder_left;
         std::array<double, 4> shoulder_right;
         std::array<double, 4> head;
-        std::array<double, 4> pc;
         std::array<double, 4> O0_0w;
         std::array<double, 4> O3_0w;
         std::array<double, 4> O4_0w;
@@ -473,27 +447,13 @@ namespace {
     }
 
 
-    // // Deg to rad
-    // double deg2rad(double deg) {
-    //     return deg * M_PI / 180.0;
-    // }
-
 
     // This function is used to calculate the joint rotaion angles using the gait parameters like step length (step_length), step width (step_width), etc.
     // and then pass them to the function of FuncMotion to calculate the position of the joints
     // This function is utilized in the SINGLE support phase, which does not involve the switching of the support foot and swing foot
     std::pair<std::array<double, 6>, P> GaitSingleSupport(
-        double ankle_length,
-        double leg_length ,
-        double pelvis_length ,
-        double neck_length ,
-        double shoulder_length ,
-        double trunk_length ,
-        double trunk_width ,
-        double foot_forward_length ,
-        double foot_backward_length ,
-        double foot_inner_length ,
-        double foot_outer_length ,
+        double height,
+
 
         int stepping_foot_index, 
         double delta_orientation, 
@@ -506,8 +466,20 @@ namespace {
         int rotation_index){
 
 
- 
-
+            // limb dimensions calulation based on agent's height
+            double ankle_length = height * HumanoidModelV0::ANKLE_SCALING_FACTOR;
+            double leg_length = height * HumanoidModelV0::LEG_SCALING_FACTOR;
+            double pelvis_length = height * HumanoidModelV0::PELVIS_WIDTH_SCALING_FACTOR;
+            double neck_length = height * HumanoidModelV0::NECK_SCALING_FACTOR;
+            double shoulder_length = height * HumanoidModelV0::SHOULDER_WIDTH_SCALING_FACTOR;
+            double trunk_length = height * HumanoidModelV0::TRUNK_HEIGHT_SCALING_FACTOR;
+            double trunk_width = height * HumanoidModelV0::TRUNK_WIDTH_SCALING_FACTOR;
+            double foot_forward_length = height * HumanoidModelV0::FOOT_FORWARD_SCALING_FACTOR;
+            double foot_backward_length = height * HumanoidModelV0::FOOT_BACKWARD_SCALING_FACTOR;
+            double foot_inner_length = height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
+            double foot_outer_length = height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
+            
+            
 
             double psi_t, psi_s, theta, phi_a, phi_p;
 
@@ -575,21 +547,12 @@ namespace {
 
         }
 
+        
     // This function is used to calculate the joint rotaion angles using the gait parameters like step length (step_length), step width (step_width), etc.
     // and then pass them to the function of FuncMotion to calculate the position of the joints
     // This function is utilized in the DOUBLE support phase, which involves the switching of the support foot and swing foot
     std::tuple<int, std::array<double, 6>, double, P> GaitDoubleSupports(
-        double ankle_length,
-        double leg_length ,
-        double pelvis_length ,
-        double neck_length ,
-        double shoulder_length ,
-        double trunk_length ,
-        double trunk_width ,
-        double foot_forward_length ,
-        double foot_backward_length ,
-        double foot_inner_length ,
-        double foot_outer_length ,
+        double height,
         
         int stepping_foot_index,
         double delta_orientation, 
@@ -598,9 +561,23 @@ namespace {
         double width_shoulder_rotation, 
         double step_length, 
         const std::array<double,6>& feet_position,
-
-        
         int rotation_index){
+
+            
+            
+            // limb dimensions calulation based on agent's height
+            double ankle_length = height * HumanoidModelV0::ANKLE_SCALING_FACTOR;
+            double leg_length = height * HumanoidModelV0::LEG_SCALING_FACTOR;
+            double pelvis_length = height * HumanoidModelV0::PELVIS_WIDTH_SCALING_FACTOR;
+            double neck_length = height * HumanoidModelV0::NECK_SCALING_FACTOR;
+            double shoulder_length = height * HumanoidModelV0::SHOULDER_WIDTH_SCALING_FACTOR;
+            double trunk_length = height * HumanoidModelV0::TRUNK_HEIGHT_SCALING_FACTOR;
+            double trunk_width = height * HumanoidModelV0::TRUNK_WIDTH_SCALING_FACTOR;
+            double foot_forward_length = height * HumanoidModelV0::FOOT_FORWARD_SCALING_FACTOR;
+            double foot_backward_length = height * HumanoidModelV0::FOOT_BACKWARD_SCALING_FACTOR;
+            double foot_inner_length = height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
+            double foot_outer_length = height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
+        
 
 
             double psi_t, psi_s, theta, phi_a, phi_p;
@@ -761,19 +738,19 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
 
 
-    // body segments length
+    // // body segments length
 
-    double ankle_length = model.height * HumanoidModelV0::ANKLE_SCALING_FACTOR;
-    double leg_length = model.height * HumanoidModelV0::LEG_SCALING_FACTOR;
-    double pelvis_length = model.height * HumanoidModelV0::PELVIS_WIDTH_SCALING_FACTOR;
-    double neck_length = model.height * HumanoidModelV0::NECK_SCALING_FACTOR;
-    double shoulder_length = model.height * HumanoidModelV0::SHOULDER_WIDTH_SCALING_FACTOR;
-    double trunk_length = model.height * HumanoidModelV0::TRUNK_HEIGHT_SCALING_FACTOR;
-    double trunk_width = model.height * HumanoidModelV0::TRUNK_WIDTH_SCALING_FACTOR;
-    double foot_forward_length = model.height * HumanoidModelV0::FOOT_FORWARD_SCALING_FACTOR;
-    double foot_backward_length = model.height * HumanoidModelV0::FOOT_BACKWARD_SCALING_FACTOR;
-    double foot_inner_length = model.height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
-    double foot_outer_length = model.height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
+    // double ankle_length = model.height * HumanoidModelV0::ANKLE_SCALING_FACTOR;
+    // double leg_length = model.height * HumanoidModelV0::LEG_SCALING_FACTOR;
+    // double pelvis_length = model.height * HumanoidModelV0::PELVIS_WIDTH_SCALING_FACTOR;
+    // double neck_length = model.height * HumanoidModelV0::NECK_SCALING_FACTOR;
+    // double shoulder_length = model.height * HumanoidModelV0::SHOULDER_WIDTH_SCALING_FACTOR;
+    // double trunk_length = model.height * HumanoidModelV0::TRUNK_HEIGHT_SCALING_FACTOR;
+    // double trunk_width = model.height * HumanoidModelV0::TRUNK_WIDTH_SCALING_FACTOR;
+    // double foot_forward_length = model.height * HumanoidModelV0::FOOT_FORWARD_SCALING_FACTOR;
+    // double foot_backward_length = model.height * HumanoidModelV0::FOOT_BACKWARD_SCALING_FACTOR;
+    // double foot_inner_length = model.height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
+    // double foot_outer_length = model.height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
 
     // Print all variables after declaration
     // std::cout << "Ankle Length: " << ankle_length <<  " -- Ankle Length true: " << 0.0451 * model.height << std::endl;
@@ -815,17 +792,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         }
 
         auto [output_stepping_foot_index, output_foot_position, output_support_foot_orientation, output_position] = GaitDoubleSupports(
-                ankle_length, 
-                leg_length ,
-                pelvis_length ,
-                neck_length ,
-                shoulder_length ,
-                trunk_length ,
-                trunk_width ,
-                foot_forward_length ,
-                foot_backward_length ,
-                foot_inner_length ,
-                foot_outer_length ,
+                model.height,
                 model.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, step_length, feet_position, rotation_index);
         
 
@@ -908,17 +875,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
             feet_position[5] = 0;
         }
         auto [output_foot_position, output_position] = GaitSingleSupport(
-                ankle_length, 
-                leg_length ,
-                pelvis_length ,
-                neck_length ,
-                shoulder_length ,
-                trunk_length ,
-                trunk_width ,
-                foot_forward_length ,
-                foot_backward_length ,
-                foot_inner_length ,
-                foot_outer_length ,
+                model.height,
                 update.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, sl_p, feet_position, lean_angle, rotation_index);
    
         update.position.x = output_position.center_of_mass[0];
