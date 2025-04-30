@@ -82,7 +82,7 @@ class HumanoidModelV0AgentParameters:
     ## Variables for gait
     step_timer: int = 0  # [number of time steps]
     stepping_foot_index: int = (
-        0  # -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
+        1  # -1 == right foot stepping/left foot support, 0 == double stance, 1 == left foot stepping/right foot support
     )
     step_target: tuple[float, float] = (0.0, 0.0)
     ## Variables for body parts
@@ -230,7 +230,9 @@ class HumanoidModelV0State:
 
     @property
     def stepping_foot_index(self) -> int:
-        """-1 == right foot stepping, 0 == double stance, 1 == left foot stepping."""
+        """-1 == right foot stepping/left foot support,
+        0 == double stance,
+        1 == left foot stepping/right foot support."""
         return self._obj.stepping_foot_index
 
     @stepping_foot_index.setter

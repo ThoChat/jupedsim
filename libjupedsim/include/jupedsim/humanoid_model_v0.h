@@ -213,6 +213,7 @@ JUPEDSIM_API int JPS_HumanoidModelV0State_GetSteppingFootIndex(JPS_HumanoidModel
 JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetSteppingFootIndex(JPS_HumanoidModelV0State handle, int stepping_foot_index);
 
+
 /**
  * Read step target of this agent.
  * @param handle of the Agent to access.
@@ -225,6 +226,7 @@ JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetStepTarget(JPS_HumanoidModelV
  * @param handle of the Agent to access.
  * @param step target of this agent.
  */
+
 JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetStepTarget(JPS_HumanoidModelV0State handle, JPS_Point step_target);
 
@@ -476,7 +478,7 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
      * gait variables
      */
     int step_timer = {0}; // number of time steps remaining to complete the current step
-    int stepping_foot_index = {0}; //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
+    int stepping_foot_index = {1}; //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
     JPS_Point step_target = {0, 0}; // target position of the current stepping foot
     /**
      * body variables

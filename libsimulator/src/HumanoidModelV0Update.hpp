@@ -29,4 +29,5 @@ struct HumanoidModelV0Update {
     Point heel_right_velocity{};
     Point heel_left_position{};
     Point heel_left_velocity{};
+    
 };

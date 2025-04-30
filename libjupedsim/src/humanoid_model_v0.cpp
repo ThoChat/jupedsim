@@ -215,6 +215,7 @@ JUPEDSIM_API void JPS_HumanoidModelV0State_SetSteppingFootIndex(JPS_HumanoidMode
     state->stepping_foot_index = stepping_foot_index;
 }
 
+
 JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetStepTarget(JPS_HumanoidModelV0State handle)
 {
     assert(handle);

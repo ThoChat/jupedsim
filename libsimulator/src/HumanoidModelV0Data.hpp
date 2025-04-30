@@ -18,7 +18,9 @@ struct HumanoidModelV0Data {
     // Humanoid model variables
     // # gait variables
     int step_timer{};  // number of time step before completing the current step
-    int stepping_foot_index{}; //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
+    int stepping_foot_index{};  //  -1 == right foot stepping/left foot support,
+                                //  0 == double support
+                                //  1 == left foot stepping/right foot support
     Point step_target{};  // target position of the current stepping foot
     // # body motion variables
     Point head_position{}; 
