@@ -58,6 +58,8 @@ add_library(simulator STATIC
     src/OperationalModelUpdate.hpp
     src/Point.cpp
     src/Point.hpp
+    src/Point3D.cpp
+    src/Point3D.hpp
     src/Polygon.cpp
     src/Polygon.hpp
     src/RoutingEngine.cpp

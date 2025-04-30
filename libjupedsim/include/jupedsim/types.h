@@ -41,6 +41,25 @@ typedef struct JPS_Point {
 } JPS_Point;
 
 /**
+ * A 3D coordinate. Units are 'meters'
+ */
+typedef struct JPS_Point3D {
+    /**
+     * x component in 'meters'
+     */
+    double x;
+    /**
+     * y component in 'meters'
+     */
+    double y;
+    /**
+     * z component in 'meters'
+     */
+    double z;
+} JPS_Point3D;
+
+
+/**
  * Describes a waypoint.
  */
 typedef struct JPS_Waypoint {
