@@ -35,7 +35,7 @@ void init_humanoid_model_v0(py::module_& m)
                         int stepping_foot_index,
                         std::tuple<double, double> step_target,
                         // humanoid body variables
-                        std::tuple<double, double> head_position, 
+                        std::tuple<double, double, double> head_position, 
                         std::tuple<double, double> head_velocity,
                         double shoulder_rotation_angle_z,
                         double shoulder_rotation_velocity_z,
@@ -66,7 +66,7 @@ void init_humanoid_model_v0(py::module_& m)
                     step_timer,
                     stepping_foot_index,
                     intoJPS_Point(step_target),
-                    intoJPS_Point(head_position),
+                    intoJPS_Point3D(head_position),
                     intoJPS_Point(head_velocity),
                     shoulder_rotation_angle_z,
                     shoulder_rotation_velocity_z,
@@ -136,7 +136,7 @@ void init_humanoid_model_v0(py::module_& m)
                 p.step_timer,
                 p.stepping_foot_index,
                 intoTuple(p.step_target),
-                intoTuple(p.head_position),
+                intoTuple3D(p.head_position),
                 intoTuple(p.head_velocity),
                 p.shoulder_rotation_angle_z,
                 p.shoulder_rotation_velocity_z,
@@ -269,10 +269,10 @@ void init_humanoid_model_v0(py::module_& m)
         .def_property(
             "head_position",
             [](const JPS_HumanoidModelV0State_Wrapper& w) {
-                return intoTuple(JPS_HumanoidModelV0State_GetHeadPosition(w.handle));
+                return intoTuple3D(JPS_HumanoidModelV0State_GetHeadPosition(w.handle));
             },
-            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> head_position) {
-                JPS_HumanoidModelV0State_SetHeadPosition(w.handle, intoJPS_Point(head_position));
+            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double, double> head_position) {
+                JPS_HumanoidModelV0State_SetHeadPosition(w.handle, intoJPS_Point3D(head_position));
             })
         .def_property(
             "head_velocity",

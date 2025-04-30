@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Point.hpp"
+#include "Point3D.hpp"
 struct HumanoidModelV0Data {
     // SFM parameter, for navigation
     Point velocity{}; // v
@@ -23,7 +24,7 @@ struct HumanoidModelV0Data {
                                 //  1 == left foot stepping/right foot support
     Point step_target{};  // target position of the current stepping foot
     // # body motion variables
-    Point head_position{}; 
+    Point3D head_position{}; 
     Point head_velocity{}; 
     double shoulder_rotation_angle_z{}; 
     double shoulder_rotation_velocity_z{}; 

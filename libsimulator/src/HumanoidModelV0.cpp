@@ -884,7 +884,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         // std::cin.get();
         update.head_position.x = output_position.head[0];
         update.head_position.y = output_position.head[1];
-        // update.head_position.z = output_position.head[2];
+        update.head_position.z = output_position.head[2];
 
         if (model.stepping_foot_index == -1) {
             update.heel_right_position.x = output_foot_position[0];

@@ -86,7 +86,7 @@ class HumanoidModelV0AgentParameters:
     )
     step_target: tuple[float, float] = (0.0, 0.0)
     ## Variables for body parts
-    head_position: tuple[float, float] = (0.0, 0.0)
+    head_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     head_velocity: tuple[float, float] = (0.0, 0.0)
     shoulder_rotation_angle_z: float = 0.0
     shoulder_rotation_velocity_z: float = 0.0

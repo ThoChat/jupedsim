@@ -236,7 +236,7 @@ JPS_HumanoidModelV0State_SetStepTarget(JPS_HumanoidModelV0State handle, JPS_Poin
  * @param handle of the Agent to access.
  * @return head position of this agent.
  */
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidModelV0State handle);
+JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidModelV0State handle);
 
 /**
  * Write head position of this agent.
@@ -244,7 +244,7 @@ JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetHeadPosition(JPS_HumanoidMode
  * @param head position of this agent.
  */
 JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetHeadPosition(JPS_HumanoidModelV0State handle, JPS_Point head_position);
+JPS_HumanoidModelV0State_SetHeadPosition(JPS_HumanoidModelV0State handle, JPS_Point3D head_position);
 
 /**
  * Read head velocity of this agent.
@@ -483,7 +483,7 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
     /**
      * body variables
      */
-    JPS_Point head_position = {0, 0}; // Position of the agent's head
+    JPS_Point3D head_position = {0, 0, 0}; // Position of the agent's head
     JPS_Point head_velocity = {0, 0}; // Velocity of the agent's head
     double shoulder_rotation_angle_z = 0.0; // shoulder rotation angle along the longitudinal axis (z)
     double shoulder_rotation_velocity_z = 0.0; // shoulder rotation velocity along the longitudinal axis (z)

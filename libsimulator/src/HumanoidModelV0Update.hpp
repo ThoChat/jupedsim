@@ -1,6 +1,7 @@
 // Copyright © 2012-2024 Forschungszentrum Jülich GmbH
 // SPDX-License-Identifier: LGPL-3.0-or-later
 #include "Point.hpp"
+#include "Point3D.hpp"
 
 #include <optional>
 
@@ -14,7 +15,7 @@ struct HumanoidModelV0Update {
     Point step_target{};
     // # body motion variables
     // head
-    Point head_position{};
+    Point3D head_position{};
     Point head_velocity{};
     // shoulder rotation
     double shoulder_rotation_angle_z{};

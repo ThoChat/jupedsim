@@ -21,6 +21,10 @@ using jupedsim::detail::intoJPS_Point;
 using jupedsim::detail::intoPoint;
 using jupedsim::detail::intoTuple;
 
+using jupedsim::detail::intoJPS_Point3D;
+using jupedsim::detail::intoPoint3D;
+using jupedsim::detail::intoTuple3D;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Simulation
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -353,7 +357,7 @@ JPS_AgentId JPS_Simulation_AddHumanoidModelV0Agent(
                 parameters.step_timer,
                 parameters.stepping_foot_index,
                 intoPoint(parameters.step_target),
-                intoPoint(parameters.head_position),
+                intoPoint3D(parameters.head_position),
                 intoPoint(parameters.head_velocity),
                 parameters.shoulder_rotation_angle_z,
                 parameters.shoulder_rotation_velocity_z,
