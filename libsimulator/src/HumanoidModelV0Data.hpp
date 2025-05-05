@@ -32,9 +32,9 @@ struct HumanoidModelV0Data {
     double trunk_rotation_velocity_x{}; 
     double trunk_rotation_angle_y{}; 
     double trunk_rotation_velocity_y{}; 
-    Point heel_right_position{}; 
+    Point3D heel_right_position{}; 
     Point heel_right_velocity{}; 
-    Point heel_left_position{}; 
+    Point3D heel_left_position{}; 
     Point heel_left_velocity{}; 
 
 

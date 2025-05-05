@@ -778,17 +778,17 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         if (model.stepping_foot_index == -1) {
             feet_position[0] = model.heel_right_position.x;
             feet_position[1] = model.heel_right_position.y;
-            feet_position[2] = 0;
+            feet_position[2] = model.heel_right_position.z;
             feet_position[3] = model.heel_left_position.x;
             feet_position[4] = model.heel_left_position.y;
-            feet_position[5] = 0;
+            feet_position[5] = model.heel_left_position.z;
         } else {
             feet_position[0] = model.heel_left_position.x;
             feet_position[1] = model.heel_left_position.y;
-            feet_position[2] = 0;
+            feet_position[2] = model.heel_left_position.z;
             feet_position[3] = model.heel_right_position.x;
             feet_position[4] = model.heel_right_position.y;
-            feet_position[5] = 0;
+            feet_position[5] = model.heel_right_position.z;
         }
 
         auto [output_stepping_foot_index, output_foot_position, output_support_foot_orientation, output_position] = GaitDoubleSupports(
@@ -813,13 +813,17 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         if (update.stepping_foot_index == -1) {
             update.heel_right_position.x = output_foot_position[0];
             update.heel_right_position.y = output_foot_position[1];
+            update.heel_right_position.z = output_foot_position[2];
             update.heel_left_position.x = output_foot_position[3];
             update.heel_left_position.y = output_foot_position[4];
+            update.heel_left_position.z = output_foot_position[5];
         } else {
             update.heel_right_position.x = output_foot_position[3];
             update.heel_right_position.y = output_foot_position[4];
+            update.heel_right_position.z = output_foot_position[5];
             update.heel_left_position.x = output_foot_position[0];
             update.heel_left_position.y = output_foot_position[1];
+            update.heel_left_position.z = output_foot_position[2];
         }
         
     } 
@@ -862,17 +866,17 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         if (model.stepping_foot_index == -1) {
             feet_position[0] = model.heel_right_position.x;
             feet_position[1] = model.heel_right_position.y;
-            feet_position[2] = 0;
+            feet_position[2] = model.heel_right_position.z;
             feet_position[3] = model.heel_left_position.x;
             feet_position[4] = model.heel_left_position.y;
-            feet_position[5] = 0;
+            feet_position[5] = model.heel_left_position.z;
         } else {
             feet_position[0] = model.heel_left_position.x;
             feet_position[1] = model.heel_left_position.y;
-            feet_position[2] = 0;
+            feet_position[2] = model.heel_left_position.z;
             feet_position[3] = model.heel_right_position.x;
             feet_position[4] = model.heel_right_position.y;
-            feet_position[5] = 0;
+            feet_position[5] = model.heel_right_position.z;
         }
         auto [output_foot_position, output_position] = GaitSingleSupport(
                 model.height,
@@ -889,13 +893,17 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         if (model.stepping_foot_index == -1) {
             update.heel_right_position.x = output_foot_position[0];
             update.heel_right_position.y = output_foot_position[1];
+            update.heel_right_position.z = output_foot_position[2];
             update.heel_left_position.x = output_foot_position[3];
             update.heel_left_position.y = output_foot_position[4];
+            update.heel_left_position.z = output_foot_position[5];
         } else {
             update.heel_right_position.x = output_foot_position[3];
             update.heel_right_position.y = output_foot_position[4];
+            update.heel_right_position.z = output_foot_position[5];
             update.heel_left_position.x = output_foot_position[0];
             update.heel_left_position.y = output_foot_position[1];
+            update.heel_left_position.z = output_foot_position[2];
         }
 
 

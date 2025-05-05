@@ -365,9 +365,9 @@ JPS_AgentId JPS_Simulation_AddHumanoidModelV0Agent(
                 parameters.trunk_rotation_velocity_x,
                 parameters.trunk_rotation_angle_y,
                 parameters.trunk_rotation_velocity_y,
-                intoPoint(parameters.heel_right_position),
+                intoPoint3D(parameters.heel_right_position),
                 intoPoint(parameters.heel_right_velocity),
-                intoPoint(parameters.heel_left_position),
+                intoPoint3D(parameters.heel_left_position),
                 intoPoint(parameters.heel_left_velocity)
                 }};
         result = simulation->AddAgent(std::move(agent));
