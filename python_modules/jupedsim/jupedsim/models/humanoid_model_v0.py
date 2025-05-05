@@ -45,7 +45,7 @@ class HumanoidModelV0AgentParameters:
         forceDistance: indicates how much the distance between an agent and obstacles or neighbors influences social forces. [in m] (is called B)
         radius: radius of the space an agent occupies. [in m] (is called r)
         height: height of the agent. [in m]
-        head_position: Vector of the cartesian coordinates of the head position of this agent. [in m]
+        head_position: 3D Vector of the cartesian coordinates of the head position of this agent. [in m]
         head_velocity: Velocity vector of the head this agent. [in m/s]
         shoulder_rotation_angle_z: shoulder rotation angle along the longitudinal axis (z) of this agent. [in rad]
         shoulder_rotation_velocity_z: shoulder rotation velocity along the longitudinal axis (z) of this agent. [in rad/s]
@@ -249,7 +249,7 @@ class HumanoidModelV0State:
         self._obj.step_target = step_target
 
     @property
-    def head_position(self) -> tuple[float, float]:
+    def head_position(self) -> tuple[float, float, float]:
         """head position of this agent."""
         return self._obj.head_position
 
