@@ -45,7 +45,7 @@ class HumanoidModelV0AgentParameters:
         forceDistance: indicates how much the distance between an agent and obstacles or neighbors influences social forces. [in m] (is called B)
         radius: radius of the space an agent occupies. [in m] (is called r)
         height: height of the agent. [in m]
-        head_position: Vector of the cartesian coordinates of the head position of this agent. [in m]
+        head_position: 3D Vector of the cartesian coordinates of the head position of this agent. [in m]
         head_velocity: Velocity vector of the head this agent. [in m/s]
         shoulder_rotation_angle_z: shoulder rotation angle along the longitudinal axis (z) of this agent. [in rad]
         shoulder_rotation_velocity_z: shoulder rotation velocity along the longitudinal axis (z) of this agent. [in rad/s]
@@ -53,9 +53,9 @@ class HumanoidModelV0AgentParameters:
         trunk_rotation_velocity_x: trunk rotation velocity along the frontal axis (x) of this agent. [in rad/s]
         trunk_rotation_angle_y: trunk rotation angle along the frontal axis (x) of this agent. [in rad]
         trunk_rotation_velocity_y: trunk rotation velocity along the sagittal axis (y) of this agent. [in rad/s]
-        heel_right_position: Vector of the cartesian coordinates of the right heel position of this agent. [in m]
+        heel_right_position: 3D Vector of the cartesian coordinates of the right heel position of this agent. [in m]
         heel_right_velocity: Velocity vector of the right heel this agent. [in m/s]
-        heel_left_position: Vector of the cartesian coordinates of the left heel position of this agent. [in m]
+        heel_left_position: 3D Vector of the cartesian coordinates of the left heel position of this agent. [in m]
         heel_left_velocity: Velocity vector of the left heel this agent. [in m/s]
     """
 
@@ -86,7 +86,7 @@ class HumanoidModelV0AgentParameters:
     )
     step_target: tuple[float, float] = (0.0, 0.0)
     ## Variables for body parts
-    head_position: tuple[float, float] = (0.0, 0.0)
+    head_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     head_velocity: tuple[float, float] = (0.0, 0.0)
     shoulder_rotation_angle_z: float = 0.0
     shoulder_rotation_velocity_z: float = 0.0
@@ -94,9 +94,9 @@ class HumanoidModelV0AgentParameters:
     trunk_rotation_angle_y: float = 0.0
     trunk_rotation_velocity_x: float = 0.0
     trunk_rotation_velocity_y: float = 0.0
-    heel_right_position: tuple[float, float] = (0.0, 0.0)
+    heel_right_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     heel_right_velocity: tuple[float, float] = (0.0, 0.0)
-    heel_left_position: tuple[float, float] = (0.0, 0.0)
+    heel_left_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     heel_left_velocity: tuple[float, float] = (0.0, 0.0)
 
     def as_native(
@@ -249,7 +249,7 @@ class HumanoidModelV0State:
         self._obj.step_target = step_target
 
     @property
-    def head_position(self) -> tuple[float, float]:
+    def head_position(self) -> tuple[float, float, float]:
         """head position of this agent."""
         return self._obj.head_position
 
@@ -321,7 +321,7 @@ class HumanoidModelV0State:
         self._obj.trunk_rotation_velocity_y = trunk_rotation_velocity_y
 
     @property
-    def heel_right_position(self) -> tuple[float, float]:
+    def heel_right_position(self) -> tuple[float, float, float]:
         """right heel position of this agent."""
         return self._obj.heel_right_position
 
@@ -339,7 +339,7 @@ class HumanoidModelV0State:
         self._obj.heel_right_velocity = heel_right_velocity
 
     @property
-    def heel_left_position(self) -> tuple[float, float]:
+    def heel_left_position(self) -> tuple[float, float, float]:
         """left heel position of this agent."""
         return self._obj.heel_left_position
 
