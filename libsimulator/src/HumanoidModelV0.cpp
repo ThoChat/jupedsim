@@ -99,6 +99,9 @@ namespace {
         std::array<double, 4> O15_0w;
     };
 
+
+    // This function is used to calculate the position of the body Segments given the joint coordinates (theta, phi, Psi);
+
     std::pair<std::array<double, 6>, P> FuncMotion(
         
         double ankle_length,
@@ -452,17 +455,15 @@ namespace {
     // and then pass them to the function of FuncMotion to calculate the position of the joints
     // This function is utilized in the SINGLE support phase, which does not involve the switching of the support foot and swing foot
     std::pair<std::array<double, 6>, P> GaitSingleSupport(
-        double height,
-
-
-        int stepping_foot_index, 
-        double delta_orientation, 
-        double support_foot_orientation, 
-        double step_width,
-        double width_shoulder_rotation, 
-        double step_length, 
-        const std::array<double,6>& feet_position, 
-        double lean_angle, 
+        double height, // parameter
+        int stepping_foot_index, // parameter
+        double delta_orientation, // variable 
+        double support_foot_orientation , // variable
+        double step_width, // parameter
+        double shoulder_width, // parameter
+        double step_length, // variable
+        const std::array<double,6>& feet_position, // variable
+        double lean_angle, // variable
         int rotation_index){
 
 
@@ -484,23 +485,21 @@ namespace {
             double psi_t, psi_s, theta, phi_a, phi_p;
 
             // rotation_index = 1: walk with rotation; rotation_index = 0: walk without rotationb (turning)
-            // psi_t: plevis rotation angle, psi_s: shoulder rotation angle (relative to the pelvis) 
+            // psi_t: plevis rotation angle
+            // psi_s: shoulder rotation angle (relative to the pelvis) 
             if (rotation_index == 0) {
                 psi_t = 0;
                 psi_s = psi_t;
-        
-                double tmp_1 = step_length / (2 * leg_length);
-                theta = asin(tmp_1);
-                double tmp_2 = (pelvis_length - step_width) / (2 * leg_length);
-                phi_a = asin(tmp_2 + lean_angle*M_PI/180);
+                
+                theta = asin(step_length / (2 * leg_length));
+                phi_a = asin(((pelvis_length - step_width) / (2 * leg_length)) + lean_angle*M_PI/180);
                 phi_p = -lean_angle*M_PI/180;
             } else {
                 psi_t = rotation_index * acos(step_width / pelvis_length); 
         
-                psi_s = rotation_index * acos(width_shoulder_rotation / shoulder_length) - psi_t;
+                psi_s = rotation_index * acos(shoulder_width / shoulder_length) - psi_t;
                 double psi_t_sin = sqrt(1 - pow(step_width / pelvis_length, 2));
-                double tmp_1 = (step_length - pelvis_length * psi_t_sin) / (2 * leg_length);
-                theta = asin(tmp_1);
+                theta = asin((step_length - pelvis_length * psi_t_sin) / (2 * leg_length));
                 phi_a = lean_angle*M_PI/180; // lean angle
                 phi_p = -phi_a;
             }
@@ -558,7 +557,7 @@ namespace {
         double delta_orientation, 
         double support_foot_orientation, 
         double step_width,
-        double width_shoulder_rotation, 
+        double shoulder_width, 
         double step_length, 
         const std::array<double,6>& feet_position,
         int rotation_index){
@@ -588,18 +587,16 @@ namespace {
                 psi_t = 0;
                 psi_s = psi_t;
         
-                double tmp_1 = step_length / (2 * leg_length);
-                theta = asin(tmp_1);
-                double tmp_2 = (pelvis_length - step_width) / (2 * leg_length);
-                phi_a = asin(tmp_2);
+
+                theta = asin(step_length / (2 * leg_length));;
+                phi_a = asin((pelvis_length - step_width) / (2 * leg_length));
                 phi_p = 0;
             } else {
                 psi_t = rotation_index * acos(step_width / pelvis_length); 
         
-                psi_s = rotation_index * acos(width_shoulder_rotation / shoulder_length) - psi_t;
+                psi_s = rotation_index * acos(shoulder_width / shoulder_length) - psi_t;
                 double psi_t_sin = sqrt(1 - pow(step_width / pelvis_length, 2));
-                double tmp_1 = (step_length - pelvis_length * psi_t_sin) / (2 * leg_length);
-                theta = asin(tmp_1);
+                theta = asin((step_length - pelvis_length * psi_t_sin) / (2 * leg_length));
                 phi_a = 0; // lean angle
                 phi_p = -phi_a;
             }
@@ -725,7 +722,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     double delta_orientation = 0.0;
     double support_foot_orientation = M_PI/2;
     double step_width = 0.2;
-    double width_shoulder_rotation = 0.45;
+    double shoulder_width = 0.45;
     double step_length = max_step_lenght;
 
     // rotation_index = 1: walk with rotation; 
@@ -736,34 +733,6 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         
     std::array<double, 6> feet_position ;
 
-
-
-    // // body segments length
-
-    // double ankle_length = model.height * HumanoidModelV0::ANKLE_SCALING_FACTOR;
-    // double leg_length = model.height * HumanoidModelV0::LEG_SCALING_FACTOR;
-    // double pelvis_length = model.height * HumanoidModelV0::PELVIS_WIDTH_SCALING_FACTOR;
-    // double neck_length = model.height * HumanoidModelV0::NECK_SCALING_FACTOR;
-    // double shoulder_length = model.height * HumanoidModelV0::SHOULDER_WIDTH_SCALING_FACTOR;
-    // double trunk_length = model.height * HumanoidModelV0::TRUNK_HEIGHT_SCALING_FACTOR;
-    // double trunk_width = model.height * HumanoidModelV0::TRUNK_WIDTH_SCALING_FACTOR;
-    // double foot_forward_length = model.height * HumanoidModelV0::FOOT_FORWARD_SCALING_FACTOR;
-    // double foot_backward_length = model.height * HumanoidModelV0::FOOT_BACKWARD_SCALING_FACTOR;
-    // double foot_inner_length = model.height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
-    // double foot_outer_length = model.height * HumanoidModelV0::FOOT_WIDTH_SCALING_FACTOR;
-
-    // Print all variables after declaration
-    // std::cout << "Ankle Length: " << ankle_length <<  " -- Ankle Length true: " << 0.0451 * model.height << std::endl;
-    // std::cout << "Leg Length: " << leg_length << " -- Leg Length true: " << (0.2522 + 0.2269) * model.height << std::endl;
-    // std::cout << "Pelvis Length: " << pelvis_length << " -- Pelvis Length true: " << 0.2 / 1.7 * model.height << std::endl;
-    // std::cout << "Neck Length: " << neck_length << " -- Neck Length true: " << 0.1396 * model.height << std::endl;
-    // std::cout << "Shoulder Length: " << shoulder_length << " -- Shoulder Length true: " << (0.45 / 1.7) * model.height << std::endl;
-    // std::cout << "Trunk Length: " << trunk_length << " -- Trunk Length true: " << 0.3495 * model.height << std::endl;
-    // std::cout << "Trunk Width: " << trunk_width << " -- Trunk Width true: " << (0.25 / 1.7) * model.height << std::endl;
-    // std::cout << "Foot Forward Length: " << foot_forward_length << " -- Foot Forward Length true: " << (0.1470 / 2) * model.height << std::endl;
-    // std::cout << "Foot Backward Length: " << foot_backward_length << " -- Foot Backward Length true: " << (0.1470 / 4) * model.height << std::endl;
-    // std::cout << "Foot Inner Length: " << foot_inner_length << " -- Foot Inner Length true: " << (0.1470 * 8 / 50) * model.height << std::endl;
-    // std::cout << "Foot Outer Length: " << foot_outer_length << " -- Foot Outer Length true: " << (0.1470 * 8 / 50) * model.height << std::endl;
 
 
 
@@ -792,8 +761,15 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         }
 
         auto [output_stepping_foot_index, output_foot_position, output_support_foot_orientation, output_position] = GaitDoubleSupports(
-                model.height,
-                model.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, step_length, feet_position, rotation_index);
+                model.height, // parameter
+                model.stepping_foot_index, // == 0
+                delta_orientation,  // == 0
+                support_foot_orientation, // pi//2 ??
+                step_width, // 0.2
+                shoulder_width, // 0.45
+                step_length, // max_step_lenght = model.height/2.5
+                feet_position, // heel position
+                rotation_index); // == 0
         
 
         support_foot_orientation = output_support_foot_orientation;
@@ -831,32 +807,32 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         
         double sl_p, lean_angle = 2 ;
         update.stepping_foot_index = model.stepping_foot_index;
-        double tmp = 1 - model.step_timer/step_duration; 
+        double step_complition_factor = 1 - model.step_timer/step_duration; 
 
-        // rotation_index = 1: walk with rotation; rotation_index = 0: walk without rotationb (turning)
+        // rotation_index = 1: walk with rotation; rotation_index = 0: walk without rotation (turning)
         if (rotation_index != 0) {
             if (model.step_timer > step_duration/2) {
 
-                sl_p = 2 * std::pow(tmp, 2) * (max_step_lenght + max_step_lenght) - max_step_lenght;
-                lean_angle  =  2 * tmp * lean_angle;
+                sl_p = 2 * std::pow(step_complition_factor, 2) * (max_step_lenght + max_step_lenght) - max_step_lenght;
+                lean_angle  =  2 * step_complition_factor * lean_angle;
             }
             else
             {
-                sl_p = max_step_lenght - 2 * std::pow(1-tmp, 2) * (2 * max_step_lenght);
-                lean_angle  =  2 * lean_angle - 2 * tmp * lean_angle;
+                sl_p = max_step_lenght - 2 * std::pow(1-step_complition_factor, 2) * (2 * max_step_lenght);
+                lean_angle  =  2 * lean_angle - 2 * step_complition_factor * lean_angle;
             }
         } 
         else
         {
             if (model.step_timer > step_duration/2) {
 
-                sl_p = 2 * std::pow(tmp, 2) * (max_step_lenght + max_step_lenght) - max_step_lenght;
-                lean_angle  =  2 * tmp * lean_angle;
+                sl_p = 2 * std::pow(step_complition_factor, 2) * (max_step_lenght + max_step_lenght) - max_step_lenght;
+                lean_angle  =  2 * step_complition_factor * lean_angle;
             }
             else
             {
-                sl_p = max_step_lenght - 2 * std::pow(1-tmp, 2) * (2 * max_step_lenght);
-                lean_angle  =  2 * lean_angle - 2 * tmp * lean_angle;
+                sl_p = max_step_lenght - 2 * std::pow(1-step_complition_factor, 2) * (2 * max_step_lenght);
+                lean_angle  =  2 * lean_angle - 2 * step_complition_factor * lean_angle;
             }
         }
 
@@ -880,7 +856,16 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         }
         auto [output_foot_position, output_position] = GaitSingleSupport(
                 model.height,
-                update.stepping_foot_index, delta_orientation, support_foot_orientation, step_width, width_shoulder_rotation, sl_p, feet_position, lean_angle, rotation_index);
+                update.stepping_foot_index, 
+                delta_orientation, 
+                support_foot_orientation, 
+                step_width, 
+                shoulder_width, 
+                sl_p, 
+                feet_position, 
+                lean_angle, 
+                rotation_index);
+
    
         update.position.x = output_position.center_of_mass[0];
         update.position.y = output_position.center_of_mass[1];
@@ -916,7 +901,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
     // ## head 
     update.head_velocity = model.head_velocity + normal_to_orientation*(0.1*Distance(update.position, ped.pos) * dT); 
-    update.head_position = update.head_position;
+    // update.head_position = update.head_position;
 
     // ## shoulders
     update.shoulder_rotation_velocity_z = 0.0;
