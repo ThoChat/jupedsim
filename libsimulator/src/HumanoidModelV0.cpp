@@ -34,19 +34,20 @@ namespace {
 
 
     #include "HumanoidModelV0Data.hpp"
+    // Get reference to the class instance
+    const HumanoidModelV0& humanoid = HumanoidModelV0(0.0, 0.0); // Temporary to have access to Denavit_Hartenberg_Matrix function
+        
    
-
-
-    /*** Matrix opperators using Eigen ***/
-    // Denavit-Hartenberg (DH) convention
-    Eigen::Matrix4d Denavit_Hartenberg_Matrix(double theta, double d, double a, double alpha) {
-        Eigen::Matrix4d mat;
-        mat << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha), a*cos(theta),
-                sin(theta), cos(theta)*cos(alpha), -cos(theta)*sin(alpha), a*sin(theta),
-                0, sin(alpha), cos(alpha), d,
-                0, 0, 0, 1;
-        return mat;
-    }
+    // /*** Matrix opperators using Eigen ***/
+    // // Denavit-Hartenberg (DH) convention
+    // Eigen::Matrix4d Denavit_Hartenberg_Matrix(double theta, double d, double a, double alpha) {
+    //     Eigen::Matrix4d mat;
+    //     mat << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha), a*cos(theta),
+    //             sin(theta), cos(theta)*cos(alpha), -cos(theta)*sin(alpha), a*sin(theta),
+    //             0, sin(alpha), cos(alpha), d,
+    //             0, 0, 0, 1;
+    //     return mat;
+    // }
 
     // This function is used to calculate the position of the joints;
     // Input: link: the body parameters, see ANATOMY;
@@ -149,26 +150,26 @@ namespace {
 
 
         // To Do: add a description of what are the B1, B2, B3,... , B10 matrices
-        Eigen::Matrix4d B1_eigen = Denavit_Hartenberg_Matrix(phi1 + M_PI / 2, 0, 0, M_PI / 2);
+        Eigen::Matrix4d B1_eigen = humanoid.Denavit_Hartenberg_Matrix(phi1 + M_PI / 2, 0, 0, M_PI / 2);
         Eigen::Matrix4d T1_0_eigen = B1_eigen;
         Eigen::Vector4d O1_0_eigen = T1_0_eigen * O0_0_eigen;
         Eigen::Vector4d O1_0w_eigen = W_eigen * O1_0_eigen;
         O1_0w_eigen = O1_0w_eigen + heel_support_eigen;
         
 
-        Eigen::Matrix4d B2_eigen = Denavit_Hartenberg_Matrix(-th1 + M_PI / 2, 0, leg_length, 0);
+        Eigen::Matrix4d B2_eigen = humanoid.Denavit_Hartenberg_Matrix(-th1 + M_PI / 2, 0, leg_length, 0);
         Eigen::Matrix4d T2_0_eigen = T1_0_eigen * B2_eigen;
         Eigen::Vector4d O2_0_eigen = T2_0_eigen * O0_0_eigen;
         Eigen::Vector4d O2_0w_eigen = W_eigen * O2_0_eigen;
         O2_0w_eigen = O2_0w_eigen + heel_support_eigen;
         
-        Eigen::Matrix4d B3_eigen = Denavit_Hartenberg_Matrix(-th3, 0, 0, -M_PI / 2);
+        Eigen::Matrix4d B3_eigen = humanoid.Denavit_Hartenberg_Matrix(-th3, 0, 0, -M_PI / 2);
         Eigen::Matrix4d T3_0_eigen = T2_0_eigen * B3_eigen;
         Eigen::Vector4d O3_0_eigen = T3_0_eigen * O0_0_eigen;
         Eigen::Vector4d O3_0w_eigen = W_eigen * O3_0_eigen;
         O3_0w_eigen = O3_0w_eigen + heel_support_eigen;
 
-        Eigen::Matrix4d B4_eigen = Denavit_Hartenberg_Matrix(phi2, 0, 0, 0);
+        Eigen::Matrix4d B4_eigen = humanoid.Denavit_Hartenberg_Matrix(phi2, 0, 0, 0);
         Eigen::Matrix4d rotMat_eigen;
         rotMat_eigen << 0, 0, 1, 0,
                         1, 0, 0, 0,
@@ -182,9 +183,9 @@ namespace {
 
         Eigen::Matrix4d B5_eigen;
         if (stepping_foot_index == -1) {
-            B5_eigen = Denavit_Hartenberg_Matrix(Psi1, 0, pelvis_length, 0);
+            B5_eigen = humanoid.Denavit_Hartenberg_Matrix(Psi1, 0, pelvis_length, 0);
         } else if (stepping_foot_index == 1) {
-            B5_eigen = Denavit_Hartenberg_Matrix(Psi1 + M_PI, 0, pelvis_length, 0);
+            B5_eigen = humanoid.Denavit_Hartenberg_Matrix(Psi1 + M_PI, 0, pelvis_length, 0);
         }
         Eigen::Matrix4d T5_0_eigen = T4_0_eigen * B5_eigen;
         Eigen::Vector4d O5_0_eigen = T5_0_eigen * O0_0_eigen;
@@ -200,35 +201,35 @@ namespace {
                             0, 0, 1, 0,
                             0, 0, 0, 1;
         if (stepping_foot_index == -1) {
-            B6_eigen = Denavit_Hartenberg_Matrix(Psi2, 0, 0, -M_PI / 2);
+            B6_eigen = humanoid.Denavit_Hartenberg_Matrix(Psi2, 0, 0, -M_PI / 2);
             T6_0_eigen = T5_0_eigen * B6_eigen * transMat_eigen;
         } else if (stepping_foot_index == 1) {
-            B6_eigen = Denavit_Hartenberg_Matrix(Psi2, 0, 0, M_PI / 2);
+            B6_eigen = humanoid.Denavit_Hartenberg_Matrix(Psi2, 0, 0, M_PI / 2);
             T6_0_eigen = T5_0_eigen * B6_eigen * transMat_eigen;
         }
         Eigen::Vector4d O6_0_eigen = T6_0_eigen * O0_0_eigen;
         Eigen::Vector4d O6_0w_eigen = W_eigen * O6_0_eigen;
         O6_0w_eigen = O6_0w_eigen + heel_support_eigen;
         
-        Eigen::Matrix4d B7_eigen = Denavit_Hartenberg_Matrix(phi3, 0, 0, -M_PI / 2);
+        Eigen::Matrix4d B7_eigen = humanoid.Denavit_Hartenberg_Matrix(phi3, 0, 0, -M_PI / 2);
         Eigen::Matrix4d T7_0_eigen = T6_0_eigen * B7_eigen;
         Eigen::Vector4d O7_0_eigen = T7_0_eigen * O0_0_eigen;
         Eigen::Vector4d O7_0w_eigen = W_eigen * O7_0_eigen;
         O7_0w_eigen = O7_0w_eigen + heel_support_eigen;
         
-        Eigen::Matrix4d B8_eigen = Denavit_Hartenberg_Matrix(-th4 + M_PI, 0, leg_length, 0);
+        Eigen::Matrix4d B8_eigen = humanoid.Denavit_Hartenberg_Matrix(-th4 + M_PI, 0, leg_length, 0);
         Eigen::Matrix4d T8_0_eigen = T7_0_eigen * B8_eigen;
         Eigen::Vector4d O8_0_eigen = T8_0_eigen * O0_0_eigen;
         Eigen::Vector4d O8_0w_eigen = W_eigen * O8_0_eigen;
         O8_0w_eigen = O8_0w_eigen + heel_support_eigen;
 
-        Eigen::Matrix4d B9_eigen = Denavit_Hartenberg_Matrix(-th6, 0, 0, M_PI / 2);
+        Eigen::Matrix4d B9_eigen = humanoid.Denavit_Hartenberg_Matrix(-th6, 0, 0, M_PI / 2);
         Eigen::Matrix4d T9_0_eigen = T8_0_eigen * B9_eigen;
         Eigen::Vector4d O9_0_eigen = T9_0_eigen * O0_0_eigen;
         Eigen::Vector4d O9_0w_eigen = W_eigen * O9_0_eigen;
         O9_0w_eigen = O9_0w_eigen + heel_support_eigen;
 
-        Eigen::Matrix4d B10_eigen = Denavit_Hartenberg_Matrix(phi4, 0, ankle_length, 0);
+        Eigen::Matrix4d B10_eigen = humanoid.Denavit_Hartenberg_Matrix(phi4, 0, ankle_length, 0);
         Eigen::Matrix4d T10_0_eigen = T9_0_eigen * B10_eigen;
         Eigen::Vector4d O10_0_eigen = T10_0_eigen * O0_0_eigen;
         Eigen::Vector4d O10_0w_eigen = W_eigen * O10_0_eigen;
@@ -268,7 +269,7 @@ namespace {
                         0, 0, 1, 0,
                         0, 0, 0, 1; 
         
-        B11_eigen = B11_eigen * Denavit_Hartenberg_Matrix(Psi3, 0, 0, 0);
+        B11_eigen = B11_eigen * humanoid.Denavit_Hartenberg_Matrix(Psi3, 0, 0, 0);
         Eigen::Matrix4d T11_0_eigen = T5_0_eigen * B11_eigen;
         Eigen::Vector4d O11_0_eigen = T11_0_eigen * O0_0_eigen;
         Eigen::Vector4d O11_0w_eigen = W_eigen * O11_0_eigen;
@@ -1063,4 +1064,20 @@ Point HumanoidModelV0::ForceBetweenPoints(
             this->friction * (radius - dist) * (velocity.ScalarProduct(tangent));
     }
     return n_ij * pushing_force_length + tangent * friction_force_length;
+}
+
+/*** Matrix opperators using Eigen ***/
+// Denavit-Hartenberg (DH) convention
+Eigen::Matrix4d HumanoidModelV0::Denavit_Hartenberg_Matrix(
+    double theta, 
+    double d, 
+    double a, 
+    double alpha) const
+    {
+    Eigen::Matrix4d mat;
+    mat << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha), a*cos(theta),
+            sin(theta), cos(theta)*cos(alpha), -cos(theta)*sin(alpha), a*sin(theta),
+            0, sin(alpha), cos(alpha), d,
+            0, 0, 0, 1;
+    return mat;
 }
