@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 #include "Point.hpp"
 #include "Point3D.hpp"
-
+#include <Eigen/Dense>
 #include <optional>
 
 struct HumanoidModelV0Update {
@@ -30,5 +30,6 @@ struct HumanoidModelV0Update {
     Point heel_right_velocity{};
     Point3D heel_left_position{};
     Point heel_left_velocity{};
+    Eigen::MatrixXd joint_coordinates_matrix {};
     
 };
