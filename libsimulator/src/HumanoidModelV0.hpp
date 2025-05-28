@@ -7,6 +7,7 @@
 #include "NeighborhoodSearch.hpp"
 #include "OperationalModel.hpp"
 #include "UniqueID.hpp"
+#include <Eigen/Dense>
 
 
 struct GenericAgent;
@@ -72,7 +73,6 @@ private:
         const Point pt1,
         const Point pt2,
         const double A,
-
         const double B,
         const double radius,
         const Point velocity) const;
@@ -86,6 +86,7 @@ private:
      */
     static double PushingForceLength(double A, double B, double r, double distance);
 
+
     /*#########################################################################
     ###     Relative to the Humanoid Representation Paradigm of agents      ###
     #########################################################################*/
@@ -93,7 +94,7 @@ private:
     // ### Constants ###
 
 
-    public: // should be remove went the namespace wil be deleted
+    public: 
     // # Anthropometric scaling factors #
     /* The following parameters are multiplyed by agents height (HumanoidModelV0Data.height) 
         to obtain the legth of the considered Limb.  */ 
@@ -108,7 +109,24 @@ private:
     static constexpr double FOOT_BACKWARD_SCALING_FACTOR = 0.1470/4; // 
     static constexpr double FOOT_WIDTH_SCALING_FACTOR = 0.1470*8/50; // 
 
-
+    // have to be set private later
+    /**
+     * Denavit-Hartenberg matrix transformation
+     * This function calculates the Denavit-Hartenberg matrix based on the given parameters.
+     * The Denavit-Hartenberg convention is a standardized way to represent the joint parameters of a robotic manipulator.
+     * It is used to describe the relationship between the joint angles and the position and orientation of the end-effector.
+     * @param theta joint angle
+     * @param d distance along the previous z-axis
+     * @param a distance along the current x-axis
+     * @param alpha angle between the previous z-axis and the current z-axis
+     * @return Denavit-Hartenberg matrix
+    
+     */
+    Eigen::Matrix4d Denavit_Hartenberg_Matrix(
+    double theta, 
+    double d, 
+    double a, 
+    double alpha) const;
     
 
 };
