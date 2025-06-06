@@ -38,8 +38,22 @@ struct HumanoidModelV0Data {
     Point heel_right_velocity{}; 
     Point3D heel_left_position{}; 
     Point heel_left_velocity{}; 
-    Eigen::MatrixXd joint_coordinates_matrix {}; // (Rows: x/y/z rotation, Columns: joints)
-
+    Eigen::MatrixXd joint_angles_matrix {}; // Rows: x/y/z rotation, Columns: joints * 11
+    Eigen::MatrixXd joint_position_matrix {}; // Rows: x/y/z/1 position (for Denavit Hartenberg tranform), Columns: joints *11
+    // list of all simulated joitns
+    /**
+    0 - right heel
+    1 - right ankle
+    2 - right hip
+    3 - left hip
+    4 - left ankle
+    5 - left heel
+    6 - pelvis/CoM
+    7 - right shoulder
+    8 - C7 / neck
+    9 - left shoulder
+    10 - head 
+     */
 
 };
 
@@ -53,7 +67,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
     {
         return fmt::format_to(
             ctx.out(),
-            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, step_timer={}, stepping_foot_index{}, step_target={}, head_position={}, head_velocity={}, shoulder_rotation_angle_z={}, shoulder_rotation_velocity_z={}, trunk_rotation_angle_x={}, trunk_rotation_velocity_x={}, trunk_rotation_angle_y={}, trunk_rotation_velocity_y={}, heel_right_position={}, heel_right_velocity={}, heel_left_position={}, heel_left_velocity={}, joint_coordinates_matrix={} ])",
+            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, step_timer={}, stepping_foot_index{}, step_target={}, head_position={}, head_velocity={}, shoulder_rotation_angle_z={}, shoulder_rotation_velocity_z={}, trunk_rotation_angle_x={}, trunk_rotation_velocity_x={}, trunk_rotation_angle_y={}, trunk_rotation_velocity_y={}, heel_right_position={}, heel_right_velocity={}, heel_left_position={}, heel_left_velocity={}, joint_angles_matrix={}, joint_position_matrix={} ])",
             m.velocity,
             m.mass,
             m.desiredSpeed,
@@ -78,7 +92,8 @@ struct fmt::formatter<HumanoidModelV0Data> {
             m.heel_right_velocity,
             m.heel_left_position,
             m.heel_left_velocity,
-            m.joint_coordinates_matrix
+            m.joint_angles_matrix,
+            m.joint_position_matrix
                         );
     }
 };
