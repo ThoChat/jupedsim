@@ -38,8 +38,12 @@ struct HumanoidModelV0Data {
     Point heel_right_velocity{}; 
     Point3D heel_left_position{}; 
     Point heel_left_velocity{}; 
-    Eigen::MatrixXd joint_angles_matrix {}; // Rows: x/y/z rotation, Columns: joints * 11
-    Eigen::MatrixXd joint_position_matrix {}; // Rows: x/y/z/1 position (for Denavit Hartenberg tranform), Columns: joints *11
+    Eigen::MatrixXd joint_angles_matrix {};     // Rows: x/y/z rotation, Columns: joints * 11
+    Eigen::MatrixXd joint_position_matrix {};   // Rows: x/y/z/1 position (for Denavit Hartenberg tranform)
+                                                // , Columns: joints *11
+                                                // the referencial of the coordinate in linked to the pelvis so that
+                                                // x == sagittal, y == frontal, z == vertical (up) axis
+    // # body parameters                        
     // list of all simulated joitns
     /**
     0 - right heel

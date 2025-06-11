@@ -86,6 +86,21 @@ private:
      */
     static double PushingForceLength(double A, double B, double r, double distance);
 
+    Eigen::MatrixXd ComputeJointAnglesStepDoubleSupports(const GenericAgent& agent,
+                            double step_length, 
+                            double step_width)
+                            const;
+
+    Eigen::MatrixXd ComputeJointAnglesGaitSingleSupport(const GenericAgent& agent,
+                            double step_length, 
+                            double step_width, 
+                            double step_duration) 
+                            const;
+
+    HumanoidModelV0Update UpdateLimbPositions (
+                            const GenericAgent& agent
+    )
+                            const;
 
     /*#########################################################################
     ###     Relative to the Humanoid Representation Paradigm of agents      ###
@@ -127,6 +142,8 @@ private:
     double d, 
     double a, 
     double alpha) const;
+
+
     
 
 };
