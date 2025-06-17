@@ -132,7 +132,8 @@ namespace {
         double phi1 = phi_eigen[0], phi2 = phi_eigen[1], phi3 = phi_eigen[2], phi4 = phi_eigen[3];
         double Psi1 = Psi_eigen[0], Psi2 = Psi_eigen[1], Psi3 = Psi_eigen[2];
     
-        std::cout << "Joint angles in FuncMotion" << std::endl;
+        std::cout << " " << std::endl;
+        std::cout << "### old joint angles in FuncMotion" << std::endl;
         std::cout << "stepping_foot_index = " << stepping_foot_index << std::endl;
         if (stepping_foot_index == -1) { // right foot stepping, left foot suport
             std::cout << "right ankle: (" << phi4 << ", " << th6 << ", " << 0 <<  ")" << std::endl;
@@ -147,8 +148,9 @@ namespace {
             std::cout << "left ankle: (" << phi4 << ", " << th6 << ", " << 0 << ")" << std::endl;
             std::cout << "pelvis: (" << 0 << ", " << 0 << ", " << Psi3 << ")" << std::endl;
         }
-        std::cin.get();
+        std::cin.get(); // pause
         system("clear"); // clean terminal output
+        
 
         
         //## Rewriting fuction using Eigen ##
@@ -160,10 +162,14 @@ namespace {
                         cos(support_foot_orientation), 0, sin(support_foot_orientation), 0,
                         0, 1, 0, ankle_length,
                         0, 0, 0, 1;
-        
+                        
+        std::cout << "old Function: FuncMotion" << std::endl;
+        std::cout << "W_eigen: \n" << W_eigen << std::endl;
+                        
         Eigen::Vector4d O0_0_eigen = {0, 0, 0, 1}; 
         Eigen::Vector4d O0_0w_eigen = W_eigen * O0_0_eigen;
         O0_0w_eigen = O0_0w_eigen + heel_support_eigen;
+
 
 
         // To Do: add a description of what are the B1, B2, B3,... , B10 matrices
@@ -179,6 +185,10 @@ namespace {
         Eigen::Vector4d O2_0_eigen = T2_0_eigen * O0_0_eigen;
         Eigen::Vector4d O2_0w_eigen = W_eigen * O2_0_eigen;
         O2_0w_eigen = O2_0w_eigen + heel_support_eigen;
+
+        
+        std::cout << "Support hip position: " << O2_0w_eigen.transpose() << std::endl;
+        
         
         Eigen::Matrix4d B3_eigen = humanoid.Denavit_Hartenberg_Matrix(-th3, 0, 0, -M_PI / 2);
         Eigen::Matrix4d T3_0_eigen = T2_0_eigen * B3_eigen;
@@ -208,6 +218,9 @@ namespace {
         Eigen::Vector4d O5_0_eigen = T5_0_eigen * O0_0_eigen;
         Eigen::Vector4d O5_0w_eigen = W_eigen * O5_0_eigen;
         O5_0w_eigen = O5_0w_eigen + heel_support_eigen;
+
+        std::cout << "Stepping hip position: " << O5_0w_eigen.transpose() << std::endl;
+
         
         Eigen::Matrix4d B6_eigen;
         Eigen::Matrix4d T6_0_eigen;
@@ -713,7 +726,6 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 {
     const auto& model = std::get<HumanoidModelV0Data>(ped.model);
     HumanoidModelV0Update update{};
-    HumanoidModelV0Update debug_update{};
     auto forces = DrivingForce(ped);
 
     const auto neighborhood = neighborhoodSearch.GetNeighboringAgents(ped.pos, this->_cutOffRadius);
@@ -844,7 +856,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     } 
     else {
         
-        // testing new SingleSupport function
+        // New Single Support Gait function
         update.joint_angles_matrix = ComputeJointAnglesGaitSingleSupport(ped, step_length, step_width, step_duration);
         // pass on stepping_foot_index 
         update.stepping_foot_index = model.stepping_foot_index;
@@ -940,9 +952,23 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         update.step_timer = model.step_timer - 1;
 
     }
-    
 
-    // creating update for the Humanoid model
+    // compute new orienttion angle between the world ref and the ref linked to the agent's pervis
+    // this rotation is along the common z-axis (vertical axis) of the world and the agent's pelvis
+    double updated_orientation_angle= asin(update.velocity.Normalized().x);
+    if (update.velocity.Normalized().y < 0){
+        updated_orientation_angle = M_PI - updated_orientation_angle;
+    }
+
+    // initialise the updated joint positions matrix
+    Eigen::MatrixXd updated_joint_positions_matrix; 
+    updated_joint_positions_matrix = Eigen::MatrixXd::Zero(11, 3); // 11 joints, 3 positions each
+    updated_joint_positions_matrix = ComputeLimbPositionsfromJointAngles (  ped,
+                                                                            updated_orientation_angle,
+                                                                            update.joint_angles_matrix);
+
+    // Update position of the joints 
+    // ....
 
     // ## head 
     // update.head_position = update.head_position;
@@ -1117,12 +1143,12 @@ Point HumanoidModelV0::ForceBetweenPoints(
 Eigen::Matrix4d HumanoidModelV0::Denavit_Hartenberg_Matrix(
     double theta, 
     double d, 
-    double a, 
+    double r, 
     double alpha) const
     {
     Eigen::Matrix4d mat;
-    mat << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha), a*cos(theta),
-            sin(theta), cos(theta)*cos(alpha), -cos(theta)*sin(alpha), a*sin(theta),
+    mat << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha), r*cos(theta),
+            sin(theta), cos(theta)*cos(alpha), -cos(theta)*sin(alpha), r*sin(theta),
             0, sin(alpha), cos(alpha), d,
             0, 0, 0, 1;
     return mat;
@@ -1209,7 +1235,7 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesStepDoubleSupports(const Gene
     }
 
 
-    std::cout << "New ComputeJointAnglesStepDoubleSupports function" << std::endl;
+    std::cout << "### New ComputeJointAnglesStepDoubleSupports function" << std::endl;
     std::cout << "stepping_foot_index = " << model.stepping_foot_index << std::endl;
     std::cout << "right ankle: " << updated_joint_angles_matrix.row(1) << std::endl;
     std::cout << "right hip: " << updated_joint_angles_matrix.row(2) << std::endl;
@@ -1342,16 +1368,114 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGaitSingleSupport(const Gener
 
 }
 
+Eigen::MatrixXd HumanoidModelV0::ComputeLimbPositionsfromJointAngles (
+                            const GenericAgent& agent,
+                            double updated_orientation_angle, // this is the orientation angle of the agent's pelvis
+                            Eigen::MatrixXd updated_joint_angles_matrix
+                            
+    ) const
+{
+ 
+    
+    // Get the model data from the agent
+    auto model = std::get<HumanoidModelV0Data>(agent.model);
+
+    
+    // initialise the updated joint positions matrix
+    Eigen::MatrixXd updated_joint_positions_matrix; 
+    updated_joint_positions_matrix = Eigen::MatrixXd::Zero(11, 3); // 11 joints, 3 positions each
+
+    
+
+    // Compute all segment lengths based on the model height
+    double ankle_length = model.height * ANKLE_SCALING_FACTOR;
+    double leg_length = model.height * LEG_SCALING_FACTOR;
+    double pelvis_width = model.height * PELVIS_WIDTH_SCALING_FACTOR;
+    // double neck_length = model.height * NECK_SCALING_FACTOR;
+    // double shoulder_width = model.height * SHOULDER_WIDTH_SCALING_FACTOR;
+    // double trunk_length = model.height * TRUNK_HEIGHT_SCALING_FACTOR;
+    // double trunk_width = model.height * TRUNK_WIDTH_SCALING_FACTOR;
+
+    
+    // Get support foot position and angles, origin for the computation of the other joint positions
+
+    Eigen::Vector4d heel_support_positions;
+    double angle_z_support_foot_world;
+    if (model.stepping_foot_index == 1) // if the right foot is support foot (left foot stepping)
+    {
+        heel_support_positions << model.heel_right_position.x, // right heel position
+                                 model.heel_right_position.y,
+                                 model.heel_right_position.z,
+                                 1.0; // homogeneous coordinates for DH matrix computation
+        angle_z_support_foot_world = updated_joint_angles_matrix(1,2)+updated_orientation_angle; // right ankle angles
+    } 
+    else //if (model.stepping_foot_index == -1) // if support foot is the left foot, right foot stepping 
+    { 
+        heel_support_positions << model.heel_left_position.x, // right heel position
+                                 model.heel_left_position.y,
+                                 model.heel_left_position.z,
+                                 1.0; // homogeneous coordinates for DH matrix computation
+        angle_z_support_foot_world = updated_joint_angles_matrix(4,2)+updated_orientation_angle; // right ankle angles
+    }
+
+    Eigen::Vector4d origin_vector ={0,0,0,1}; // origin vector for the computation of the joint positions
+
+    std::cout << " "  << std::endl;
+    std::cout<< "## New ComputeLimbPositionsfromJointAngles function" << std::endl;
+
+    // Transformation matrix from support foot to world frame
+    Eigen::Matrix4d T_support_foot__world;
+    T_support_foot__world << -sin(angle_z_support_foot_world), 0, cos(angle_z_support_foot_world), 0,
+                    cos(angle_z_support_foot_world), 0, sin(angle_z_support_foot_world), 0,
+                    0, 1, 0, ankle_length,
+                    0, 0, 0, 1;
 
 
-// call function UpdateLimbPositions to compute the new joint positions
+    std::cout << "T_support_foot__world: \n" << T_support_foot__world << std::endl;
 
+    // Position of the support ankle and heel do not change
 
+    // Position of the support leg hip
+    Eigen::Matrix4d B_1 = Denavit_Hartenberg_Matrix(updated_joint_angles_matrix(1,0) + M_PI / 2, 0, 0, M_PI / 2);
+    Eigen::Matrix4d B_2 = Denavit_Hartenberg_Matrix(-updated_joint_angles_matrix(1,1) + M_PI / 2, 0, leg_length, 0);
+    Eigen::Vector4d support_hip_position = T_support_foot__world *( (B_1+B_2) * origin_vector) + heel_support_positions;
 
+    
+    std::cout << "Support hip position: " << support_hip_position.transpose() << std::endl;
+    system("clear"); // clean terminal output
 
+    // Position of the pelvis center / Center of Mass (CoM)
+    // wip
+    
+    // position of the stepping leg hip
+    Eigen::Matrix4d B_3 = Denavit_Hartenberg_Matrix(updated_joint_angles_matrix(2,0) + M_PI / 2, 0, 0, M_PI / 2);
+    Eigen::Matrix4d B_4 = Denavit_Hartenberg_Matrix(-updated_joint_angles_matrix(2,1) + M_PI / 2, 0, leg_length, 0);
+    Eigen::Matrix4d rotation_matrix; // What is this rotation matrix for?
+    rotation_matrix << 0, 0, 1, 0,
+                    1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 0, 1;
+    Eigen::Matrix4d B_5;
+    if (model.stepping_foot_index == -1) {
+        B_5 = Denavit_Hartenberg_Matrix(-updated_joint_angles_matrix(2,2), 0, pelvis_width, 0);
+    } else if (model.stepping_foot_index == 1) {
+        B_5 = Denavit_Hartenberg_Matrix(updated_joint_angles_matrix(2,2) + M_PI, 0, pelvis_width, 0);
+    }
 
+    Eigen::Vector4d stepping_hip_position =   T_support_foot__world   
+                                                        * B_1
+                                                        * B_2 
+                                                        * B_3 
+                                                        * B_4 
+                                                        * rotation_matrix 
+                                                        * B_5 * origin_vector + heel_support_positions;
+                                                        
+    std::cout << "Stepping hip position: " << stepping_hip_position.transpose() << std::endl;
+    std::cin.get(); // pause
+    system("clear"); // clean terminal output
 
-
+    return updated_joint_positions_matrix;
+}
 
 
 

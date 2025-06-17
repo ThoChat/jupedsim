@@ -38,13 +38,10 @@ struct HumanoidModelV0Data {
     Point heel_right_velocity{}; 
     Point3D heel_left_position{}; 
     Point heel_left_velocity{}; 
-    Eigen::MatrixXd joint_angles_matrix {};     // Rows: x/y/z rotation, Columns: joints * 11
-    Eigen::MatrixXd joint_position_matrix {};   // Rows: x/y/z/1 position (for Denavit Hartenberg tranform)
-                                                // , Columns: joints *11
+    Eigen::MatrixXd joint_angles_matrix {};     // Rows: joints * 11, Columns: x/y/z rotation, 
                                                 // the referencial of the coordinate in linked to the pelvis so that
-                                                // x == sagittal, y == frontal, z == vertical (up) axis
-    // # body parameters                        
-    // list of all simulated joitns
+                                                // x == sagittal, y == frontal, z == vertical (up) axis                    
+    // list of all simulated joints
     /**
     0 - right heel
     1 - right ankle
@@ -57,7 +54,7 @@ struct HumanoidModelV0Data {
     8 - C7 / neck
     9 - left shoulder
     10 - head 
-     */
+     **/
 
 };
 
@@ -71,7 +68,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
     {
         return fmt::format_to(
             ctx.out(),
-            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, step_timer={}, stepping_foot_index{}, step_target={}, head_position={}, head_velocity={}, shoulder_rotation_angle_z={}, shoulder_rotation_velocity_z={}, trunk_rotation_angle_x={}, trunk_rotation_velocity_x={}, trunk_rotation_angle_y={}, trunk_rotation_velocity_y={}, heel_right_position={}, heel_right_velocity={}, heel_left_position={}, heel_left_velocity={}, joint_angles_matrix={}, joint_position_matrix={} ])",
+            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, step_timer={}, stepping_foot_index{}, step_target={}, head_position={}, head_velocity={}, shoulder_rotation_angle_z={}, shoulder_rotation_velocity_z={}, trunk_rotation_angle_x={}, trunk_rotation_velocity_x={}, trunk_rotation_angle_y={}, trunk_rotation_velocity_y={}, heel_right_position={}, heel_right_velocity={}, heel_left_position={}, heel_left_velocity={}, joint_angles_matrix={} ])",
             m.velocity,
             m.mass,
             m.desiredSpeed,
@@ -96,8 +93,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
             m.heel_right_velocity,
             m.heel_left_position,
             m.heel_left_velocity,
-            m.joint_angles_matrix,
-            m.joint_position_matrix
+            m.joint_angles_matrix
                         );
     }
 };

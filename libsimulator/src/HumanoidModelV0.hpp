@@ -97,9 +97,10 @@ private:
                             double step_duration) 
                             const;
 
-    HumanoidModelV0Update UpdateLimbPositions (
-                            const GenericAgent& agent
-    )
+    Eigen::MatrixXd ComputeLimbPositionsfromJointAngles (
+                            const GenericAgent& agent,
+                            double updated_orientation_angle,
+                            Eigen::MatrixXd joint_angles_matrix)
                             const;
 
     /*#########################################################################
@@ -140,7 +141,7 @@ private:
     Eigen::Matrix4d Denavit_Hartenberg_Matrix(
     double theta, 
     double d, 
-    double a, 
+    double r, 
     double alpha) const;
 
 
