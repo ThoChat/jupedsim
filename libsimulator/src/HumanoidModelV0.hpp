@@ -97,7 +97,7 @@ private:
                             double step_duration) 
                             const;
 
-    Eigen::MatrixXd ComputeLimbPositionsfromJointAngles (
+    Eigen::MatrixXd ComputeJointPositionsfromJointAngles (
                             const GenericAgent& agent,
                             double updated_orientation_angle,
                             Eigen::MatrixXd joint_angles_matrix)

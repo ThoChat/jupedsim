@@ -813,7 +813,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
                 model.height, // parameter
                 model.stepping_foot_index, // == 0
                 delta_orientation,  // == 0
-                support_foot_orientation, // pi//2 ??
+                support_foot_orientation, // pi//2 - why is this angle pi/2
                 step_width, // 0.2
                 shoulder_width, // 0.45
                 step_length, // max_step_lenght = model.height/2.5
@@ -963,7 +963,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     // initialise the updated joint positions matrix
     Eigen::MatrixXd updated_joint_positions_matrix; 
     updated_joint_positions_matrix = Eigen::MatrixXd::Zero(11, 3); // 11 joints, 3 positions each
-    updated_joint_positions_matrix = ComputeLimbPositionsfromJointAngles (  ped,
+    updated_joint_positions_matrix = ComputeJointPositionsfromJointAngles (  ped,
                                                                             updated_orientation_angle,
                                                                             update.joint_angles_matrix);
 
@@ -1174,7 +1174,6 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesStepDoubleSupports(const Gene
     // only walk without rotation is implemented for now (rotation_index != 0)
 
 
-    // XXXXX Ask Xiaoyun what does this represent ? XXXXX
     double psi_t, psi_s, theta, phi_a, phi_p;
 
     psi_t = 0;
@@ -1276,7 +1275,7 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGaitSingleSupport(const Gener
     // Rotation 
     // only walk without rotation is implemented for now (rotation_index != 0)
     double traveled_step_length; // length traveled by the stepping foot during this time step (former "sl_p")
-    double lean_angle; // ???????
+    double lean_angle; // What is this angle ?
 
     if (model.step_timer > step_duration/2) {
         traveled_step_length = 2 * std::pow(step_complition_factor, 2) //
@@ -1290,7 +1289,6 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGaitSingleSupport(const Gener
         lean_angle  =  4 - 4 * step_complition_factor ;
     }
 
-    // XXXXX Ask Xiaoyun what does this represent ? XXXXX
     double psi_t, psi_s, theta, phi_a, phi_p;
     // only walk without rotation is implemented for now (rotation_index != 0)  
     psi_t = 0;
@@ -1368,7 +1366,7 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGaitSingleSupport(const Gener
 
 }
 
-Eigen::MatrixXd HumanoidModelV0::ComputeLimbPositionsfromJointAngles (
+Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
                             const GenericAgent& agent,
                             double updated_orientation_angle, // this is the orientation angle of the agent's pelvis
                             Eigen::MatrixXd updated_joint_angles_matrix
@@ -1421,7 +1419,7 @@ Eigen::MatrixXd HumanoidModelV0::ComputeLimbPositionsfromJointAngles (
     Eigen::Vector4d origin_vector ={0,0,0,1}; // origin vector for the computation of the joint positions
 
     std::cout << " "  << std::endl;
-    std::cout<< "## New ComputeLimbPositionsfromJointAngles function" << std::endl;
+    std::cout<< "## New ComputeJointPositionsfromJointAngles function" << std::endl;
 
     // Transformation matrix from support foot to world frame
     Eigen::Matrix4d T_support_foot__world;
