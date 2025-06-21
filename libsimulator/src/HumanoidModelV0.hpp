@@ -100,7 +100,8 @@ private:
     Eigen::MatrixXd ComputeJointPositionsfromJointAngles (
                             const GenericAgent& agent,
                             double updated_orientation_angle,
-                            Eigen::MatrixXd joint_angles_matrix)
+                            Eigen::MatrixXd joint_angles_matrix,
+                            double support_foot_orientation)
                             const;
 
     /*#########################################################################

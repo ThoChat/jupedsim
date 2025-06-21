@@ -813,7 +813,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
                 model.height, // parameter
                 model.stepping_foot_index, // == 0
                 delta_orientation,  // == 0
-                support_foot_orientation, // pi//2 - why is this angle pi/2
+                support_foot_orientation, // pi//2 - why is this angle pi/2 // along y-axis is pi/2 (or -pi/2); along x-axis is 0 (or -pi)
                 step_width, // 0.2
                 shoulder_width, // 0.45
                 step_length, // max_step_lenght = model.height/2.5
@@ -965,7 +965,8 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     updated_joint_positions_matrix = Eigen::MatrixXd::Zero(11, 3); // 11 joints, 3 positions each
     updated_joint_positions_matrix = ComputeJointPositionsfromJointAngles (  ped,
                                                                             updated_orientation_angle,
-                                                                            update.joint_angles_matrix);
+                                                                            update.joint_angles_matrix,
+                                                                            support_foot_orientation);
 
     // Update position of the joints 
     // ....
@@ -1241,8 +1242,8 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesStepDoubleSupports(const Gene
     std::cout << "left hip: " << updated_joint_angles_matrix.row(3) << std::endl;
     std::cout << "left ankle: " << updated_joint_angles_matrix.row(4) << std::endl;
     std::cout << "pelvis: " << updated_joint_angles_matrix.row(6) << std::endl;
-    
   
+
     return updated_joint_angles_matrix;
 
     // ... thenUpdate joint positions
@@ -1275,7 +1276,7 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGaitSingleSupport(const Gener
     // Rotation 
     // only walk without rotation is implemented for now (rotation_index != 0)
     double traveled_step_length; // length traveled by the stepping foot during this time step (former "sl_p")
-    double lean_angle; // What is this angle ?
+    double lean_angle; // What is this angle ? // It allows the head to oscillate perdendicularly to the walking direction, so the head trajectory looks like a sine wave
 
     if (model.step_timer > step_duration/2) {
         traveled_step_length = 2 * std::pow(step_complition_factor, 2) //
@@ -1369,7 +1370,8 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGaitSingleSupport(const Gener
 Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
                             const GenericAgent& agent,
                             double updated_orientation_angle, // this is the orientation angle of the agent's pelvis
-                            Eigen::MatrixXd updated_joint_angles_matrix
+                            Eigen::MatrixXd updated_joint_angles_matrix,
+                            double support_foot_orientation
                             
     ) const
 {
@@ -1405,7 +1407,8 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
                                  model.heel_right_position.y,
                                  model.heel_right_position.z,
                                  1.0; // homogeneous coordinates for DH matrix computation
-        angle_z_support_foot_world = updated_joint_angles_matrix(1,2)+updated_orientation_angle; // right ankle angles
+        // angle_z_support_foot_world = updated_joint_angles_matrix(1,2)+updated_orientation_angle; // right ankle angles // here should be "support_foot_orientation"
+        angle_z_support_foot_world = support_foot_orientation;
     } 
     else //if (model.stepping_foot_index == -1) // if support foot is the left foot, right foot stepping 
     { 
@@ -1413,9 +1416,10 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
                                  model.heel_left_position.y,
                                  model.heel_left_position.z,
                                  1.0; // homogeneous coordinates for DH matrix computation
-        angle_z_support_foot_world = updated_joint_angles_matrix(4,2)+updated_orientation_angle; // right ankle angles
+        // angle_z_support_foot_world = updated_joint_angles_matrix(4,2)+updated_orientation_angle; // right ankle angles
+        angle_z_support_foot_world = support_foot_orientation;
     }
-
+    
     Eigen::Vector4d origin_vector ={0,0,0,1}; // origin vector for the computation of the joint positions
 
     std::cout << " "  << std::endl;
