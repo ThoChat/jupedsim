@@ -100,8 +100,7 @@ private:
     Eigen::MatrixXd ComputeJointPositionsfromJointAngles (
                             const GenericAgent& agent,
                             double updated_orientation_angle,
-                            Eigen::MatrixXd joint_angles_matrix,
-                            double support_foot_orientation)
+                            Eigen::MatrixXd joint_angles_matrix)
                             const;
 
     /*#########################################################################
@@ -139,11 +138,13 @@ private:
      * @return Denavit-Hartenberg matrix
     
      */
-    Eigen::Matrix4d Denavit_Hartenberg_Matrix(
+    Eigen::Matrix4d DHTransformationMatrix(
     double theta, 
     double d, 
     double r, 
     double alpha) const;
+
+    Eigen::Matrix3d EulerAnglesToRotationMatrix(const Eigen::Vector3d& angles) const;
 
 
     

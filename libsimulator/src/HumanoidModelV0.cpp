@@ -35,12 +35,12 @@ namespace {
 
     #include "HumanoidModelV0Data.hpp"
     // Get reference to the class instance
-    const HumanoidModelV0& humanoid = HumanoidModelV0(0.0, 0.0); // Temporary to have access to Denavit_Hartenberg_Matrix function
+    const HumanoidModelV0& humanoid = HumanoidModelV0(0.0, 0.0); // Temporary to have access to DHTransformationMatrix function
         
    
     // /*** Matrix opperators using Eigen ***/
     // // Denavit-Hartenberg (DH) convention
-    // Eigen::Matrix4d Denavit_Hartenberg_Matrix(double theta, double d, double a, double alpha) {
+    // Eigen::Matrix4d DHTransformationMatrix(double theta, double d, double a, double alpha) {
     //     Eigen::Matrix4d mat;
     //     mat << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha), a*cos(theta),
     //             sin(theta), cos(theta)*cos(alpha), -cos(theta)*sin(alpha), a*sin(theta),
@@ -164,7 +164,7 @@ namespace {
                         0, 0, 0, 1;
                         
         std::cout << "old Function: FuncMotion" << std::endl;
-        std::cout << "W_eigen: \n" << W_eigen << std::endl;
+        // std::cout << "W_eigen: \n" << W_eigen << std::endl;
                         
         Eigen::Vector4d O0_0_eigen = {0, 0, 0, 1}; 
         Eigen::Vector4d O0_0w_eigen = W_eigen * O0_0_eigen;
@@ -173,14 +173,14 @@ namespace {
 
 
         // To Do: add a description of what are the B1, B2, B3,... , B10 matrices
-        Eigen::Matrix4d B1_eigen = humanoid.Denavit_Hartenberg_Matrix(phi1 + M_PI / 2, 0, 0, M_PI / 2);
+        Eigen::Matrix4d B1_eigen = humanoid.DHTransformationMatrix(phi1 + M_PI / 2, 0, 0, M_PI / 2);
         Eigen::Matrix4d T1_0_eigen = B1_eigen;
         Eigen::Vector4d O1_0_eigen = T1_0_eigen * O0_0_eigen;
         Eigen::Vector4d O1_0w_eigen = W_eigen * O1_0_eigen;
         O1_0w_eigen = O1_0w_eigen + heel_support_eigen;
         
 
-        Eigen::Matrix4d B2_eigen = humanoid.Denavit_Hartenberg_Matrix(-th1 + M_PI / 2, 0, leg_length, 0);
+        Eigen::Matrix4d B2_eigen = humanoid.DHTransformationMatrix(-th1 + M_PI / 2, 0, leg_length, 0);
         Eigen::Matrix4d T2_0_eigen = T1_0_eigen * B2_eigen;
         Eigen::Vector4d O2_0_eigen = T2_0_eigen * O0_0_eigen;
         Eigen::Vector4d O2_0w_eigen = W_eigen * O2_0_eigen;
@@ -190,13 +190,13 @@ namespace {
         std::cout << "Support hip position: " << O2_0w_eigen.transpose() << std::endl;
         
         
-        Eigen::Matrix4d B3_eigen = humanoid.Denavit_Hartenberg_Matrix(-th3, 0, 0, -M_PI / 2);
+        Eigen::Matrix4d B3_eigen = humanoid.DHTransformationMatrix(-th3, 0, 0, -M_PI / 2);
         Eigen::Matrix4d T3_0_eigen = T2_0_eigen * B3_eigen;
         Eigen::Vector4d O3_0_eigen = T3_0_eigen * O0_0_eigen;
         Eigen::Vector4d O3_0w_eigen = W_eigen * O3_0_eigen;
         O3_0w_eigen = O3_0w_eigen + heel_support_eigen;
 
-        Eigen::Matrix4d B4_eigen = humanoid.Denavit_Hartenberg_Matrix(phi2, 0, 0, 0);
+        Eigen::Matrix4d B4_eigen = humanoid.DHTransformationMatrix(phi2, 0, 0, 0);
         Eigen::Matrix4d rotMat_eigen;
         rotMat_eigen << 0, 0, 1, 0,
                         1, 0, 0, 0,
@@ -210,9 +210,9 @@ namespace {
 
         Eigen::Matrix4d B5_eigen;
         if (stepping_foot_index == -1) {
-            B5_eigen = humanoid.Denavit_Hartenberg_Matrix(Psi1, 0, pelvis_length, 0);
+            B5_eigen = humanoid.DHTransformationMatrix(Psi1, 0, pelvis_length, 0);
         } else if (stepping_foot_index == 1) {
-            B5_eigen = humanoid.Denavit_Hartenberg_Matrix(Psi1 + M_PI, 0, pelvis_length, 0);
+            B5_eigen = humanoid.DHTransformationMatrix(Psi1 + M_PI, 0, pelvis_length, 0);
         }
         Eigen::Matrix4d T5_0_eigen = T4_0_eigen * B5_eigen;
         Eigen::Vector4d O5_0_eigen = T5_0_eigen * O0_0_eigen;
@@ -220,6 +220,9 @@ namespace {
         O5_0w_eigen = O5_0w_eigen + heel_support_eigen;
 
         std::cout << "Stepping hip position: " << O5_0w_eigen.transpose() << std::endl;
+        std::cout << "B3_eigen: \n" << B3_eigen << std::endl;
+        std::cout << "B4_eigen: \n" << B4_eigen << std::endl;
+        // std::cout << "B5_eigen: \n" << B5_eigen << std::endl;
 
         
         Eigen::Matrix4d B6_eigen;
@@ -231,35 +234,35 @@ namespace {
                             0, 0, 1, 0,
                             0, 0, 0, 1;
         if (stepping_foot_index == -1) {
-            B6_eigen = humanoid.Denavit_Hartenberg_Matrix(Psi2, 0, 0, -M_PI / 2);
+            B6_eigen = humanoid.DHTransformationMatrix(Psi2, 0, 0, -M_PI / 2);
             T6_0_eigen = T5_0_eigen * B6_eigen * transMat_eigen;
         } else if (stepping_foot_index == 1) {
-            B6_eigen = humanoid.Denavit_Hartenberg_Matrix(Psi2, 0, 0, M_PI / 2);
+            B6_eigen = humanoid.DHTransformationMatrix(Psi2, 0, 0, M_PI / 2);
             T6_0_eigen = T5_0_eigen * B6_eigen * transMat_eigen;
         }
         Eigen::Vector4d O6_0_eigen = T6_0_eigen * O0_0_eigen;
         Eigen::Vector4d O6_0w_eigen = W_eigen * O6_0_eigen;
         O6_0w_eigen = O6_0w_eigen + heel_support_eigen;
         
-        Eigen::Matrix4d B7_eigen = humanoid.Denavit_Hartenberg_Matrix(phi3, 0, 0, -M_PI / 2);
+        Eigen::Matrix4d B7_eigen = humanoid.DHTransformationMatrix(phi3, 0, 0, -M_PI / 2);
         Eigen::Matrix4d T7_0_eigen = T6_0_eigen * B7_eigen;
         Eigen::Vector4d O7_0_eigen = T7_0_eigen * O0_0_eigen;
         Eigen::Vector4d O7_0w_eigen = W_eigen * O7_0_eigen;
         O7_0w_eigen = O7_0w_eigen + heel_support_eigen;
         
-        Eigen::Matrix4d B8_eigen = humanoid.Denavit_Hartenberg_Matrix(-th4 + M_PI, 0, leg_length, 0);
+        Eigen::Matrix4d B8_eigen = humanoid.DHTransformationMatrix(-th4 + M_PI, 0, leg_length, 0);
         Eigen::Matrix4d T8_0_eigen = T7_0_eigen * B8_eigen;
         Eigen::Vector4d O8_0_eigen = T8_0_eigen * O0_0_eigen;
         Eigen::Vector4d O8_0w_eigen = W_eigen * O8_0_eigen;
         O8_0w_eigen = O8_0w_eigen + heel_support_eigen;
 
-        Eigen::Matrix4d B9_eigen = humanoid.Denavit_Hartenberg_Matrix(-th6, 0, 0, M_PI / 2);
+        Eigen::Matrix4d B9_eigen = humanoid.DHTransformationMatrix(-th6, 0, 0, M_PI / 2);
         Eigen::Matrix4d T9_0_eigen = T8_0_eigen * B9_eigen;
         Eigen::Vector4d O9_0_eigen = T9_0_eigen * O0_0_eigen;
         Eigen::Vector4d O9_0w_eigen = W_eigen * O9_0_eigen;
         O9_0w_eigen = O9_0w_eigen + heel_support_eigen;
 
-        Eigen::Matrix4d B10_eigen = humanoid.Denavit_Hartenberg_Matrix(phi4, 0, ankle_length, 0);
+        Eigen::Matrix4d B10_eigen = humanoid.DHTransformationMatrix(phi4, 0, ankle_length, 0);
         Eigen::Matrix4d T10_0_eigen = T9_0_eigen * B10_eigen;
         Eigen::Vector4d O10_0_eigen = T10_0_eigen * O0_0_eigen;
         Eigen::Vector4d O10_0w_eigen = W_eigen * O10_0_eigen;
@@ -299,7 +302,7 @@ namespace {
                         0, 0, 1, 0,
                         0, 0, 0, 1; 
         
-        B11_eigen = B11_eigen * humanoid.Denavit_Hartenberg_Matrix(Psi3, 0, 0, 0);
+        B11_eigen = B11_eigen * humanoid.DHTransformationMatrix(Psi3, 0, 0, 0);
         Eigen::Matrix4d T11_0_eigen = T5_0_eigen * B11_eigen;
         Eigen::Vector4d O11_0_eigen = T11_0_eigen * O0_0_eigen;
         Eigen::Vector4d O11_0w_eigen = W_eigen * O11_0_eigen;
@@ -955,9 +958,9 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
     // compute new orienttion angle between the world ref and the ref linked to the agent's pervis
     // this rotation is along the common z-axis (vertical axis) of the world and the agent's pelvis
-    double updated_orientation_angle= asin(update.velocity.Normalized().x);
-    if (update.velocity.Normalized().y < 0){
-        updated_orientation_angle = M_PI - updated_orientation_angle;
+    double updated_orientation_angle= acos(update.velocity.Normalized().x);
+    if (update.velocity.Normalized().x < 0) {
+        updated_orientation_angle = 2 * M_PI - updated_orientation_angle; // adjust the angle to be in the range [0, 2*pi] 
     }
 
     // initialise the updated joint positions matrix
@@ -965,8 +968,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     updated_joint_positions_matrix = Eigen::MatrixXd::Zero(11, 3); // 11 joints, 3 positions each
     updated_joint_positions_matrix = ComputeJointPositionsfromJointAngles (  ped,
                                                                             updated_orientation_angle,
-                                                                            update.joint_angles_matrix,
-                                                                            support_foot_orientation);
+                                                                            update.joint_angles_matrix);
 
     // Update position of the joints 
     // ....
@@ -1141,7 +1143,8 @@ Point HumanoidModelV0::ForceBetweenPoints(
 
 /*** Matrix opperators using Eigen ***/
 // Denavit-Hartenberg (DH) convention
-Eigen::Matrix4d HumanoidModelV0::Denavit_Hartenberg_Matrix(
+// compute T^{n-1}_n
+Eigen::Matrix4d HumanoidModelV0::DHTransformationMatrix(
     double theta, 
     double d, 
     double r, 
@@ -1154,6 +1157,17 @@ Eigen::Matrix4d HumanoidModelV0::Denavit_Hartenberg_Matrix(
             0, 0, 0, 1;
     return mat;
 }
+
+/*** rotation matrix  ***/
+ 
+Eigen::Matrix3d HumanoidModelV0::EulerAnglesToRotationMatrix(const Eigen::Vector3d& angles) const {
+    Eigen::AngleAxisd rollAngle(angles[0], Eigen::Vector3d::UnitX());
+    Eigen::AngleAxisd pitchAngle(angles[1], Eigen::Vector3d::UnitY());
+    Eigen::AngleAxisd yawAngle(angles[2], Eigen::Vector3d::UnitZ());
+    return (yawAngle * pitchAngle * rollAngle).toRotationMatrix();
+}
+
+
 
 // In this function the motion of a step is initiated after a double support phase.
 // The function computes the joint angles then the joint position 
@@ -1370,8 +1384,7 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGaitSingleSupport(const Gener
 Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
                             const GenericAgent& agent,
                             double updated_orientation_angle, // this is the orientation angle of the agent's pelvis
-                            Eigen::MatrixXd updated_joint_angles_matrix,
-                            double support_foot_orientation
+                            Eigen::MatrixXd updated_joint_angles_matrix
                             
     ) const
 {
@@ -1385,7 +1398,7 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
     Eigen::MatrixXd updated_joint_positions_matrix; 
     updated_joint_positions_matrix = Eigen::MatrixXd::Zero(11, 3); // 11 joints, 3 positions each
 
-    
+    system("clear"); // degug
 
     // Compute all segment lengths based on the model height
     double ankle_length = model.height * ANKLE_SCALING_FACTOR;
@@ -1407,8 +1420,8 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
                                  model.heel_right_position.y,
                                  model.heel_right_position.z,
                                  1.0; // homogeneous coordinates for DH matrix computation
-        // angle_z_support_foot_world = updated_joint_angles_matrix(1,2)+updated_orientation_angle; // right ankle angles // here should be "support_foot_orientation"
-        angle_z_support_foot_world = support_foot_orientation;
+        angle_z_support_foot_world = updated_joint_angles_matrix(1,2)+updated_orientation_angle; // right ankle angles // here should be "support_foot_orientation"
+
     } 
     else //if (model.stepping_foot_index == -1) // if support foot is the left foot, right foot stepping 
     { 
@@ -1416,10 +1429,12 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
                                  model.heel_left_position.y,
                                  model.heel_left_position.z,
                                  1.0; // homogeneous coordinates for DH matrix computation
-        // angle_z_support_foot_world = updated_joint_angles_matrix(4,2)+updated_orientation_angle; // right ankle angles
-        angle_z_support_foot_world = support_foot_orientation;
+        angle_z_support_foot_world = updated_joint_angles_matrix(4,2)+updated_orientation_angle; // right ankle angles
+
     }
     
+    
+
     Eigen::Vector4d origin_vector ={0,0,0,1}; // origin vector for the computation of the joint positions
 
     std::cout << " "  << std::endl;
@@ -1433,25 +1448,27 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
                     0, 0, 0, 1;
 
 
-    std::cout << "T_support_foot__world: \n" << T_support_foot__world << std::endl;
+    std::cout << "T_support_foot__world: \n" << T_support_foot__world << std::endl; // debug
+
+    Eigen::Matrix3d R = EulerAnglesToRotationMatrix(Eigen::Vector3d(0, 0, angle_z_support_foot_world)); // debug
+    std::cout << "EulerAnglesToRotationMatrix: \n" << R << std::endl; // debug
 
     // Position of the support ankle and heel do not change
 
     // Position of the support leg hip
-    Eigen::Matrix4d B_1 = Denavit_Hartenberg_Matrix(updated_joint_angles_matrix(1,0) + M_PI / 2, 0, 0, M_PI / 2);
-    Eigen::Matrix4d B_2 = Denavit_Hartenberg_Matrix(-updated_joint_angles_matrix(1,1) + M_PI / 2, 0, leg_length, 0);
-    Eigen::Vector4d support_hip_position = T_support_foot__world *( (B_1+B_2) * origin_vector) + heel_support_positions;
+    Eigen::Matrix4d B_1 = DHTransformationMatrix(updated_joint_angles_matrix(1,0) + M_PI / 2, 0, 0, M_PI / 2);
+    Eigen::Matrix4d B_2 = DHTransformationMatrix(-updated_joint_angles_matrix(1,1) + M_PI / 2, 0, leg_length, 0);
+    Eigen::Vector4d support_hip_position = T_support_foot__world * B_1 * B_2 * origin_vector + heel_support_positions;
 
-    
+
     std::cout << "Support hip position: " << support_hip_position.transpose() << std::endl;
-    system("clear"); // clean terminal output
 
     // Position of the pelvis center / Center of Mass (CoM)
     // wip
     
     // position of the stepping leg hip
-    Eigen::Matrix4d B_3 = Denavit_Hartenberg_Matrix(updated_joint_angles_matrix(2,0) + M_PI / 2, 0, 0, M_PI / 2);
-    Eigen::Matrix4d B_4 = Denavit_Hartenberg_Matrix(-updated_joint_angles_matrix(2,1) + M_PI / 2, 0, leg_length, 0);
+    Eigen::Matrix4d B_3 = DHTransformationMatrix(updated_joint_angles_matrix(2,0) , 0, 0, -M_PI / 2);
+    Eigen::Matrix4d B_4 = DHTransformationMatrix(updated_joint_angles_matrix(2,1), 0, 0, 0);
     Eigen::Matrix4d rotation_matrix; // What is this rotation matrix for?
     rotation_matrix << 0, 0, 1, 0,
                     1, 0, 0, 0,
@@ -1459,9 +1476,9 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
                     0, 0, 0, 1;
     Eigen::Matrix4d B_5;
     if (model.stepping_foot_index == -1) {
-        B_5 = Denavit_Hartenberg_Matrix(-updated_joint_angles_matrix(2,2), 0, pelvis_width, 0);
+        B_5 = DHTransformationMatrix(updated_joint_angles_matrix(2,2), 0, pelvis_width, 0);
     } else if (model.stepping_foot_index == 1) {
-        B_5 = Denavit_Hartenberg_Matrix(updated_joint_angles_matrix(2,2) + M_PI, 0, pelvis_width, 0);
+        B_5 = DHTransformationMatrix(updated_joint_angles_matrix(2,2) + M_PI, 0, pelvis_width, 0);
     }
 
     Eigen::Vector4d stepping_hip_position =   T_support_foot__world   
@@ -1473,6 +1490,9 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
                                                         * B_5 * origin_vector + heel_support_positions;
                                                         
     std::cout << "Stepping hip position: " << stepping_hip_position.transpose() << std::endl;
+    std::cout << "B_3: \n" << B_3 << std::endl; // debug
+    std::cout << "B_4: \n" << B_4 << std::endl; // debug
+    // std::cout << "B_5: \n" << B_5 << std::endl; // debug
     std::cin.get(); // pause
     system("clear"); // clean terminal output
 
