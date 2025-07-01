@@ -86,6 +86,8 @@ private:
      */
     static double PushingForceLength(double A, double B, double r, double distance);
 
+
+
     Eigen::MatrixXd ComputeJointAnglesStepDoubleSupports(const GenericAgent& agent,
                             double step_length, 
                             double step_width)
@@ -99,7 +101,7 @@ private:
 
     Eigen::MatrixXd ComputeJointPositionsfromJointAngles (
                             const GenericAgent& agent,
-                            double updated_orientation_angle,
+                            const HumanoidModelV0Update& update,
                             Eigen::MatrixXd joint_angles_matrix)
                             const;
 
@@ -144,8 +146,11 @@ private:
     double r, 
     double alpha) const;
 
-    Eigen::Matrix3d EulerAnglesToRotationMatrix(const Eigen::Vector3d& angles) const;
+    Eigen::Matrix4d CreateTransformationMatrix( const Eigen::Vector3d &translation, 
+                                    const Eigen::Vector3d &rotation) const;
 
+
+    
 
     
 
