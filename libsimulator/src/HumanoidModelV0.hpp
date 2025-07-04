@@ -88,15 +88,23 @@ private:
 
 
 
-    Eigen::MatrixXd ComputeJointAnglesStepDoubleSupports(const GenericAgent& agent,
+    Eigen::MatrixXd ComputeJointAnglesStepDoubleSupports(
+                            const GenericAgent& agent,
                             double step_length, 
                             double step_width)
                             const;
 
-    Eigen::MatrixXd ComputeJointAnglesGaitSingleSupport(const GenericAgent& agent,
+    Eigen::MatrixXd ComputeJointAnglesGaitSingleSupport(
+                            const GenericAgent& agent,
                             double step_length, 
                             double step_width, 
                             double step_duration) 
+                            const;
+                            
+    Eigen::MatrixXd ComputeJointAnglesGait(
+                            const GenericAgent& agent,
+                            const HumanoidModelV0Update& update,
+                            double dT) 
                             const;
 
     Eigen::MatrixXd ComputeJointPositionsfromJointAngles (
