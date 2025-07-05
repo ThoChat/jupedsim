@@ -7,6 +7,7 @@
 #include "NeighborhoodSearch.hpp"
 #include "OperationalModel.hpp"
 #include "UniqueID.hpp"
+#include "HumanoidModelV0Data.hpp"
 #include <Eigen/Dense>
 
 
@@ -102,7 +103,7 @@ private:
                             const;
                             
     Eigen::MatrixXd ComputeJointAnglesGait(
-                            const GenericAgent& agent,
+                            const HumanoidModelV0Data& model,
                             const HumanoidModelV0Update& update,
                             double dT) 
                             const;
