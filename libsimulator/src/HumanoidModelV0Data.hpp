@@ -28,6 +28,7 @@ struct HumanoidModelV0Data {
     Point step_target{};  // target position of the current stepping foot
     // # body motion variables
     Point3D head_position{}; 
+    Point3D pelvis_position{}; 
     double shoulder_rotation_angle_z{}; 
     double trunk_rotation_angle_x{}; 
     double trunk_rotation_angle_y{}; 

@@ -45,7 +45,11 @@ class HumanoidModelV0AgentParameters:
         forceDistance: indicates how much the distance between an agent and obstacles or neighbors influences social forces. [in m] (is called B)
         radius: radius of the space an agent occupies. [in m] (is called r)
         height: height of the agent. [in m]
+        step_duration: total number of time steps to complete the current step
+        step_timer: number of time steps remaining to complete the current step
+        stepping_foot_index: -1 == right foot stepping/left foot support, 0 == double stance, 1 == left foot stepping/right foot support
         head_position: 3D Vector of the cartesian coordinates of the head position of this agent. [in m]
+        pelvis_position: 3D Vector of the cartesian coordinates of the pelvis position of this agent. [in m]
         shoulder_rotation_angle_z: shoulder rotation angle along the longitudinal axis (z) of this agent. [in rad]
         trunk_rotation_angle_x: trunk rotation angle along the frontal axis (x) of this agent. [in rad]
         trunk_rotation_angle_y: trunk rotation angle along the frontal axis (x) of this agent. [in rad]
@@ -82,6 +86,7 @@ class HumanoidModelV0AgentParameters:
     step_target: tuple[float, float] = (0.0, 0.0)
     ## Variables for body parts
     head_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    pelvis_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     shoulder_rotation_angle_z: float = 0.0
     trunk_rotation_angle_x: float = 0.0
     trunk_rotation_angle_y: float = 0.0
@@ -110,6 +115,7 @@ class HumanoidModelV0AgentParameters:
             stepping_foot_index=self.stepping_foot_index,
             step_target=self.step_target,
             head_position=self.head_position,
+            pelvis_position=self.pelvis_position,
             shoulder_rotation_angle_z=self.shoulder_rotation_angle_z,
             trunk_rotation_angle_x=self.trunk_rotation_angle_x,
             trunk_rotation_angle_y=self.trunk_rotation_angle_y,
@@ -249,6 +255,15 @@ class HumanoidModelV0State:
     @head_position.setter
     def head_position(self, head_position):
         self._obj.head_position = head_position
+
+    @property
+    def pelvis_position(self) -> tuple[float, float, float]:
+        """pelvis position of this agent."""
+        return self._obj.pelvis_position
+
+    @pelvis_position.setter
+    def pelvis_position(self, pelvis_position):
+        self._obj.pelvis_position = pelvis_position
 
     @property
     def shoulder_rotation_angle_z(self) -> float:

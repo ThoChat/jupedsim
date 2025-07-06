@@ -261,6 +261,21 @@ JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetHeadPosition(JPS_HumanoidModelV0State handle, JPS_Point3D head_position);
 
 /**
+ * Read head position of this agent.
+ * @param handle of the Agent to access.
+ * @return head position of this agent.
+ */
+JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetPelvisPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write head position of this agent.
+ * @param handle of the Agent to access.
+ * @param head position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetPelvisPosition(JPS_HumanoidModelV0State handle, JPS_Point3D pelvis_position);
+
+/**
  * Read shoulder rotation angle along the longitudinal axis (z) of this agent.
  * @param handle of the Agent to access.
  * @return shoulder rotation angle along the longitudinal axis (z) of this agent.
@@ -409,9 +424,10 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
      * body variables
      */
     JPS_Point3D head_position = {0, 0, 0}; // Position of the agent's head
-    double shoulder_rotation_angle_z = 0.0; // shoulder rotation angle along the longitudinal axis (z)
-    double trunk_rotation_angle_x = 0.0; // trunk rotation angle along the frontal axis (x)
-    double trunk_rotation_angle_y = 0.0; // trunk rotation angle along the sagittal axis (y)
+    JPS_Point3D pelvis_position = {0, 0, 0}; // Position of the agent's pelvis (oriented toward the "orientation" vector)
+    double shoulder_rotation_angle_z = 0.0; // shoulder rotation angle relative to the pelvis along the longitudinal axis (z)
+    double trunk_rotation_angle_x = 0.0; // trunk rotation angle relative to the pelvis along the frontal axis (x)
+    double trunk_rotation_angle_y = 0.0; // trunk rotation angle relative to the pelvis along the sagittal axis (y)
     JPS_Point3D heel_right_position = {0, 0, 0}; // Position of the agent's right heel
     JPS_Point3D heel_left_position = {0, 0, 0}; // Position of the agent's left heel
 

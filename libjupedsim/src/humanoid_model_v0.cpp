@@ -264,6 +264,21 @@ JPS_HumanoidModelV0State_SetHeadPosition(JPS_HumanoidModelV0State handle, JPS_Po
     state->head_position = intoPoint3D(head_position);
 }
 
+JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetPelvisPosition(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return intoJPS_Point3D(state->pelvis_position);
+}
+
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetPelvisPosition(JPS_HumanoidModelV0State handle, JPS_Point3D pelvis_position)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->pelvis_position = intoPoint3D(pelvis_position);
+}
+
 
 JUPEDSIM_API double JPS_HumanoidModelV0State_GetShoulderRotationAngleZ(JPS_HumanoidModelV0State handle)
 {

@@ -167,10 +167,19 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     }
 
     // Update position of the joints 
-    //  pelvis position
+    //  General position = pelvis position
     update.position.x = updated_joint_positions_matrix(6, 0);
     update.position.y = updated_joint_positions_matrix(6, 1);
 
+    // // head position
+    update.head_position.x = updated_joint_positions_matrix(10, 0);
+    update.head_position.y = updated_joint_positions_matrix(10, 1);
+    update.head_position.z = updated_joint_positions_matrix(10, 2);
+
+    // // pelvis position (3D)
+    update.pelvis_position.x = updated_joint_positions_matrix(6, 0);
+    update.pelvis_position.y = updated_joint_positions_matrix(6, 1);
+    update.pelvis_position.z = updated_joint_positions_matrix(6, 2);
 
     // // right heel position
     update.heel_right_position.x = updated_joint_positions_matrix(0, 0);
@@ -182,16 +191,12 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     update.heel_left_position.y = updated_joint_positions_matrix(5, 1);
     update.heel_left_position.z = updated_joint_positions_matrix(5, 2);
 
-    // // head position
-    update.head_position.x = updated_joint_positions_matrix(10, 0);
-    update.head_position.y = updated_joint_positions_matrix(10, 1);
-    update.head_position.z = updated_joint_positions_matrix(10, 2);
+
     
 
 
     // ## shoulders
     update.shoulder_rotation_angle_z = 0.0;
-
     // ## trunk
     // ### along the frontal axis (x) of this agent
     update.trunk_rotation_angle_x = 0.0;
@@ -236,6 +241,7 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
 
     // # body motion variables
     model.head_position = upd.head_position; 
+    model.pelvis_position = upd.pelvis_position;
     model.shoulder_rotation_angle_z = upd.shoulder_rotation_angle_z;
     model.trunk_rotation_angle_x = upd.trunk_rotation_angle_x;
     model.trunk_rotation_angle_y = upd.trunk_rotation_angle_y;
