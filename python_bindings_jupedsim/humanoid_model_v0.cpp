@@ -36,17 +36,11 @@ void init_humanoid_model_v0(py::module_& m)
                         std::tuple<double, double> step_target,
                         // humanoid body variables
                         std::tuple<double, double, double> head_position, 
-                        std::tuple<double, double> head_velocity,
                         double shoulder_rotation_angle_z,
-                        double shoulder_rotation_velocity_z,
                         double trunk_rotation_angle_x,
-                        double trunk_rotation_velocity_x,
                         double trunk_rotation_angle_y,
-                        double trunk_rotation_velocity_y,
                         std::tuple<double, double, double> heel_right_position, 
-                        std::tuple<double, double> heel_right_velocity,
-                        std::tuple<double, double, double> heel_left_position, 
-                        std::tuple<double, double> heel_left_velocity
+                        std::tuple<double, double, double> heel_left_position
                         ) 
                         {
                 return JPS_HumanoidModelV0AgentParameters{
@@ -67,17 +61,11 @@ void init_humanoid_model_v0(py::module_& m)
                     stepping_foot_index,
                     intoJPS_Point(step_target),
                     intoJPS_Point3D(head_position),
-                    intoJPS_Point(head_velocity),
                     shoulder_rotation_angle_z,
-                    shoulder_rotation_velocity_z,
                     trunk_rotation_angle_x,
-                    trunk_rotation_velocity_x,
                     trunk_rotation_angle_y,
-                    trunk_rotation_velocity_y,
                     intoJPS_Point3D(heel_right_position),
-                    intoJPS_Point(heel_right_velocity),
-                    intoJPS_Point3D(heel_left_position),
-                    intoJPS_Point(heel_left_velocity)
+                    intoJPS_Point3D(heel_left_position)
                     };
             }),
             py::kw_only(),
@@ -98,17 +86,11 @@ void init_humanoid_model_v0(py::module_& m)
             py::arg("stepping_foot_index"),
             py::arg("step_target"),
             py::arg("head_position"),
-            py::arg("head_velocity"),
             py::arg("shoulder_rotation_angle_z"),
-            py::arg("shoulder_rotation_velocity_z"),
             py::arg("trunk_rotation_angle_x"),
-            py::arg("trunk_rotation_velocity_x"),
             py::arg("trunk_rotation_angle_y"),
-            py::arg("trunk_rotation_velocity_y"),
             py::arg("heel_right_position"),
-            py::arg("heel_right_velocity"),
-            py::arg("heel_left_position"),
-            py::arg("heel_left_velocity")
+            py::arg("heel_left_position")
             )
         .def("__repr__", [](const JPS_HumanoidModelV0AgentParameters& p) {
             return fmt::format(
@@ -116,10 +98,8 @@ void init_humanoid_model_v0(py::module_& m)
                 "velocity: {}, mass: {}, desiredSpeed: {},"
                 "reactionTime: {}, agentScale: {}, obstacleScale: {}, forceDistance: {},"
                 "radius: {}, height: {}, step_timer: {}, stepping_foot_index: {}, step_target: {},"
-                "head_position: {}, head_velocity: {}, shoulder_rotation_angle_z: {},"
-                "shoulder_rotation_velocity_z: {}, trunk_rotation_angle_x: {}, trunk_rotation_velocity_x: {},"
-                "trunk_rotation_angle_y: {}, trunk_rotation_velocity_y: {},"
-                "heel_right_position: {}, heel_right_velocity: {}, heel_left_position: {}, heel_left_velocity: {},",
+                "head_position: {}, shoulder_rotation_angle_z: {}, trunk_rotation_angle_x: {},"
+                "trunk_rotation_angle_y: {}, heel_right_position: {}, heel_left_position: {},",
                 intoTuple(p.position),
                 intoTuple(p.orientation),
                 p.journeyId,
@@ -137,17 +117,11 @@ void init_humanoid_model_v0(py::module_& m)
                 p.stepping_foot_index,
                 intoTuple(p.step_target),
                 intoTuple3D(p.head_position),
-                intoTuple(p.head_velocity),
                 p.shoulder_rotation_angle_z,
-                p.shoulder_rotation_velocity_z,
                 p.trunk_rotation_angle_x,
-                p.trunk_rotation_velocity_x,
                 p.trunk_rotation_angle_y,
-                p.trunk_rotation_velocity_y,
                 intoTuple3D(p.heel_right_position),
-                intoTuple(p.heel_right_velocity),
-                intoTuple3D(p.heel_left_position),
-                intoTuple(p.heel_left_velocity)
+                intoTuple3D(p.heel_left_position)
                 );
         });
     py::class_<JPS_HumanoidModelV0Builder_Wrapper>(m, "HumanoidModelV0Builder")
@@ -275,28 +249,12 @@ void init_humanoid_model_v0(py::module_& m)
                 JPS_HumanoidModelV0State_SetHeadPosition(w.handle, intoJPS_Point3D(head_position));
             })
         .def_property(
-            "head_velocity",
-            [](const JPS_HumanoidModelV0State_Wrapper& w) {
-                return intoTuple(JPS_HumanoidModelV0State_GetHeadVelocity(w.handle));
-            },
-            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> head_velocity) {
-                JPS_HumanoidModelV0State_SetHeadVelocity(w.handle, intoJPS_Point(head_velocity));
-            })
-        .def_property(
             "shoulder_rotation_angle_z",
             [](const JPS_HumanoidModelV0State_Wrapper& w) {
                 return JPS_HumanoidModelV0State_GetShoulderRotationAngleZ(w.handle);
             },
             [](JPS_HumanoidModelV0State_Wrapper& w, double shoulder_rotation_angle_z) {
                 JPS_HumanoidModelV0State_SetShoulderRotationAngleZ(w.handle, shoulder_rotation_angle_z);
-            })
-        .def_property(
-            "shoulder_rotation_velocity_z",
-            [](const JPS_HumanoidModelV0State_Wrapper& w) {
-                return JPS_HumanoidModelV0State_GetShoulderRotationVelocityZ(w.handle);
-            },
-            [](JPS_HumanoidModelV0State_Wrapper& w, double shoulder_rotation_velocity_z) {
-                JPS_HumanoidModelV0State_SetShoulderRotationVelocityZ(w.handle, shoulder_rotation_velocity_z);
             })
         .def_property(
             "trunk_rotation_angle_x",
@@ -307,28 +265,12 @@ void init_humanoid_model_v0(py::module_& m)
                 JPS_HumanoidModelV0State_SetTrunkRotationAngleX(w.handle, trunk_rotation_angle_x);
             })
         .def_property(
-            "trunk_rotation_velocity_x",
-            [](const JPS_HumanoidModelV0State_Wrapper& w) {
-                return JPS_HumanoidModelV0State_GetTrunkRotationVelocityX(w.handle);
-            },
-            [](JPS_HumanoidModelV0State_Wrapper& w, double trunk_rotation_velocity_x) {
-                JPS_HumanoidModelV0State_SetTrunkRotationVelocityX(w.handle, trunk_rotation_velocity_x);
-            })
-        .def_property(
             "trunk_rotation_angle_y",
             [](const JPS_HumanoidModelV0State_Wrapper& w) {
                 return JPS_HumanoidModelV0State_GetTrunkRotationAngleY(w.handle);
             },
             [](JPS_HumanoidModelV0State_Wrapper& w, double trunk_rotation_angle_y) {
                 JPS_HumanoidModelV0State_SetTrunkRotationAngleY(w.handle, trunk_rotation_angle_y);
-            })
-        .def_property(
-            "trunk_rotation_velocity_y",
-            [](const JPS_HumanoidModelV0State_Wrapper& w) {
-                return JPS_HumanoidModelV0State_GetTrunkRotationVelocityY(w.handle);
-            },
-            [](JPS_HumanoidModelV0State_Wrapper& w, double trunk_rotation_velocity_y) {
-                JPS_HumanoidModelV0State_SetTrunkRotationVelocityY(w.handle, trunk_rotation_velocity_y);
             })
         .def_property(
             "heel_right_position",
@@ -339,28 +281,12 @@ void init_humanoid_model_v0(py::module_& m)
                 JPS_HumanoidModelV0State_SetHeelRightPosition(w.handle, intoJPS_Point3D(heel_right_position));
             })
         .def_property(
-            "heel_right_velocity",
-            [](const JPS_HumanoidModelV0State_Wrapper& w) {
-                return intoTuple(JPS_HumanoidModelV0State_GetHeelRightVelocity(w.handle));
-            },
-            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> heel_right_velocity) {
-                JPS_HumanoidModelV0State_SetHeelRightVelocity(w.handle, intoJPS_Point(heel_right_velocity));
-            })
-        .def_property(
             "heel_left_position",
             [](const JPS_HumanoidModelV0State_Wrapper& w) {
                 return intoTuple3D(JPS_HumanoidModelV0State_GetHeelLeftPosition(w.handle));
             },
             [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double, double> heel_left_position) {
                 JPS_HumanoidModelV0State_SetHeelLeftPosition(w.handle, intoJPS_Point3D(heel_left_position));
-            })
-        .def_property(
-            "heel_left_velocity",
-            [](const JPS_HumanoidModelV0State_Wrapper& w) {
-                return intoTuple(JPS_HumanoidModelV0State_GetHeelLeftVelocity(w.handle));
-            },
-            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> heel_left_velocity) {
-                JPS_HumanoidModelV0State_SetHeelLeftVelocity(w.handle, intoJPS_Point(heel_left_velocity));
             })
             ;
 }

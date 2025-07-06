@@ -188,16 +188,13 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
 
     // ## shoulders
-    update.shoulder_rotation_velocity_z = 0.0;
-    update.shoulder_rotation_angle_z = model.shoulder_rotation_angle_z + update.shoulder_rotation_velocity_z * dT;
+    update.shoulder_rotation_angle_z = 0.0;
 
     // ## trunk
     // ### along the frontal axis (x) of this agent
-    update.trunk_rotation_velocity_x = 0.0;
-    update.trunk_rotation_angle_x = model.trunk_rotation_angle_x + update.trunk_rotation_velocity_x * dT;
+    update.trunk_rotation_angle_x = 0.0;
     // ### along sagittal axis (y) of this agent
-    update.trunk_rotation_velocity_y = 0.0;
-    update.trunk_rotation_angle_y = model.trunk_rotation_angle_y + update.trunk_rotation_velocity_y * dT;
+    update.trunk_rotation_angle_y = 0.0;
 
     // print the updated joint positions
     // std::cout << "old Joint Positions :"  << std::endl;
@@ -236,17 +233,11 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
 
     // # body motion variables
     model.head_position = upd.head_position; 
-    model.head_velocity = upd.head_velocity;
     model.shoulder_rotation_angle_z = upd.shoulder_rotation_angle_z;
-    model.shoulder_rotation_velocity_z = upd.shoulder_rotation_velocity_z;
     model.trunk_rotation_angle_x = upd.trunk_rotation_angle_x;
-    model.trunk_rotation_velocity_x = upd.trunk_rotation_velocity_x;
     model.trunk_rotation_angle_y = upd.trunk_rotation_angle_y;
-    model.trunk_rotation_velocity_y = upd.trunk_rotation_velocity_y;
     model.heel_right_position = upd.heel_right_position;
-    model.heel_right_velocity = upd.heel_right_velocity;
     model.heel_left_position = upd.heel_left_position;
-    model.heel_left_velocity = upd.heel_left_velocity;
 }
 
 
