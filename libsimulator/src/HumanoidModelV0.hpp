@@ -7,6 +7,7 @@
 #include "NeighborhoodSearch.hpp"
 #include "OperationalModel.hpp"
 #include "UniqueID.hpp"
+#include "HumanoidModelV0Data.hpp"
 #include <Eigen/Dense>
 
 
@@ -87,6 +88,32 @@ private:
     static double PushingForceLength(double A, double B, double r, double distance);
 
 
+
+    Eigen::MatrixXd ComputeJointAnglesStepDoubleSupports(
+                            const GenericAgent& agent,
+                            double step_length, 
+                            double step_width)
+                            const;
+
+    Eigen::MatrixXd ComputeJointAnglesGaitSingleSupport(
+                            const GenericAgent& agent,
+                            double step_length, 
+                            double step_width, 
+                            double step_duration) 
+                            const;
+                            
+    Eigen::MatrixXd ComputeJointAnglesGait(
+                            const HumanoidModelV0Data& model,
+                            const HumanoidModelV0Update& update,
+                            double dT) 
+                            const;
+
+    Eigen::MatrixXd ComputeJointPositionsfromJointAngles (
+                            const GenericAgent& agent,
+                            const HumanoidModelV0Update& update,
+                            Eigen::MatrixXd joint_angles_matrix)
+                            const;
+
     /*#########################################################################
     ###     Relative to the Humanoid Representation Paradigm of agents      ###
     #########################################################################*/
@@ -122,11 +149,18 @@ private:
      * @return Denavit-Hartenberg matrix
     
      */
-    Eigen::Matrix4d Denavit_Hartenberg_Matrix(
+    Eigen::Matrix4d DHTransformationMatrix(
     double theta, 
     double d, 
-    double a, 
+    double r, 
     double alpha) const;
+
+    Eigen::Matrix4d CreateTransformationMatrix( const Eigen::Vector3d &translation, 
+                                    const Eigen::Vector3d &rotation) const;
+
+
+    
+
     
 
 };

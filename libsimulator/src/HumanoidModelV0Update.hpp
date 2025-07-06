@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 #include "Point.hpp"
 #include "Point3D.hpp"
-
+#include <Eigen/Dense>
 #include <optional>
 
 struct HumanoidModelV0Update {

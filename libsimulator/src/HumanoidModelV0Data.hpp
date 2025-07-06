@@ -4,6 +4,8 @@
 
 #include "Point.hpp"
 #include "Point3D.hpp"
+#include <Eigen/Dense>
+
 struct HumanoidModelV0Data {
     // SFM parameter, for navigation
     Point velocity{}; // v
@@ -36,7 +38,6 @@ struct HumanoidModelV0Data {
     Point heel_right_velocity{}; 
     Point3D heel_left_position{}; 
     Point heel_left_velocity{}; 
-
 
 };
 
