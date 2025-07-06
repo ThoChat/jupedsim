@@ -95,9 +95,10 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     {
 
 
-        // # computation of the next step duration (step_timer is the step duration given as a number of time step)
+        // Compute the next step_duration (int number of time step require to complete the step)
         // constant stepping time of 0.5 for an agent of 1.7m
-        update.step_timer = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
+        update.step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
+        update.step_timer=update.step_duration;
 
         // Update stepping_foot_index
         if (model.stepping_foot_index == 1) {
@@ -150,8 +151,9 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     else // single support
     {
         
-        // pass on stepping_foot_index 
+        // pass on stepping_foot_index and step_duration
         update.stepping_foot_index = model.stepping_foot_index;
+        update.step_duration = model.step_duration;
         // update step timer
         update.step_timer = model.step_timer - 1;
         ///////////
@@ -225,6 +227,7 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
     agent.orientation = upd.velocity.Normalized();
     // update the Humanoid model
     // # gait variables
+    model.step_duration = upd.step_duration;
     model.step_timer = upd.step_timer;
     model.stepping_foot_index = upd.stepping_foot_index;
 
@@ -418,14 +421,10 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGait(
     double leg_length = model.height * (LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR); 
     double pelvis_width = model.height * PELVIS_WIDTH_SCALING_FACTOR;
 
-    // Step duration, required to copute stepping foot position
-    double step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
-    
     // compute step_complition_factor
     // this represent the avancement of the curent step. this factor == 1 when the step is over.
-    double step_complition_factor = 1 - update.step_timer/step_duration; 
+    double step_complition_factor = 1 - update.step_timer/update.step_duration; 
     //#######
-
                       
     if(update.stepping_foot_index == 1) // if the right foot is support foot (left foot stepping)
     {

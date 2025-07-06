@@ -7,7 +7,7 @@ import jupedsim.native as py_jps
 
 @dataclass(kw_only=True)
 class HumanoidModelV0:
-    """Parameters for Social Force Model
+    """Parameters for HumanoidModelV0
 
     All attributes are initialized with reasonably good defaults.
 
@@ -74,7 +74,8 @@ class HumanoidModelV0AgentParameters:
     ## Parameters for Humanoid body
     height: float = 1.7  # [m]
     ## Variables for gait
-    step_timer: int = 0  # [number of time steps]
+    step_duration: int = 0  # total number of time steps to complete the current step
+    step_timer: int = 0  # number of time steps remaining to complete the current step
     stepping_foot_index: int = (
         1  # -1 == right foot stepping/left foot support, 0 == double stance, 1 == left foot stepping/right foot support
     )
@@ -104,6 +105,7 @@ class HumanoidModelV0AgentParameters:
             forceDistance=self.forceDistance,
             radius=self.radius,
             height=self.height,
+            step_duration=self.step_duration,
             step_timer=self.step_timer,
             stepping_foot_index=self.stepping_foot_index,
             step_target=self.step_target,
@@ -202,8 +204,17 @@ class HumanoidModelV0State:
         self._obj.height = height
 
     @property
+    def step_duration(self) -> int:
+        """total number of time steps required to complete the current step."""
+        return self._obj.step_duration
+
+    @step_duration.setter
+    def step_duration(self, step_duration):
+        self._obj.step_duration = step_duration
+
+    @property
     def step_timer(self) -> int:
-        """number of time step before completing the current step."""
+        """number of time steps before completing the current step."""
         return self._obj.step_timer
 
     @step_timer.setter

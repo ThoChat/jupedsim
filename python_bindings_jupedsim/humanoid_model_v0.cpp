@@ -31,6 +31,7 @@ void init_humanoid_model_v0(py::module_& m)
                         // humanoid body parameters
                         double height,
                         // gait variables
+                        int step_duration,
                         int step_timer,
                         int stepping_foot_index,
                         std::tuple<double, double> step_target,
@@ -57,6 +58,7 @@ void init_humanoid_model_v0(py::module_& m)
                     forceDistance,
                     radius, 
                     height,
+                    step_duration,
                     step_timer,
                     stepping_foot_index,
                     intoJPS_Point(step_target),
@@ -82,6 +84,7 @@ void init_humanoid_model_v0(py::module_& m)
             py::arg("forceDistance"),
             py::arg("radius"),
             py::arg("height"),
+            py::arg("step_duration"),
             py::arg("step_timer"),
             py::arg("stepping_foot_index"),
             py::arg("step_target"),
@@ -97,7 +100,7 @@ void init_humanoid_model_v0(py::module_& m)
                 "position: {}, orientation: {}, journey_id: {}, stage_id: {},"
                 "velocity: {}, mass: {}, desiredSpeed: {},"
                 "reactionTime: {}, agentScale: {}, obstacleScale: {}, forceDistance: {},"
-                "radius: {}, height: {}, step_timer: {}, stepping_foot_index: {}, step_target: {},"
+                "radius: {}, height: {}, step_duration: {}, step_timer: {}, stepping_foot_index: {}, step_target: {},"
                 "head_position: {}, shoulder_rotation_angle_z: {}, trunk_rotation_angle_x: {},"
                 "trunk_rotation_angle_y: {}, heel_right_position: {}, heel_left_position: {},",
                 intoTuple(p.position),
@@ -113,6 +116,7 @@ void init_humanoid_model_v0(py::module_& m)
                 p.forceDistance,
                 p.radius,
                 p.height,
+                p.step_duration,
                 p.step_timer,
                 p.stepping_foot_index,
                 intoTuple(p.step_target),
@@ -215,6 +219,14 @@ void init_humanoid_model_v0(py::module_& m)
             },
             [](JPS_HumanoidModelV0State_Wrapper& w, double height) {
                 JPS_HumanoidModelV0State_SetHeight(w.handle, height);
+            })
+        .def_property(
+            "step_duration",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return JPS_HumanoidModelV0State_GetStepDuration(w.handle);
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, int step_duration) {
+                JPS_HumanoidModelV0State_SetStepDuration(w.handle, step_duration);
             })
         .def_property(
             "step_timer",

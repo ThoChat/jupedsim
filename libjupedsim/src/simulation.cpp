@@ -354,6 +354,7 @@ JPS_AgentId JPS_Simulation_AddHumanoidModelV0Agent(
                 parameters.forceDistance,
                 parameters.radius,
                 parameters.height,
+                parameters.step_duration,
                 parameters.step_timer,
                 parameters.stepping_foot_index,
                 intoPoint(parameters.step_target),

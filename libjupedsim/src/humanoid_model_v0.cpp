@@ -191,6 +191,20 @@ JUPEDSIM_API void JPS_HumanoidModelV0State_SetHeight(JPS_HumanoidModelV0State ha
     state->height = height;
 }
 
+JUPEDSIM_API int JPS_HumanoidModelV0State_GetStepDuration (JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return state->step_duration;
+}
+
+JUPEDSIM_API void JPS_HumanoidModelV0State_SetStepDuration(JPS_HumanoidModelV0State handle, int step_duration)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->step_duration = step_duration;
+}
+
 JUPEDSIM_API int JPS_HumanoidModelV0State_GetStepTimer (JPS_HumanoidModelV0State handle)
 {
     assert(handle);

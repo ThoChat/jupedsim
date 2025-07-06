@@ -182,6 +182,20 @@ JUPEDSIM_API double JPS_HumanoidModelV0State_GetHeight(JPS_HumanoidModelV0State 
 JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetHeight(JPS_HumanoidModelV0State handle, double height);
 
+/**
+ * Read step duration of this agent.
+ * @param handle of the Agent to access.
+ * @return step duration of this agent.
+ */
+JUPEDSIM_API int JPS_HumanoidModelV0State_GetStepDuration(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write step duration of this agent.
+ * @param handle of the Agent to access.
+ * @param step duration of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetStepDuration(JPS_HumanoidModelV0State handle, int step_duration);
 
 /**
  * Read step timer of this agent.
@@ -387,6 +401,7 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
     /**
      * gait variables
      */
+    int step_duration = {0}; // total number of time steps to complete the current step
     int step_timer = {0}; // number of time steps remaining to complete the current step
     int stepping_foot_index = {1}; //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
     JPS_Point step_target = {0, 0}; // target position of the current stepping foot
