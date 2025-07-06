@@ -62,8 +62,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
     // creating update of pelvis position based on the collision avoidance model
     update.velocity = model.velocity + forces * dT;
-    // update.position = ped.pos + update.velocity * dT;
-    update.position = ped.pos;
+    update.position = ped.pos + update.velocity * dT;
 
 
     /// #### Humanoid model #####
@@ -602,15 +601,6 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesStepDoubleSupports(
     }
 
 
-    // std::cout << "### New ComputeJointAnglesStepDoubleSupports function" << std::endl;
-    // std::cout << "stepping_foot_index = " << model.stepping_foot_index << std::endl;
-    // std::cout << "right ankle: " << updated_joint_angles_matrix.row(1) << std::endl;
-    // std::cout << "right hip: " << updated_joint_angles_matrix.row(2) << std::endl;
-    // std::cout << "left hip: " << updated_joint_angles_matrix.row(3) << std::endl;
-    // std::cout << "left ankle: " << updated_joint_angles_matrix.row(4) << std::endl;
-    // std::cout << "pelvis: " << updated_joint_angles_matrix.row(6) << std::endl;
-  
-
     return updated_joint_angles_matrix;
 
     // ... thenUpdate joint positions
@@ -713,15 +703,6 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGaitSingleSupport(const Gener
                                                 0;
     }
 
-
-    // std::cout << "New ComputeJointAnglesGaitSingleSupport function" << std::endl;
-    // std::cout << "stepping_foot_index = " << model.stepping_foot_index << std::endl;
-    // std::cout << "right ankle: " << updated_joint_angles_matrix.row(1) << std::endl;
-    // std::cout << "right hip: " << updated_joint_angles_matrix.row(2) << std::endl;
-    // std::cout << "left hip: " << updated_joint_angles_matrix.row(3) << std::endl;
-    // std::cout << "left ankle: " << updated_joint_angles_matrix.row(4) << std::endl;
-    // std::cout << "pelvis: " << updated_joint_angles_matrix.row(6) << std::endl;
-    
     
     return updated_joint_angles_matrix;
     
@@ -893,16 +874,6 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
     updated_joint_positions_matrix.row(10) <<   head_vector[0],
                                                 head_vector[1], 
                                                 head_vector[2]; // update the position of the head
-
-
-    // degug: plot the joint positions one by one
-    // std::cout << " ###  Updated joint positions: " << std::endl;
-    // std::cout << "Pelvis: " << updated_joint_positions_matrix.row(6)<< std::endl;
-    // std::cout << "Right Heel: " << updated_joint_positions_matrix.row(0) << std::endl;
-    // std::cout << "Left Heel: " << updated_joint_positions_matrix.row(5) << std::endl;
-    // std::cout << " # \n # \n # " << std::endl;
-
-
 
 
     return updated_joint_positions_matrix;

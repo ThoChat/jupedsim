@@ -30,6 +30,5 @@ struct HumanoidModelV0Update {
     Point heel_right_velocity{};
     Point3D heel_left_position{};
     Point heel_left_velocity{};
-    Eigen::MatrixXd joint_angles_matrix {};
     
 };
