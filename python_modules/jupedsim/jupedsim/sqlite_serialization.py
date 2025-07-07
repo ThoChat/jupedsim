@@ -244,6 +244,9 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                 "   head_pos_x REAL,"
                 "   head_pos_y REAL,"
                 "   head_pos_z REAL,"
+                "   pelvis_pos_x REAL,"
+                "   pelvis_pos_y REAL,"
+                "   pelvis_pos_z REAL,"
                 "   shoulder_rotation_angle_z REAL,"
                 "   trunk_rotation_angle_x REAL,"
                 "   trunk_rotation_angle_y REAL,"
@@ -314,6 +317,9 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                         agent.model.head_position[0],
                         agent.model.head_position[1],
                         agent.model.head_position[2],
+                        agent.model.pelvis_position[0],
+                        agent.model.pelvis_position[1],
+                        agent.model.pelvis_position[2],
                         agent.model.shoulder_rotation_angle_z,
                         agent.model.trunk_rotation_angle_x,
                         agent.model.trunk_rotation_angle_y,
@@ -328,7 +334,7 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                 for agent in simulation.agents()
             ]
             cur.executemany(
-                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 frame_data,
             )
 
