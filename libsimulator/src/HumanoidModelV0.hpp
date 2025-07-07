@@ -129,7 +129,7 @@ private:
     static constexpr double SHOULDER_WIDTH_SCALING_FACTOR = 0.45/1.7; 
     static constexpr double TRUNK_WIDTH_SCALING_FACTOR = 0.1470; // called l_r previously
     static constexpr double TRUNK_HEIGHT_SCALING_FACTOR = 0.3495; 
-    static constexpr double PELVIS_WIDTH_SCALING_FACTOR = 0.2 / 1.7; 
+    static constexpr double PELVIS_WIDTH_SCALING_FACTOR = 0.4 / 1.7; 
     static constexpr double LEG_SCALING_FACTOR = 0.4791; //0.2522 (shank) + 0.2269 (thigh)
     static constexpr double ANKLE_SCALING_FACTOR = 0.0451; 
     static constexpr double FOOT_FORWARD_SCALING_FACTOR = 0.1470/2; // 

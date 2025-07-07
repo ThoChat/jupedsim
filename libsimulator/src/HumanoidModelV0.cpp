@@ -125,13 +125,17 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
         Point normal_orientation = update.velocity.Normalized().Rotate90Deg();
         // right foot
-        init_model->heel_right_position.x = (ped.pos - normal_orientation*(model.height * PELVIS_WIDTH_SCALING_FACTOR)).x;
-        init_model->heel_right_position.y = (ped.pos - normal_orientation*(model.height * PELVIS_WIDTH_SCALING_FACTOR)).y;
+        init_model->heel_right_position.x = (ped.pos - normal_orientation*( model.height 
+                                                                            * PELVIS_WIDTH_SCALING_FACTOR * 0.5)).x;
+        init_model->heel_right_position.y = (ped.pos - normal_orientation*( model.height 
+                                                                            * PELVIS_WIDTH_SCALING_FACTOR* 0.5)).y;
         init_model->heel_right_position.z = 0.0;
 
         // left foot
-        init_model->heel_left_position.x = (ped.pos + normal_orientation*(model.height * PELVIS_WIDTH_SCALING_FACTOR)).x;
-        init_model->heel_left_position.y = (ped.pos + normal_orientation*(model.height * PELVIS_WIDTH_SCALING_FACTOR)).y;
+        init_model->heel_left_position.x = (ped.pos + normal_orientation*(  model.height 
+                                                                            * PELVIS_WIDTH_SCALING_FACTOR* 0.5)).x;
+        init_model->heel_left_position.y = (ped.pos + normal_orientation*(  model.height 
+                                                                            * PELVIS_WIDTH_SCALING_FACTOR* 0.5)).y;
         init_model->heel_left_position.z = 0.0;
 
         // compute update based on initialized state
@@ -192,8 +196,6 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     update.heel_left_position.z = updated_joint_positions_matrix(5, 2);
 
 
-    
-
 
     // ## shoulders
     update.shoulder_rotation_angle_z = 0.0;
@@ -204,8 +206,8 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     update.trunk_rotation_angle_y = 0.0;
 
     // print the updated joint positions
-    // std::cout << "old Joint Positions :"  << std::endl;
-    // std::cout << "Pelvis: " << update.position.x <<", "<< update.position.y << std::endl;
+
+    // // std::cout << "Pelvis: " << update.position.x <<", "<< update.position.y << std::endl;
     // std::cout << "Right Heel: " << update.heel_right_position.x << ", " 
     //                             << update.heel_right_position.y << ", " 
     //                             << update.heel_right_position.z << std::endl;
@@ -213,7 +215,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     //                             << update.heel_left_position.y << ", " 
     //                             << update.heel_left_position.z << std::endl;
 
-    // // pause
+    // // // pause
     // std::cin.get();  
     // // clear the system console
     // std::system("clear");
@@ -429,12 +431,13 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGait(
 
     // compute step_complition_factor
     // this represent the avancement of the curent step. this factor == 1 when the step is over.
-    double step_complition_factor = 1 - update.step_timer/update.step_duration; 
+    double step_complition_factor = 1.0 - (static_cast<double>(update.step_timer) / update.step_duration);
+
     //#######
-                      
+    
+
     if(update.stepping_foot_index == 1) // if the right foot is support foot (left foot stepping)
     {
-        
         // Step 1: computation of the next stepping foot position
         // left foot stepping
         updated_joint_positions_matrix.row(5) <<    model.heel_left_position.x + update.velocity.x * dT,
@@ -491,9 +494,9 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGait(
 
         support_hip_position.x = updated_joint_positions_matrix(6, 0) + pelvis_width * 0.5 * normal_orientation.x;
         support_hip_position.y = updated_joint_positions_matrix(6, 1) + pelvis_width * 0.5 * normal_orientation.y;
-        support_hip_position.z = model.heel_right_position.z; // to insure a planar computation of distance_support_hip_foot_xy
+        support_hip_position.z = model.heel_left_position.z; // to insure a planar computation of distance_support_hip_foot_xy
 
-        double distance_support_hip_foot_xy = (support_hip_position - model.heel_right_position).Norm();
+        double distance_support_hip_foot_xy = (support_hip_position - model.heel_left_position).Norm();
 
         // the height of the pelvis is based on the Leg length and position of the hip relative to the support foot
         // pyhtagore with leg legth and support foot-hip positions
@@ -512,7 +515,6 @@ Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGait(
     updated_joint_positions_matrix(10, 2) = updated_joint_positions_matrix(6, 2) 
                                                 + model.height * (TRUNK_HEIGHT_SCALING_FACTOR 
                                                                 + NECK_SCALING_FACTOR);
-
 
 
     return updated_joint_positions_matrix;
