@@ -90,7 +90,7 @@ private:
 
 
 
-    Eigen::MatrixXd ComputeJointPositionGait(
+    HumanoidModelV0Update ComputeGaitMotion(
                             const HumanoidModelV0Data& model,
                             const HumanoidModelV0Update& update,
                             double dT) 
