@@ -6,8 +6,9 @@
 #include "CollisionGeometry.hpp"
 #include "NeighborhoodSearch.hpp"
 #include "OperationalModel.hpp"
-#include "UniqueID.hpp"
 #include "HumanoidModelV0Data.hpp"
+#include "UniqueID.hpp"
+
 #include <Eigen/Dense>
 
 
@@ -102,7 +103,7 @@ private:
                             double step_duration) 
                             const;
                             
-    Eigen::MatrixXd ComputeJointAnglesGait(
+    Eigen::MatrixXd ComputeJointPositionGait(
                             const HumanoidModelV0Data& model,
                             const HumanoidModelV0Update& update,
                             double dT) 

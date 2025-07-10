@@ -139,14 +139,14 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         init_model->heel_left_position.z = 0.0;
 
         // compute update based on initialized state
-        updated_joint_positions_matrix = ComputeJointAnglesGait(*init_model, update, dT); 
+        updated_joint_positions_matrix = ComputeJointPositionGait(*init_model, update, dT); 
         
          
         }
         else
         {
         // compute update based on previous state
-        updated_joint_positions_matrix = ComputeJointAnglesGait(model, update, dT);
+        updated_joint_positions_matrix = ComputeJointPositionGait(model, update, dT);
         }
         
 
@@ -164,7 +164,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
 
         // New Single Support Gait function
-        updated_joint_positions_matrix = ComputeJointAnglesGait(model, update, dT);
+        updated_joint_positions_matrix = ComputeJointPositionGait(model, update, dT);
 
 
 
@@ -414,7 +414,7 @@ Eigen::Matrix4d HumanoidModelV0::CreateTransformationMatrix(
 
 
 
-Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGait(
+Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionGait(
                                             const HumanoidModelV0Data& model,
                                             const HumanoidModelV0Update& update,
                                             double dT
