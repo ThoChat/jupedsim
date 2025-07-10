@@ -276,6 +276,21 @@ JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetPelvisPosition(JPS_HumanoidModelV0State handle, JPS_Point3D pelvis_position);
 
 /**
+ * Read pelvis rotation angle along the longitudinal axis (z) of this agent.
+ * @param handle of the Agent to access.
+ * @return pelvis rotation angle along the longitudinal axis (z) of this agent.
+ */
+JUPEDSIM_API double JPS_HumanoidModelV0State_GetPelvisRotationAngleZ(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write pelvis rotation angle along the longitudinal axis (z) of this agent.
+ * @param handle of the Agent to access.
+ * @param pelvis rotation angle along the longitudinal axis (z) of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetPelvisRotationAngleZ(JPS_HumanoidModelV0State handle, double pelvis_rotation_angle_z);
+
+/**
  * Read shoulder rotation angle along the longitudinal axis (z) of this agent.
  * @param handle of the Agent to access.
  * @return shoulder rotation angle along the longitudinal axis (z) of this agent.
@@ -425,9 +440,10 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
      */
     JPS_Point3D head_position = {0, 0, 0}; // Position of the agent's head
     JPS_Point3D pelvis_position = {0, 0, 0}; // Position of the agent's pelvis (oriented toward the "orientation" vector)
-    double shoulder_rotation_angle_z = 0.0; // shoulder rotation angle relative to the pelvis along the longitudinal axis (z)
-    double trunk_rotation_angle_x = 0.0; // trunk rotation angle relative to the pelvis along the frontal axis (x)
-    double trunk_rotation_angle_y = 0.0; // trunk rotation angle relative to the pelvis along the sagittal axis (y)
+    double pelvis_rotation_angle_z = 0.0; // pelvis rotation angle relative to the world along the longitudinal axis (z)
+    double shoulder_rotation_angle_z = 0.0; // shoulder rotation angle along the longitudinal axis (z)
+    double trunk_rotation_angle_x = 0.0; // trunk rotation angle along the frontal axis (x)
+    double trunk_rotation_angle_y = 0.0; // trunk rotation angle along the sagittal axis (y)
     JPS_Point3D heel_right_position = {0, 0, 0}; // Position of the agent's right heel
     JPS_Point3D heel_left_position = {0, 0, 0}; // Position of the agent's left heel
 

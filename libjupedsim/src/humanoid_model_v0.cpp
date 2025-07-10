@@ -279,6 +279,20 @@ JPS_HumanoidModelV0State_SetPelvisPosition(JPS_HumanoidModelV0State handle, JPS_
     state->pelvis_position = intoPoint3D(pelvis_position);
 }
 
+JUPEDSIM_API double JPS_HumanoidModelV0State_GetPelvisRotationAngleZ(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return state->pelvis_rotation_angle_z;
+}
+
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetPelvisRotationAngleZ(JPS_HumanoidModelV0State handle, double pelvis_rotation_angle_z)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->pelvis_rotation_angle_z = pelvis_rotation_angle_z;
+}
 
 JUPEDSIM_API double JPS_HumanoidModelV0State_GetShoulderRotationAngleZ(JPS_HumanoidModelV0State handle)
 {

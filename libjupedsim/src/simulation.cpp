@@ -360,6 +360,7 @@ JPS_AgentId JPS_Simulation_AddHumanoidModelV0Agent(
                 intoPoint(parameters.step_target), 
                 intoPoint3D(parameters.head_position),
                 intoPoint3D(parameters.pelvis_position),
+                parameters.pelvis_rotation_angle_z,
                 parameters.shoulder_rotation_angle_z,
                 parameters.trunk_rotation_angle_x,
                 parameters.trunk_rotation_angle_y,

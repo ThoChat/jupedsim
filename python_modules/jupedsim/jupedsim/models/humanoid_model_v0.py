@@ -50,6 +50,7 @@ class HumanoidModelV0AgentParameters:
         stepping_foot_index: -1 == right foot stepping/left foot support, 0 == double stance, 1 == left foot stepping/right foot support
         head_position: 3D Vector of the cartesian coordinates of the head position of this agent. [in m]
         pelvis_position: 3D Vector of the cartesian coordinates of the pelvis position of this agent. [in m]
+        pelvis_rotation_angle_z: pelvis rotation angle along the longitudinal axis (z) of this agent relative to the world. [in rad]
         shoulder_rotation_angle_z: shoulder rotation angle along the longitudinal axis (z) of this agent. [in rad]
         trunk_rotation_angle_x: trunk rotation angle along the frontal axis (x) of this agent. [in rad]
         trunk_rotation_angle_y: trunk rotation angle along the frontal axis (x) of this agent. [in rad]
@@ -87,6 +88,7 @@ class HumanoidModelV0AgentParameters:
     ## Variables for body parts
     head_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     pelvis_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    pelvis_rotation_angle_z: float = 0.0
     shoulder_rotation_angle_z: float = 0.0
     trunk_rotation_angle_x: float = 0.0
     trunk_rotation_angle_y: float = 0.0
@@ -116,6 +118,7 @@ class HumanoidModelV0AgentParameters:
             step_target=self.step_target,
             head_position=self.head_position,
             pelvis_position=self.pelvis_position,
+            pelvis_rotation_angle_z=self.pelvis_rotation_angle_z,
             shoulder_rotation_angle_z=self.shoulder_rotation_angle_z,
             trunk_rotation_angle_x=self.trunk_rotation_angle_x,
             trunk_rotation_angle_y=self.trunk_rotation_angle_y,
@@ -264,6 +267,15 @@ class HumanoidModelV0State:
     @pelvis_position.setter
     def pelvis_position(self, pelvis_position):
         self._obj.pelvis_position = pelvis_position
+
+    @property
+    def pelvis_rotation_angle_z(self) -> float:
+        """pelvis rotation angle z of this agent."""
+        return self._obj.pelvis_rotation_angle_z
+
+    @pelvis_rotation_angle_z.setter
+    def pelvis_rotation_angle_z(self, pelvis_rotation_angle_z):
+        self._obj.pelvis_rotation_angle_z = pelvis_rotation_angle_z
 
     @property
     def shoulder_rotation_angle_z(self) -> float:

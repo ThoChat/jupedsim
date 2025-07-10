@@ -244,6 +244,7 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
     // # body motion variables
     model.head_position = upd.head_position; 
     model.pelvis_position = upd.pelvis_position;
+    model.pelvis_rotation_angle_z = upd.pelvis_rotation_angle_z;
     model.shoulder_rotation_angle_z = upd.shoulder_rotation_angle_z;
     model.trunk_rotation_angle_x = upd.trunk_rotation_angle_x;
     model.trunk_rotation_angle_y = upd.trunk_rotation_angle_y;

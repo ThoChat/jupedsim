@@ -19,6 +19,7 @@ struct HumanoidModelV0Update {
     Point3D head_position{};
     // pelvis
     Point3D pelvis_position{};
+    double pelvis_rotation_angle_z{};
     // shoulder rotation
     double shoulder_rotation_angle_z{};
     // trunk rotation
