@@ -126,6 +126,10 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
                                                         + LEG_SCALING_FACTOR 
                                                         + TRUNK_HEIGHT_SCALING_FACTOR
                                                         + NECK_SCALING_FACTOR);
+        // pelvis
+        init_model->pelvis_position.x = ped.pos.x;
+        init_model->pelvis_position.y = ped.pos.y;
+        init_model->pelvis_position.z = model.height * ( LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR);
 
         Point normal_orientation = update.velocity.Normalized().Rotate90Deg();
         // right foot
@@ -416,6 +420,11 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
     double leg_length = model.height * (LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR); 
     double pelvis_width = model.height * PELVIS_WIDTH_SCALING_FACTOR;
 
+    // compute the natural frequency XCoM pendulum
+    // omega_0 = sqrt(g / l) where g is the gravity and l is the leg length
+    // this is used to compute the pelvis position 
+    double omega_0 = std::sqrt(9.81 / leg_length); 
+
     // compute step_complition_factor
     // this represent the avancement of the curent step. this factor == 1 when the step is over.
     double step_complition_factor = 1.0 - (static_cast<double>(update.step_timer) / update.step_duration);
@@ -428,19 +437,23 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         // Step 1: computation of the next stepping foot position
         // left foot stepping
         // the stepping foot travel double the distance that the navigation model predict fot the pelvis
-        update_gait_motion.heel_left_position.x = model.heel_left_position.x + update.velocity.x * 2 *dT;
-        update_gait_motion.heel_left_position.y = model.heel_left_position.y + update.velocity.y * 2 *dT;
+        update_gait_motion.heel_left_position.x = model.heel_left_position.x + update.velocity.x * dT;
+        update_gait_motion.heel_left_position.y = model.heel_left_position.y + update.velocity.y * dT;
         update_gait_motion.heel_left_position.z = -0.4*step_complition_factor*(step_complition_factor-1); 
                                                     // the vertical displacement of the stepping foot is 
                                                     // a parabola with a maximum at 0.1m/ z=0.40(t)(t - 1);
                                                      
 
         // Step 2: computation of the pelvis and support hip position
-        // the center of the pelvis is placed between both feet
-        update_gait_motion.pelvis_position.x =  model.heel_right_position.x 
-                                                +(update_gait_motion.heel_left_position.x-model.heel_right_position.x)/2;
-        update_gait_motion.pelvis_position.y =  model.heel_right_position.y 
-                                                +(update_gait_motion.heel_left_position.y-model.heel_right_position.y)/2;
+        // The pelvis position is updated so that the XCoM is on the position of the support foot (locomotion stability creteria) 
+        //  - under assumption pervis center = CoM
+
+        update_gait_motion.pelvis_position.x =  model.pelvis_position.x 
+                                                +(model.heel_right_position.x-model.pelvis_position.x)*omega_0* dT;
+        update_gait_motion.pelvis_position.y =  model.pelvis_position.y 
+                                                +(model.heel_right_position.y-model.pelvis_position.y)*omega_0* dT;
+
+        
 
         // position of the support hip (right hip)
         Point normal_orientation = update.velocity.Normalized().Rotate90Deg();
@@ -451,7 +464,6 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         support_hip_position.z = model.heel_right_position.z; // to insure a planar computation of distance_support_hip_foot_xy
 
         double distance_support_hip_foot_xy = (support_hip_position - model.heel_right_position).Norm();
-
         // the height of the pelvis is based on the Leg length and position of the hip relative to the support foot
         // pyhtagore with leg legth and support foot-hip positions
         update_gait_motion.pelvis_position.z =  sqrt(std::pow(leg_length, 2)- std::pow(distance_support_hip_foot_xy,2));
@@ -461,24 +473,25 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         update_gait_motion.heel_right_position.z = 0;                               
                                                 
     } 
-    else // if the left foot is support foot (right foot stepping)
+    else if(update.stepping_foot_index == -1)// if the left foot is support foot (right foot stepping)
     {
         // Step 1: computation of the next stepping foot position
         // right foot stepping
         // the stepping foot travel double the distance that the navigation model predict fot the pelvis
-        update_gait_motion.heel_right_position.x = model.heel_right_position.x + update.velocity.x * 2 *dT; 
-        update_gait_motion.heel_right_position.y = model.heel_right_position.y + update.velocity.y * 2 *dT;
+        update_gait_motion.heel_right_position.x = model.heel_right_position.x + update.velocity.x * dT; 
+        update_gait_motion.heel_right_position.y = model.heel_right_position.y + update.velocity.y * dT;
         update_gait_motion.heel_right_position.z = -0.4*step_complition_factor*(step_complition_factor-1); 
                                                     // the vertical displacement of the stepping foot is 
                                                     // a parabola with a maximum at 0.1m/ z=0.40(t)(t - 1);
 
         
         // Step 2: computation of the pelvis and support hip position
-        // the center of the pelvis is placed between both feet
-        update_gait_motion.pelvis_position.x =  model.heel_left_position.x 
-                                                +(update_gait_motion.heel_right_position.x-model.heel_left_position.x)/2;
-        update_gait_motion.pelvis_position.y =  model.heel_left_position.y 
-                                                +(update_gait_motion.heel_right_position.y-model.heel_left_position.y)/2;
+        // The pelvis position is updated so that the XCoM is on the position of the support foot (locomotion stability creteria) 
+        //  - under assumption pervis center = CoM
+        update_gait_motion.pelvis_position.x =  model.pelvis_position.x 
+                                                +(model.heel_left_position.x-model.pelvis_position.x)*omega_0* dT;
+        update_gait_motion.pelvis_position.y =  model.pelvis_position.y 
+                                                +(model.heel_left_position.y-model.pelvis_position.y)*omega_0* dT;
 
         // position of the support hip (right hip)
         Point normal_orientation = update.velocity.Normalized().Rotate90Deg();
@@ -509,6 +522,21 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
     // Step 5: The agent update position is set to the pelvis position
     update_gait_motion.position.x = update_gait_motion.pelvis_position.x;
     update_gait_motion.position.y = update_gait_motion.pelvis_position.y;
+
+    // //#############
+    // std::cout << " "<< std::endl;
+    // std::cout << "update_gait_motion.stepping_foot_index: " << update_gait_motion.stepping_foot_index << std::endl;
+    // std::cout << "(model.heel_left_position.x-model.pelvis_position.x): " << (model.heel_right_position.x-model.pelvis_position.x) << std::endl;
+    // // print left heal right heel and pelvis position
+    // std::cout << "Left Heel Position: " << model.heel_left_position.x << ", "
+    //             << model.heel_left_position.y << std::endl;
+    // std::cout << "Right Heel Position: " << model.heel_right_position.x << ", "
+    //             << model.heel_right_position.y << std::endl;
+    // std::cout << "Pelvis Position: " << model.pelvis_position.x << ", "
+    //             << model.pelvis_position.y << std::endl;
+    // std::cin.get();
+    // //#############
+    
 
 
     return  update_gait_motion;
