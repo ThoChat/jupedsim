@@ -419,9 +419,9 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
     // this is used to compute the pelvis position 
     double omega_0 = std::sqrt(9.81 / leg_length); 
 
-    // compute step_complition_factor
+    // compute step_completion_factor
     // this represent the avancement of the curent step. this factor == 1 when the step is over.
-    double step_complition_factor = 1.0 - (static_cast<double>(update_gait_motion.step_timer) / update_gait_motion.step_duration);
+    double step_completion_factor = 1.0 - (static_cast<double>(update_gait_motion.step_timer) / update_gait_motion.step_duration);
     //#######
 
 
@@ -498,11 +498,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         // Step 1: computation of the next stepping foot position
         // left foot stepping
         // the stepping foot travel double the distance that the navigation model predict fot the pelvis
-        update_gait_motion.heel_left_position.x = model.heel_left_position.x + update.velocity.x * dT;
-        update_gait_motion.heel_left_position.y = model.heel_left_position.y + update.velocity.y * dT;
-        update_gait_motion.heel_left_position.z = -0.4*step_complition_factor*(step_complition_factor-1); 
-                                                    // the vertical displacement of the stepping foot is 
-                                                    // a parabola with a maximum at 0.1m/ z=0.40(t)(t - 1);
+        update_gait_motion.heel_left_position = ComputeSwingingFootPosition(model, update_gait_motion, step_completion_factor, dT);
                                                      
 
         // Step 2: computation of the pelvis and support hip position
@@ -539,11 +535,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         // Step 1: computation of the next stepping foot position
         // right foot stepping
         // the stepping foot travel double the distance that the navigation model predict fot the pelvis
-        update_gait_motion.heel_right_position.x = model.heel_right_position.x + update.velocity.x * dT; 
-        update_gait_motion.heel_right_position.y = model.heel_right_position.y + update.velocity.y * dT;
-        update_gait_motion.heel_right_position.z = -0.4*step_complition_factor*(step_complition_factor-1); 
-                                                    // the vertical displacement of the stepping foot is 
-                                                    // a parabola with a maximum at 0.1m/ z=0.40(t)(t - 1);
+        update_gait_motion.heel_right_position = ComputeSwingingFootPosition(model, update_gait_motion, step_completion_factor, dT);
 
         
         // Step 2: computation of the pelvis and support hip position
@@ -583,6 +575,22 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
     update_gait_motion.position.x = update_gait_motion.pelvis_position.x;
     update_gait_motion.position.y = update_gait_motion.pelvis_position.y;
 
+    // Step 6: Pelvis rotation
+    // following the line in between both feet
+    Point in_between_feet_vector = update_gait_motion.heel_right_position.To2D()
+                                    - update_gait_motion.heel_left_position.To2D();
+    // compute the angle of the pelvis rotation (between 0 an 2*pi)
+    if (in_between_feet_vector.y >= 0) 
+    {
+        update_gait_motion.pelvis_rotation_angle_z = std::atan2(in_between_feet_vector.y, in_between_feet_vector.x);
+    }
+    else 
+    {
+        update_gait_motion.pelvis_rotation_angle_z = std::atan2(in_between_feet_vector.y, in_between_feet_vector.x) + 2 * M_PI;
+    }
+ 
+        
+
     // //#############
     // // std::cout << " "<< std::endl;
     // // std::cout << "update_gait_motion.stepping_foot_index: " << update_gait_motion.stepping_foot_index << std::endl;
@@ -602,9 +610,43 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
     // //#############
     
 
-
-
     return  update_gait_motion;
-;
 
+}
+
+
+Point3D HumanoidModelV0::ComputeSwingingFootPosition(
+                                            const HumanoidModelV0Data& model,
+                                            const HumanoidModelV0Update& update_gait_motion,
+                                            double step_completion_factor,
+                                            double dT
+                                    ) const
+
+{
+    Point3D updated_swinging_foot_position;
+
+    if( update_gait_motion.stepping_foot_index == 1) // if the right foot is support foot (left foot stepping
+    {
+        // the left foot is swinging
+        updated_swinging_foot_position.x = model.heel_left_position.x + update_gait_motion.velocity.x * dT;
+        updated_swinging_foot_position.y = model.heel_left_position.y + update_gait_motion.velocity.y * dT;
+        updated_swinging_foot_position.z = -0.4*step_completion_factor*(step_completion_factor-1);
+                                                    // the vertical displacement of the stepping foot is 
+                                                    // a parabola with a maximum at 0.1m/ z=0.40(t)(t - 1);
+    }
+    else if( update_gait_motion.stepping_foot_index == -1) // if the left foot is support foot (right foot stepping)
+    {
+        // the right foot is swinging
+        updated_swinging_foot_position.x = model.heel_right_position.x + update_gait_motion.velocity.x * dT;
+        updated_swinging_foot_position.y = model.heel_right_position.y + update_gait_motion.velocity.y * dT;
+        updated_swinging_foot_position.z = -0.4*step_completion_factor*(step_completion_factor-1); 
+                                                    // the vertical displacement of the stepping foot is 
+                                                    // a parabola with a maximum at 0.1m/ z=0.40(t)(t - 1);
+    }
+
+    // return the updated swinging foot position
+    return updated_swinging_foot_position;
+                                                     
+    // to do:   - implement pelvis rotation 
+    //          - implement new step computation in reach area
 }

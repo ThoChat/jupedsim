@@ -89,10 +89,16 @@ private:
     static double PushingForceLength(double A, double B, double r, double distance);
 
 
-
     HumanoidModelV0Update ComputeGaitMotion(
                             const HumanoidModelV0Data& model,
                             const HumanoidModelV0Update& update,
+                            double dT) 
+                            const;
+
+    Point3D ComputeSwingingFootPosition(
+                            const HumanoidModelV0Data& model,
+                            const HumanoidModelV0Update& update,
+                            double step_completion_factor,
                             double dT) 
                             const;
 
