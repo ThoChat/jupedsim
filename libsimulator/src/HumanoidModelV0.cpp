@@ -498,7 +498,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         // Step 1: computation of the next stepping foot position
         // left foot stepping
         // the stepping foot travel double the distance that the navigation model predict fot the pelvis
-        update_gait_motion.heel_left_position = ComputeSwingingFootPosition(model, update_gait_motion, step_completion_factor, dT);
+        UpdateSwingingFootPosition(update_gait_motion, model, step_completion_factor, dT);
                                                      
 
         // Step 2: computation of the pelvis and support hip position
@@ -535,7 +535,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         // Step 1: computation of the next stepping foot position
         // right foot stepping
         // the stepping foot travel double the distance that the navigation model predict fot the pelvis
-        update_gait_motion.heel_right_position = ComputeSwingingFootPosition(model, update_gait_motion, step_completion_factor, dT);
+        UpdateSwingingFootPosition(update_gait_motion, model, step_completion_factor, dT);
 
         
         // Step 2: computation of the pelvis and support hip position
@@ -615,38 +615,37 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
 }
 
 
-Point3D HumanoidModelV0::ComputeSwingingFootPosition(
+void HumanoidModelV0::UpdateSwingingFootPosition(
+                                            HumanoidModelV0Update& update_gait_motion,
                                             const HumanoidModelV0Data& model,
-                                            const HumanoidModelV0Update& update_gait_motion,
                                             double step_completion_factor,
                                             double dT
                                     ) const
 
 {
-    Point3D updated_swinging_foot_position;
+    // define the maximal stepping length
+    // double max_step_length = model.height * 0.5; // have to be added with the other parameters of the model
+
 
     if( update_gait_motion.stepping_foot_index == 1) // if the right foot is support foot (left foot stepping
     {
         // the left foot is swinging
-        updated_swinging_foot_position.x = model.heel_left_position.x + update_gait_motion.velocity.x * dT;
-        updated_swinging_foot_position.y = model.heel_left_position.y + update_gait_motion.velocity.y * dT;
-        updated_swinging_foot_position.z = -0.4*step_completion_factor*(step_completion_factor-1);
+        update_gait_motion.heel_left_position.x = model.heel_left_position.x + update_gait_motion.velocity.x * dT;
+        update_gait_motion.heel_left_position.y = model.heel_left_position.y + update_gait_motion.velocity.y * dT;
+        update_gait_motion.heel_left_position.z = -0.4*step_completion_factor*(step_completion_factor-1);
                                                     // the vertical displacement of the stepping foot is 
                                                     // a parabola with a maximum at 0.1m/ z=0.40(t)(t - 1);
     }
     else if( update_gait_motion.stepping_foot_index == -1) // if the left foot is support foot (right foot stepping)
     {
         // the right foot is swinging
-        updated_swinging_foot_position.x = model.heel_right_position.x + update_gait_motion.velocity.x * dT;
-        updated_swinging_foot_position.y = model.heel_right_position.y + update_gait_motion.velocity.y * dT;
-        updated_swinging_foot_position.z = -0.4*step_completion_factor*(step_completion_factor-1); 
+        update_gait_motion.heel_right_position.x = model.heel_right_position.x + update_gait_motion.velocity.x * dT;
+        update_gait_motion.heel_right_position.y = model.heel_right_position.y + update_gait_motion.velocity.y * dT;
+        update_gait_motion.heel_right_position.z = -0.4*step_completion_factor*(step_completion_factor-1); 
                                                     // the vertical displacement of the stepping foot is 
                                                     // a parabola with a maximum at 0.1m/ z=0.40(t)(t - 1);
     }
 
-    // return the updated swinging foot position
-    return updated_swinging_foot_position;
                                                      
-    // to do:   - implement pelvis rotation 
-    //          - implement new step computation in reach area
+    // to do:   - implement new step computation in reach area
 }

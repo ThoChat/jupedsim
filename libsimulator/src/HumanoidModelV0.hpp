@@ -95,9 +95,9 @@ private:
                             double dT) 
                             const;
 
-    Point3D ComputeSwingingFootPosition(
+    void UpdateSwingingFootPosition(
+                            HumanoidModelV0Update& update,
                             const HumanoidModelV0Data& model,
-                            const HumanoidModelV0Update& update,
                             double step_completion_factor,
                             double dT) 
                             const;
