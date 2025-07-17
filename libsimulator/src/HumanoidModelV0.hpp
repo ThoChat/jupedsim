@@ -98,7 +98,6 @@ private:
     void UpdateSwingingFootPosition(
                             HumanoidModelV0Update& update,
                             const HumanoidModelV0Data& model,
-                            double step_completion_factor,
                             double dT) 
                             const;
 

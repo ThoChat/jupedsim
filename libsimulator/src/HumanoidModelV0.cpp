@@ -419,9 +419,6 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
     // this is used to compute the pelvis position 
     double omega_0 = std::sqrt(9.81 / leg_length); 
 
-    // compute step_completion_factor
-    // this represent the avancement of the curent step. this factor == 1 when the step is over.
-    double step_completion_factor = 1.0 - (static_cast<double>(update_gait_motion.step_timer) / update_gait_motion.step_duration);
     //#######
 
 
@@ -498,7 +495,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         // Step 1: computation of the next stepping foot position
         // left foot stepping
         // the stepping foot travel double the distance that the navigation model predict fot the pelvis
-        UpdateSwingingFootPosition(update_gait_motion, model, step_completion_factor, dT);
+        UpdateSwingingFootPosition(update_gait_motion, model, dT);
                                                      
 
         // Step 2: computation of the pelvis and support hip position
@@ -535,7 +532,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         // Step 1: computation of the next stepping foot position
         // right foot stepping
         // the stepping foot travel double the distance that the navigation model predict fot the pelvis
-        UpdateSwingingFootPosition(update_gait_motion, model, step_completion_factor, dT);
+        UpdateSwingingFootPosition(update_gait_motion, model, dT);
 
         
         // Step 2: computation of the pelvis and support hip position
@@ -583,19 +580,18 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
     if (in_between_feet_vector.y >= 0) 
     {
         update_gait_motion.pelvis_rotation_angle_z = std::atan2(in_between_feet_vector.y, in_between_feet_vector.x);
+        // update_gait_motion.shoulder_rotation_angle_z = M_PI - update_gait_motion.pelvis_rotation_angle_z; // shoulder rotation is opposite to pelvis rotation
     }
     else 
     {
         update_gait_motion.pelvis_rotation_angle_z = std::atan2(in_between_feet_vector.y, in_between_feet_vector.x) + 2 * M_PI;
+        // update_gait_motion.shoulder_rotation_angle_z = M_PI - update_gait_motion.pelvis_rotation_angle_z; // shoulder rotation is opposite to pelvis rotation
     }
  
         
 
     // //#############
     // // std::cout << " "<< std::endl;
-    // // std::cout << "update_gait_motion.stepping_foot_index: " << update_gait_motion.stepping_foot_index << std::endl;
-    // // std::cout << "(model.heel_left_position.x-model.pelvis_position.x): " << (model.heel_right_position.x-model.pelvis_position.x) << std::endl;
-    // // print left heal right heel and pelvis position
 
 
     // std::cout<< "update_gait_motion.step_timer: " << update_gait_motion.step_timer << std::endl;
@@ -618,20 +614,70 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
 void HumanoidModelV0::UpdateSwingingFootPosition(
                                             HumanoidModelV0Update& update_gait_motion,
                                             const HumanoidModelV0Data& model,
-                                            double step_completion_factor,
                                             double dT
                                     ) const
 
 {
     // define the maximal stepping length
-    // double max_step_length = model.height * 0.5; // have to be added with the other parameters of the model
+    double max_step_length = model.height * 0.4; // have to be added with the other parameters of the model
+
+    // compute step_completion_factor
+    // this represent the avancement of the curent step. this factor == 1 when the step is over.
+    double step_completion_factor = 1.0 - (static_cast<double>(update_gait_motion.step_timer) / update_gait_motion.step_duration);
+
+    Point step_displacement_2d;
+
+
+    // compute the prefered step displacement                         
+    step_displacement_2d = update_gait_motion.velocity * dT ;
+
+    // if the future step displacement over max_step_length 
+    if ( (step_displacement_2d * model.step_timer).Norm() > max_step_length)
+    {
+        // limit the future step displacement to the maximal step length (given the relative placement of the feet in the direction of the navigation)
+        Point vector_to_support_foot;
+        if (update_gait_motion.stepping_foot_index == 1) // if the right foot is support foot (left foot stepping)
+        {
+            vector_to_support_foot = model.heel_right_position.To2D() - model.heel_left_position.To2D();
+        }
+        else if (update_gait_motion.stepping_foot_index == -1) // if the left foot is support foot (right foot stepping)
+        {
+            vector_to_support_foot = model.heel_left_position.To2D() - model.heel_right_position.To2D();
+        }
+        
+        step_displacement_2d = update_gait_motion.velocity.Normalized() 
+                                * (
+                                    max_step_length
+                                    + vector_to_support_foot.ScalarProduct(update_gait_motion.velocity.Normalized())
+                                 )
+                                / update_gait_motion.step_timer ;
+        // modify Step duration to keep up with the desired navigation speed (step_duration is given in number of time step dT)
+        update_gait_motion.step_duration = static_cast<int>(
+            std::round( 
+                (
+                    (step_displacement_2d.Norm() * update_gait_motion.step_timer) // target displacement for the total steptarget  
+                    / update_gait_motion.velocity.Norm() // time require to reach total displacement at current Vnav
+                )
+                 / dT // equivalent number of time step for the time require to reach the total target displacement
+            ));
+        // modify step_timer to maintain step_completion_factor and match the new step duration
+        update_gait_motion.step_timer = static_cast<int>(
+                update_gait_motion.step_duration * (model.step_timer / model.step_duration)
+             - 1 // to account for the step timer decrement at the end of the step
+        );
+        if (update_gait_motion.step_timer < 0) {
+            update_gait_motion.step_timer = 0; // ensure step timer is not negative
+        }
+
+
+    }
 
 
     if( update_gait_motion.stepping_foot_index == 1) // if the right foot is support foot (left foot stepping
     {
         // the left foot is swinging
-        update_gait_motion.heel_left_position.x = model.heel_left_position.x + update_gait_motion.velocity.x * dT;
-        update_gait_motion.heel_left_position.y = model.heel_left_position.y + update_gait_motion.velocity.y * dT;
+        update_gait_motion.heel_left_position.x = model.heel_left_position.x + step_displacement_2d.x;
+        update_gait_motion.heel_left_position.y = model.heel_left_position.y + step_displacement_2d.y;
         update_gait_motion.heel_left_position.z = -0.4*step_completion_factor*(step_completion_factor-1);
                                                     // the vertical displacement of the stepping foot is 
                                                     // a parabola with a maximum at 0.1m/ z=0.40(t)(t - 1);
@@ -639,13 +685,12 @@ void HumanoidModelV0::UpdateSwingingFootPosition(
     else if( update_gait_motion.stepping_foot_index == -1) // if the left foot is support foot (right foot stepping)
     {
         // the right foot is swinging
-        update_gait_motion.heel_right_position.x = model.heel_right_position.x + update_gait_motion.velocity.x * dT;
-        update_gait_motion.heel_right_position.y = model.heel_right_position.y + update_gait_motion.velocity.y * dT;
+        update_gait_motion.heel_right_position.x = model.heel_right_position.x + step_displacement_2d.x;
+        update_gait_motion.heel_right_position.y = model.heel_right_position.y + step_displacement_2d.y;
         update_gait_motion.heel_right_position.z = -0.4*step_completion_factor*(step_completion_factor-1); 
                                                     // the vertical displacement of the stepping foot is 
                                                     // a parabola with a maximum at 0.1m/ z=0.40(t)(t - 1);
     }
 
-                                                     
     // to do:   - implement new step computation in reach area
 }
