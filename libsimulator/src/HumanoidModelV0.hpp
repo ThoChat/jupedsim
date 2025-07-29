@@ -120,7 +120,7 @@ private:
     static constexpr double LEG_SCALING_FACTOR = 0.4791; //0.2522 (shank) + 0.2269 (thigh)
     static constexpr double ANKLE_SCALING_FACTOR = 0.0451; 
     static constexpr double FOOT_FORWARD_SCALING_FACTOR = 0.1470/2; // 
-    static constexpr double FOOT_BACKWARD_SCALING_FACTOR = 0.1470/4; // 
+    static constexpr double FOOT_BACKWARD_SCALING_FACTOR = 0.1470/2; // 
     static constexpr double FOOT_WIDTH_SCALING_FACTOR = 0.1470*8/50; // 
 
     // have to be set private later

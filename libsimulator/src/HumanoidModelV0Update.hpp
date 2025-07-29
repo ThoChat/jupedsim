@@ -28,6 +28,9 @@ struct HumanoidModelV0Update {
     // heels
     Point3D heel_right_position{};
     Point3D heel_left_position{};
+    // Toes
+    Point3D toe_right_position{};
+    Point3D toe_left_position{};
 
     
 };

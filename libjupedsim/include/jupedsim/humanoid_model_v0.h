@@ -366,6 +366,36 @@ JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetHeelLeftPosition(JPS_Humano
 JUPEDSIM_API void
 JPS_HumanoidModelV0State_SetHeelLeftPosition(JPS_HumanoidModelV0State handle, JPS_Point3D heel_left_position);
 
+/**
+ * Read toe right position of this agent.
+ * @param handle of the Agent to access.
+ * @return toe right position of this agent.
+ */
+JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetToeRightPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write toe right position of this agent.
+ * @param handle of the Agent to access.
+ * @param toe right position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetToeRightPosition(JPS_HumanoidModelV0State handle, JPS_Point3D toe_right_position);
+
+/**
+ * Read toe left position of this agent.
+ * @param handle of the Agent to access.
+ * @return toe left position of this agent.
+ */
+JUPEDSIM_API JPS_Point3D JPS_HumanoidModelV0State_GetToeLeftPosition(JPS_HumanoidModelV0State handle);
+
+/**
+ * Write toe left position of this agent.
+ * @param handle of the Agent to access.
+ * @param toe left position of this agent.
+ */
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetToeLeftPosition(JPS_HumanoidModelV0State handle, JPS_Point3D toe_left_position);
+
 
 /**
  * Describes parameters of an Agent in HumanoidModelV0
@@ -446,6 +476,8 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
     double trunk_rotation_angle_y = 0.0; // trunk rotation angle along the sagittal axis (y)
     JPS_Point3D heel_right_position = {0, 0, 0}; // Position of the agent's right heel
     JPS_Point3D heel_left_position = {0, 0, 0}; // Position of the agent's left heel
+    JPS_Point3D toe_right_position = {0, 0, 0}; // Position of the agent's right toe
+    JPS_Point3D toe_left_position = {0, 0, 0}; // Position of the agent's left toe
 
 
 

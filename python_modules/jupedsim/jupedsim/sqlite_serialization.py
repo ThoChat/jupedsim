@@ -253,6 +253,12 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                 "   heel_left_pos_x REAL,"
                 "   heel_left_pos_y REAL,"
                 "   heel_left_pos_z REAL,"
+                "   toe_right_pos_x REAL,"
+                "   toe_right_pos_y REAL,"
+                "   toe_right_pos_z REAL,"
+                "   toe_left_pos_x REAL,"
+                "   toe_left_pos_y REAL,"
+                "   toe_left_pos_z REAL,"
                 "   pelvis_rotation_angle_z REAL,"
                 "   shoulder_rotation_angle_z REAL,"
                 "   trunk_rotation_angle_x REAL,"
@@ -327,6 +333,12 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                         agent.model.heel_left_position[0],
                         agent.model.heel_left_position[1],
                         agent.model.heel_left_position[2],
+                        agent.model.toe_right_position[0],
+                        agent.model.toe_right_position[1],
+                        agent.model.toe_right_position[2],
+                        agent.model.toe_left_position[0],
+                        agent.model.toe_left_position[1],
+                        agent.model.toe_left_position[2],
                         agent.model.pelvis_rotation_angle_z,
                         agent.model.shoulder_rotation_angle_z,
                         agent.model.trunk_rotation_angle_x,
@@ -335,8 +347,11 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                 )
                 for agent in simulation.agents()
             ]
+            # Dynamically generate the placeholder string
+            num_columns = len(frame_data[0]) if frame_data else 0
+            placeholders = ", ".join(["?"] * num_columns)
             cur.executemany(
-                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                f"INSERT INTO trajectory_data VALUES({placeholders})",
                 frame_data,
             )
 

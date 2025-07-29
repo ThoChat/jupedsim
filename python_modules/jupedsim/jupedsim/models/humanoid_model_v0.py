@@ -56,6 +56,8 @@ class HumanoidModelV0AgentParameters:
         trunk_rotation_angle_y: trunk rotation angle along the frontal axis (x) of this agent. [in rad]
         heel_right_position: 3D Vector of the cartesian coordinates of the right heel position of this agent. [in m]
         heel_left_position: 3D Vector of the cartesian coordinates of the left heel position of this agent. [in m]
+        toe_right_position: 3D Vector of the cartesian coordinates of the right toe position of this agent. [in m]
+        toe_left_position: 3D Vector of the cartesian coordinates of the left toe position of this agent. [in m]
     """
 
     # todo write force equation from paper
@@ -94,6 +96,8 @@ class HumanoidModelV0AgentParameters:
     trunk_rotation_angle_y: float = 0.0
     heel_right_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     heel_left_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    toe_right_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    toe_left_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
     def as_native(
         self,
@@ -124,6 +128,8 @@ class HumanoidModelV0AgentParameters:
             trunk_rotation_angle_y=self.trunk_rotation_angle_y,
             heel_right_position=self.heel_right_position,
             heel_left_position=self.heel_left_position,
+            toe_right_position=self.toe_right_position,
+            toe_left_position=self.toe_left_position,
         )
 
 
@@ -321,3 +327,21 @@ class HumanoidModelV0State:
     @heel_left_position.setter
     def heel_left_position(self, heel_left_position):
         self._obj.heel_left_position = heel_left_position
+
+    @property
+    def toe_right_position(self) -> tuple[float, float, float]:
+        """right toe position of this agent."""
+        return self._obj.toe_right_position
+
+    @toe_right_position.setter
+    def toe_right_position(self, toe_right_position):
+        self._obj.toe_right_position = toe_right_position
+
+    @property
+    def toe_left_position(self) -> tuple[float, float, float]:
+        """left toe position of this agent."""
+        return self._obj.toe_left_position
+
+    @toe_left_position.setter
+    def toe_left_position(self, toe_left_position):
+        self._obj.toe_left_position = toe_left_position
