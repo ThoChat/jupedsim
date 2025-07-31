@@ -347,11 +347,8 @@ class SqliteHumanoidTrajectoryWriter(TrajectoryWriter):
                 )
                 for agent in simulation.agents()
             ]
-            # Dynamically generate the placeholder string
-            num_columns = len(frame_data[0]) if frame_data else 0
-            placeholders = ", ".join(["?"] * num_columns)
             cur.executemany(
-                f"INSERT INTO trajectory_data VALUES({placeholders})",
+                "INSERT INTO trajectory_data VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 frame_data,
             )
 
