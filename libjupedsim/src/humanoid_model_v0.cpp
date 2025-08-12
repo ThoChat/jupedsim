@@ -234,18 +234,18 @@ JUPEDSIM_API void JPS_HumanoidModelV0State_SetSteppingFootIndex(JPS_HumanoidMode
 }
 
 
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetStepTarget(JPS_HumanoidModelV0State handle)
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetXcom(JPS_HumanoidModelV0State handle)
 {
     assert(handle);
     const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
-    return intoJPS_Point(state->step_target);
+    return intoJPS_Point(state->Xcom);
 }
 
-JUPEDSIM_API void JPS_HumanoidModelV0State_SetStepTarget(JPS_HumanoidModelV0State handle, JPS_Point step_target)
+JUPEDSIM_API void JPS_HumanoidModelV0State_SetXcom(JPS_HumanoidModelV0State handle, JPS_Point Xcom)
 {
     assert(handle);
     const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
-    state->step_target = intoPoint(step_target);
+    state->Xcom = intoPoint(Xcom);
 }
 
 

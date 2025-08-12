@@ -13,7 +13,7 @@ struct HumanoidModelV0Update {
     int step_duration{};
     int step_timer{}; 
     int stepping_foot_index{}; 
-    Point step_target{};
+    Point Xcom{};
     // # body motion variables
     // head
     Point3D head_position{};

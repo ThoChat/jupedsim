@@ -233,7 +233,7 @@ JPS_HumanoidModelV0State_SetSteppingFootIndex(JPS_HumanoidModelV0State handle, i
  * @param handle of the Agent to access.
  * @return step target of this agent.
  */
-JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetStepTarget(JPS_HumanoidModelV0State handle);
+JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetXcom(JPS_HumanoidModelV0State handle);
 
 /**
  * Write step target of this agent.
@@ -242,7 +242,7 @@ JUPEDSIM_API JPS_Point JPS_HumanoidModelV0State_GetStepTarget(JPS_HumanoidModelV
  */
 
 JUPEDSIM_API void
-JPS_HumanoidModelV0State_SetStepTarget(JPS_HumanoidModelV0State handle, JPS_Point step_target);
+JPS_HumanoidModelV0State_SetXcom(JPS_HumanoidModelV0State handle, JPS_Point Xcom);
 
 
 /**
@@ -464,7 +464,7 @@ typedef struct JPS_HumanoidModelV0AgentParameters {
     int step_duration = {0}; // total number of time steps to complete the current step
     int step_timer = {0}; // number of time steps remaining to complete the current step
     int stepping_foot_index = {1}; //  -1 == right foot stepping, 0 == double stance, 1 == left foot stepping
-    JPS_Point step_target = {0, 0}; // target position of the current stepping foot
+    JPS_Point Xcom = {0, 0}; // Position of the extrapolated center of mass
     /**
      * body variables
      */

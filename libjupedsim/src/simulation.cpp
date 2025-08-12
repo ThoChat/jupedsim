@@ -357,7 +357,7 @@ JPS_AgentId JPS_Simulation_AddHumanoidModelV0Agent(
                 parameters.step_duration,
                 parameters.step_timer,
                 parameters.stepping_foot_index,
-                intoPoint(parameters.step_target), 
+                intoPoint(parameters.Xcom), 
                 intoPoint3D(parameters.head_position),
                 intoPoint3D(parameters.pelvis_position),
                 parameters.pelvis_rotation_angle_z,

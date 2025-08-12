@@ -86,7 +86,7 @@ class HumanoidModelV0AgentParameters:
     stepping_foot_index: int = (
         1  # -1 == right foot stepping/left foot support, 0 == double stance, 1 == left foot stepping/right foot support
     )
-    step_target: tuple[float, float] = (0.0, 0.0)
+    Xcom: tuple[float, float] = (0.0, 0.0)
     ## Variables for body parts
     head_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     pelvis_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
@@ -119,7 +119,7 @@ class HumanoidModelV0AgentParameters:
             step_duration=self.step_duration,
             step_timer=self.step_timer,
             stepping_foot_index=self.stepping_foot_index,
-            step_target=self.step_target,
+            Xcom=self.Xcom,
             head_position=self.head_position,
             pelvis_position=self.pelvis_position,
             pelvis_rotation_angle_z=self.pelvis_rotation_angle_z,
@@ -248,13 +248,13 @@ class HumanoidModelV0State:
         self._obj.stepping_foot_index = stepping_foot_index
 
     @property
-    def step_target(self) -> tuple[float, float]:
+    def Xcom(self) -> tuple[float, float]:
         """target position of the current stepping foot."""
-        return self._obj.step_target
+        return self._obj.Xcom
 
-    @step_target.setter
-    def step_target(self, step_target):
-        self._obj.step_target = step_target
+    @Xcom.setter
+    def Xcom(self, Xcom):
+        self._obj.Xcom = Xcom
 
     @property
     def head_position(self) -> tuple[float, float, float]:
