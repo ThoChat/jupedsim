@@ -9,7 +9,6 @@
 #include "HumanoidModelV0Data.hpp"
 #include "UniqueID.hpp"
 
-#include <Eigen/Dense>
 
 
 struct GenericAgent;
@@ -95,11 +94,6 @@ private:
                             double dT) 
                             const;
 
-    void UpdateSwingingFootPosition(
-                            HumanoidModelV0Update& update,
-                            const HumanoidModelV0Data& model,
-                            double dT) 
-                            const;
 
     /*#########################################################################
     ###     Relative to the Humanoid Representation Paradigm of agents      ###
@@ -123,30 +117,6 @@ private:
     static constexpr double FOOT_BACKWARD_SCALING_FACTOR = 0.1470/2; // 
     static constexpr double FOOT_WIDTH_SCALING_FACTOR = 0.1470*8/50; // 
 
-    // have to be set private later
-    /**
-     * Denavit-Hartenberg matrix transformation
-     * This function calculates the Denavit-Hartenberg matrix based on the given parameters.
-     * The Denavit-Hartenberg convention is a standardized way to represent the joint parameters of a robotic manipulator.
-     * It is used to describe the relationship between the joint angles and the position and orientation of the end-effector.
-     * @param theta joint angle
-     * @param d distance along the previous z-axis
-     * @param a distance along the current x-axis
-     * @param alpha angle between the previous z-axis and the current z-axis
-     * @return Denavit-Hartenberg matrix
-    
-     */
-    Eigen::Matrix4d DHTransformationMatrix(
-    double theta, 
-    double d, 
-    double r, 
-    double alpha) const;
-
-    Eigen::Matrix4d CreateTransformationMatrix( const Eigen::Vector3d &translation, 
-                                    const Eigen::Vector3d &rotation) const;
-
-
-    
 
     
 
