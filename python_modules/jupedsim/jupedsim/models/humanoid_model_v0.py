@@ -249,7 +249,7 @@ class HumanoidModelV0State:
 
     @property
     def Xcom(self) -> tuple[float, float]:
-        """target position of the current stepping foot."""
+        """Position of the Extrapolated center of mass."""
         return self._obj.Xcom
 
     @Xcom.setter
