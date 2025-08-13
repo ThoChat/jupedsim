@@ -365,7 +365,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
     double sc = 0.75; // model.height * 0.42; // prefered step length (0.75 in the paper) (To Do: controle this with spreferend speed)
     double wc = model.height * PELVIS_WIDTH_SCALING_FACTOR; // prefered strid width (0.1 in the paper)
     double Tc = 0.5; // prefered step duration
-    double w0 = std::sqrt(9.81 / (model.height * ( LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR)));
+    double w0 = std::sqrt(9.81 / (model.height * (LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR)));
     double bx = sc / (std::exp(w0 * Tc) - 1); // step length offset
     double by = wc / (std::exp(w0 * Tc) + 1); // step width offset
     double k1 = 0.1; // control gain for control feedback loop
@@ -434,12 +434,12 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         // move the support foot to the CoP
         if(update_gait_motion.stepping_foot_index == 1) // right foot support, left foot stepping
         {
-            update_gait_motion.heel_right_position.x = CoP.x;
-            update_gait_motion.heel_right_position.y = CoP.y;
+            update_gait_motion.heel_right_position.x = CoP.x - orientation.x * model.height * FOOT_BACKWARD_SCALING_FACTOR;
+            update_gait_motion.heel_right_position.y = CoP.y - orientation.y * model.height * FOOT_BACKWARD_SCALING_FACTOR;
             update_gait_motion.heel_right_position.z = 0.0;
 
-            update_gait_motion.toe_right_position.x = CoP.x + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_right_position.y = CoP.y + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+            update_gait_motion.toe_right_position.x = CoP.x + orientation.x * model.height * FOOT_FORWARD_SCALING_FACTOR ;
+            update_gait_motion.toe_right_position.y = CoP.y + orientation.y * model.height * FOOT_FORWARD_SCALING_FACTOR ;
             update_gait_motion.toe_right_position.z = 0.0;
 
             // new BoS
@@ -451,12 +451,12 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         }
         else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
         {
-            update_gait_motion.heel_left_position.x = CoP.x;
-            update_gait_motion.heel_left_position.y = CoP.y;
+            update_gait_motion.heel_left_position.x = CoP.x - orientation.x * model.height * FOOT_BACKWARD_SCALING_FACTOR;
+            update_gait_motion.heel_left_position.y = CoP.y - orientation.y * model.height * FOOT_BACKWARD_SCALING_FACTOR;
             update_gait_motion.heel_left_position.z = 0.0;
 
-            update_gait_motion.toe_left_position.x = CoP.x + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_left_position.y = CoP.y + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+            update_gait_motion.toe_left_position.x = CoP.x + orientation.x * model.height * FOOT_FORWARD_SCALING_FACTOR;
+            update_gait_motion.toe_left_position.y = CoP.y + orientation.y * model.height * FOOT_FORWARD_SCALING_FACTOR;
             update_gait_motion.toe_left_position.z = 0.0;
 
             // new BoS
@@ -485,8 +485,8 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
             
             swinging_foot_displacement = (
                                             update_gait_motion.Xcom - model.heel_left_position.To2D()
-                                            + orientation * (step_length - bx) 
-                                            + normal_orientation * (step_width - by)
+                                            + orientation * (step_length - bx - model.height * FOOT_BACKWARD_SCALING_FACTOR) 
+                                            + normal_orientation * (step_width )
                                         )
                                         * (1/static_cast<double>(model.step_timer));
             update_gait_motion.heel_left_position.x = model.heel_left_position.x + swinging_foot_displacement.x;
@@ -508,8 +508,8 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         {
             swinging_foot_displacement = (
                                             update_gait_motion.Xcom - model.heel_right_position.To2D()
-                                            + orientation * (step_length - bx) 
-                                            - normal_orientation * (step_width - by) 
+                                            + orientation * (step_length - bx - model.height * FOOT_BACKWARD_SCALING_FACTOR) 
+                                            - normal_orientation * (step_width ) 
                                         )
                                         * (1/static_cast<double>(model.step_timer));
             update_gait_motion.heel_right_position.x = model.heel_right_position.x + swinging_foot_displacement.x;
@@ -532,10 +532,10 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
 
     // update pelvis position
     // the pelvis moves towards the Base of support (center of the feet)
-    Point CoM_2d = (model.pelvis_position.To2D() + BoS_center * dT * w0) / (1 + dT * w0);
-    // Point in_between_feet =  (update_gait_motion.heel_right_position.To2D() + update_gait_motion.toe_left_position.To2D()) * 0.5;
-    update_gait_motion.pelvis_position.x = CoM_2d.x;
-    update_gait_motion.pelvis_position.y = CoM_2d.y;
+    // Point CoM_2d = (model.pelvis_position.To2D() + update_gait_motion.Xcom * dT * w0) / (1 + dT * w0);
+    Point CoM_displacement =  (update_gait_motion.Xcom - model.pelvis_position.To2D()) * w0 * dT;
+    update_gait_motion.pelvis_position.x = model.pelvis_position.x + CoM_displacement.x;
+    update_gait_motion.pelvis_position.y = model.pelvis_position.y + CoM_displacement.y;
     update_gait_motion.pelvis_position.z = model.height * ( LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR);
 
     // agent update position is set to the pelvis position
