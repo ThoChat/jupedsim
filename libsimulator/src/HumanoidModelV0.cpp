@@ -384,7 +384,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
     if (model.velocity.ScalarProduct(update.velocity) < 0)
     {
         std::cout << "## rotation regulation ##" << std::endl;
-        if (model.velocity.Rotate90Deg().ScalarProduct(update.velocity.Normalized()) > 0)
+        if (model.velocity.Rotate90Deg().ScalarProduct(update.velocity) > 0)
         {
             // if the agent is turning more than 90 degrees, set the velocity to the normal direction
             update_gait_motion.velocity = model.velocity.Rotate90Deg().Normalized() * update.velocity.Norm();
