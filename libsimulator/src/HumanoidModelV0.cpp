@@ -169,30 +169,6 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     update.position = update_gait_motion.pelvis_position.To2D(); // update the position of the agent to the pelvis position
 
 
-    // print pos and heel right position
-    // std::cout << "Pelvis: " << update.pelvis_position.x <<", "<< update.pelvis_position.y << std::endl;
-    // std::cout << "Right Heel: " << update.heel_right_position.x << ", "
-    //                             << update.heel_right_position.y  << std::endl;
-    // std::cout << "Left Heel: "  << update.heel_left_position.x << ", "
-    //                             << update.heel_left_position.y  << std::endl;
-    //pause
-    // std::cin.get();
-
-  
-    // print the updated joint positions
-
-    // // // std::cout << "Pelvis: " << update.position.x <<", "<< update.position.y << std::endl;
-    // // std::cout << "Right Heel: " << update.heel_right_position.x << ", " 
-    //                             << update.heel_right_position.y << ", " 
-    //                             << update.heel_right_position.z << std::endl;
-    // // std::cout << "Left Heel: "  << update.heel_left_position.x << ", " 
-    //                             << update.heel_left_position.y << ", " 
-    //                             << update.heel_left_position.z << std::endl;
-
-    // // // pause
-    // std::cin.get();  
-    // // clear the system console
-    // std::system("clear");
 
  
     return update;
@@ -202,6 +178,7 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
 {
     auto& model = std::get<HumanoidModelV0Data>(agent.model);
     const auto& upd = std::get<HumanoidModelV0Update>(update);
+
     // update the SFM navigation
     agent.pos = upd.position;
     model.velocity = upd.velocity;
@@ -332,14 +309,13 @@ Point HumanoidModelV0::ForceBetweenPoints(
 {
     // todo reduce range of force to 180 degrees
     const double dist = (pt1 - pt2).Norm();
-    double pushing_force_length = PushingForceLength(A, B, radius, dist) * 0; // if this is 0 agents bumps into each other 
+    double pushing_force_length = PushingForceLength(A, B, radius, dist) ; // if this is 0 agents bumps into each other 
     double friction_force_length = 0;
     const Point n_ij = (pt1 - pt2).Normalized();
     const Point tangent = n_ij.Rotate90Deg();
     if(dist < radius) {
         pushing_force_length += this->bodyForce * (radius - dist);
-        friction_force_length =
-            this->friction * (radius - dist) * (velocity.ScalarProduct(tangent));
+        friction_force_length = this->friction * (radius - dist) * (velocity.ScalarProduct(tangent));
     }
     return n_ij * pushing_force_length + tangent * friction_force_length;
 }
@@ -378,12 +354,14 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         step_length = model.height*0.5;
         std::cout << "## step length limit##" << std::endl;
     }
+    update_gait_motion.step_timer = model.step_timer;
 
     // Walking orientation
     // make sure the agent do not turn more than 90 degrees in one step
     if (model.velocity.ScalarProduct(update.velocity) < 0)
     {
         std::cout << "## rotation regulation ##" << std::endl;
+        update_gait_motion.step_timer = 0; // reset step timer to force a new step
         if (model.velocity.Rotate90Deg().ScalarProduct(update.velocity) > 0)
         {
             // if the agent is turning more than 90 degrees, set the velocity to the normal direction
@@ -393,13 +371,14 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
             update_gait_motion.velocity = model.velocity.Rotate90Deg().Normalized() * - update.velocity.Norm();
         }
     }
+
     Point orientation = update_gait_motion.velocity.Normalized(); // To do: make sure the agent do not turn more than 90 degrees in one step
     Point normal_orientation = orientation.Rotate90Deg();
     Point BoS_center; // position of the Base of Support (center of the support feet)
 
 
     // if step_timer == 0: compute the next step
-    if (model.step_timer == 0)
+    if (update_gait_motion.step_timer == 0)
     {
         // switch support foot
         // update_gait_motion.stepping_foot_index = -1 * model.stepping_foot_index;// 1 == left foot swinging; -1 == right foot swinging
@@ -469,7 +448,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
         
     }
     else{
-        update_gait_motion.step_timer = model.step_timer - 1; // decrement step timer
+        update_gait_motion.step_timer -= 1; // decrement step timer
         // pass on the current step variables
         update_gait_motion.step_duration = model.step_duration;
         update_gait_motion.stepping_foot_index = model.stepping_foot_index;
@@ -610,6 +589,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
 
     // to do:   
         // - Handle collisions
+        // - prevent step through walls
 
 
     
