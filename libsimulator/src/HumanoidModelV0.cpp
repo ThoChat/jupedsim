@@ -60,6 +60,31 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         });
     forces += obstacle_f / model.mass;
 
+    // Physical interaction flag
+    bool has_nearby_agent = std::any_of(
+        neighborhood.cbegin(),
+        neighborhood.cend(),
+        [&ped, &model](const GenericAgent& neighbor) {
+            if (neighbor.id == ped.id) return false;
+            const double distance = (ped.pos - neighbor.pos).Norm();
+            return distance < 2 * model.radius;
+        }
+    );
+
+    bool has_nearby_wall = std::any_of(
+        walls.cbegin(),
+        walls.cend(),
+        [&ped, &model](const LineSegment& wall) {
+            const Point closest_point = wall.ShortestPoint(ped.pos);
+            const double dist = (ped.pos - closest_point).Norm();
+            return dist < 2 * model.radius;
+        }
+    );
+
+    bool physical_interaction_flag = has_nearby_agent || has_nearby_wall;
+
+
+
     // creating update of pelvis position based on the collision avoidance model
     update.velocity = model.velocity + forces * dT;
     update.position = ped.pos + update.velocity * dT;
@@ -150,7 +175,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
 
         // compute update based on initialized state
-        update_gait_motion = ComputeGaitMotion(init_model, update, dT); 
+        update_gait_motion = ComputeMotionHof2008(init_model, update, dT); 
 
         
         
@@ -158,8 +183,18 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         }
     else
         {
-        // compute update based on previous state
-        update_gait_motion = ComputeGaitMotion(model, update, dT);
+        // compute update based on previous state and physical_interaction_flag
+        // if physical_interaction_flag ist true the motion is governed by the navigation 
+        // else the gait motion is computed based on Hof 2008. locomotion model.
+        if(physical_interaction_flag)
+        {
+            update_gait_motion = ComputeMotionPhysicalInteraction(model, update, ped, dT);
+        }
+        else
+        {
+            update_gait_motion = ComputeMotionHof2008(model, update, dT);
+        }
+        
         }
 
 
@@ -324,7 +359,7 @@ Point HumanoidModelV0::ForceBetweenPoints(
 /***************** Function For Humanoid motion *****************/
 
 
-HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
+HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
                                             const HumanoidModelV0Data& model,
                                             const HumanoidModelV0Update& update,
                                             double dT
@@ -470,13 +505,13 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
                                         * (1/static_cast<double>(model.step_timer));
             update_gait_motion.heel_left_position.x = model.heel_left_position.x + swinging_foot_displacement.x;
             update_gait_motion.heel_left_position.y = model.heel_left_position.y + swinging_foot_displacement.y;
-            update_gait_motion.heel_left_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);;
+            update_gait_motion.heel_left_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
 
             update_gait_motion.toe_left_position.x = update_gait_motion.heel_left_position.x 
                                                     + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
             update_gait_motion.toe_left_position.y = update_gait_motion.heel_left_position.y 
                                                     + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_left_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);;
+            update_gait_motion.toe_left_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
 
             // update suport foot position
             update_gait_motion.heel_right_position = model.heel_right_position;
@@ -493,13 +528,13 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
                                         * (1/static_cast<double>(model.step_timer));
             update_gait_motion.heel_right_position.x = model.heel_right_position.x + swinging_foot_displacement.x;
             update_gait_motion.heel_right_position.y = model.heel_right_position.y + swinging_foot_displacement.y;
-            update_gait_motion.heel_right_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);;    
+            update_gait_motion.heel_right_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);    
 
             update_gait_motion.toe_right_position.x = update_gait_motion.heel_right_position.x 
                                                     + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
             update_gait_motion.toe_right_position.y = update_gait_motion.heel_right_position.y 
                                                     + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_right_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);;
+            update_gait_motion.toe_right_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
 
             // update support foot position
             update_gait_motion.heel_left_position = model.heel_left_position;
@@ -588,7 +623,6 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
 // //#############
 
     // to do:   
-        // - Handle collisions
         // - prevent step through walls
 
 
@@ -596,4 +630,184 @@ HumanoidModelV0Update HumanoidModelV0::ComputeGaitMotion(
 
     return  update_gait_motion;
 
+}
+
+
+HumanoidModelV0Update HumanoidModelV0::ComputeMotionPhysicalInteraction(
+                                            const HumanoidModelV0Data& model,
+                                            const HumanoidModelV0Update& update,
+                                            const GenericAgent& agent,
+                                            double dT
+                                    ) const
+
+{
+    //copy current updare pointer values
+    HumanoidModelV0Update update_gait_motion = update;
+
+    // here the swinging foot will follows as much as possible the Xcom position 
+    // with an offset in the normal direction to account for step width
+    // the shoulder will turn to alligne with the agent derection and not with the nav velocity 
+    // the support foot will stay in place
+
+    // parameters (have to be added with the other parameters of the model)
+    double sc = 0.5; // model.height * 0.42; // prefered step length (0.75 in the paper) (To Do: controle this with spreferend speed)
+    double s_max = 0.75; // maximum step length
+    double wc = model.height * PELVIS_WIDTH_SCALING_FACTOR; // prefered strid width (0.1 in the paper)
+    double Tc = 0.5; // prefered step duration
+    double w0 = std::sqrt(9.81 / (model.height * (LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR)));
+    double bx = sc / (std::exp(w0 * Tc) - 1); // step length offset
+    double by = wc / (std::exp(w0 * Tc) + 1); // step width offset
+    // double k1 = 0.1; // control gain for control feedback loop
+
+    // update Pelvis (CoM) an Xcom positions
+    update_gait_motion.pelvis_position.x = model.pelvis_position.x + update_gait_motion.velocity.x * dT;
+    update_gait_motion.pelvis_position.y = model.pelvis_position.y + update_gait_motion.velocity.y * dT;
+    update_gait_motion.pelvis_position.z = model.pelvis_position.z; 
+
+    update_gait_motion.Xcom = update_gait_motion.pelvis_position.To2D() + update_gait_motion.velocity / w0;
+
+
+    // compute step timming
+    update_gait_motion.step_timer = model.step_timer; 
+
+    // Make sure the step is not too large
+    // if the future step will be too far, reset step_timer to force new step
+    /////////// !!!!!!!!!! MAKE SURE THE AGENT DO NOT CHAGE STEPPING STATE ALL THE TIME 
+    if (model.stepping_foot_index == 1) // right foot support, left foot stepping
+    {
+        if ((update_gait_motion.Xcom - model.heel_right_position.To2D()).Norm() > s_max)
+        {
+            update_gait_motion.step_timer = 0; // reset step timer to force new step
+        }
+    }
+    else if (model.stepping_foot_index == -1) // left foot support, right foot stepping
+    {
+        if ((update_gait_motion.Xcom - model.heel_left_position.To2D()).Norm() > s_max)
+        {
+            update_gait_motion.step_timer = 0; // reset step timer to force new step
+        }
+    }
+
+    if (update_gait_motion.step_timer == 0)
+    {
+        // switch support foot
+        if (model.stepping_foot_index == 1)
+        {update_gait_motion.stepping_foot_index = -1;}
+        else 
+        {update_gait_motion.stepping_foot_index = 1;}
+
+        // compute next step duration
+        update_gait_motion.step_duration = static_cast<int>(
+            std::round(
+                (1/(w0*dT))
+                * std::log( (sc/ (update_gait_motion.Xcom - update_gait_motion.pelvis_position.To2D()).ScalarProduct(update_gait_motion.velocity.Normalized())) + 1)
+            )
+        );
+        // set step timer
+        update_gait_motion.step_timer = update_gait_motion.step_duration;
+
+    }
+    else{
+        update_gait_motion.step_timer -= 1; // decrement step timer
+            // pass on the current step variables
+        update_gait_motion.step_duration = model.step_duration;
+        update_gait_motion.stepping_foot_index = model.stepping_foot_index;
+    }
+
+    // compute the next feet position
+    Point orientation = update_gait_motion.velocity.Normalized(); // To do: make sure the agent do not turn more than 90 degrees in one step
+    Point normal_orientation = orientation.Rotate90Deg();
+    double step_completion_factor = 1.0 - (static_cast<double>(update_gait_motion.step_timer) / update_gait_motion.step_duration);
+
+    if (update_gait_motion.stepping_foot_index == 1) // right foot support, left foot stepping
+    {
+        // toe position
+        update_gait_motion.toe_left_position.x = model.toe_left_position.x 
+                                                    + (
+                                                        update_gait_motion.Xcom.x - model.toe_left_position.x
+                                                        + orientation.x * (model.height * FOOT_FORWARD_SCALING_FACTOR - bx)
+                                                        + normal_orientation.x * by
+                                                    )/ (update_gait_motion.step_timer + 1);
+        update_gait_motion.toe_left_position.y = model.toe_left_position.y 
+                                                 + (
+                                                        update_gait_motion.Xcom.y - model.toe_left_position.y
+                                                        + orientation.y * (model.height * FOOT_FORWARD_SCALING_FACTOR - bx)
+                                                        + normal_orientation.y * by
+                                                    )/ (update_gait_motion.step_timer + 1);
+        update_gait_motion.toe_left_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
+
+        // heel position
+        update_gait_motion.heel_left_position = update_gait_motion.toe_left_position;
+        update_gait_motion.heel_left_position.x -= orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+        update_gait_motion.heel_left_position.y -= orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+
+        // pass on swinging foot position
+        update_gait_motion.heel_right_position = model.heel_right_position;
+        update_gait_motion.toe_right_position = model.toe_right_position;
+    }
+    else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
+    {
+        // toe position
+        update_gait_motion.toe_right_position.x = model.toe_right_position.x 
+                                                    + (
+                                                            update_gait_motion.Xcom.x - model.toe_right_position.x
+                                                            + orientation.x * (model.height * FOOT_FORWARD_SCALING_FACTOR - bx)
+                                                            - normal_orientation.x * by
+                                                        )/ (update_gait_motion.step_timer + 1);
+                                                
+        update_gait_motion.toe_right_position.y = model.toe_right_position.y 
+                                                    + (
+                                                            update_gait_motion.Xcom.y - model.toe_right_position.y
+                                                            + orientation.y * (model.height * FOOT_FORWARD_SCALING_FACTOR - bx)
+                                                            - normal_orientation.y * by
+                                                        )/ (update_gait_motion.step_timer + 1);
+                                                 
+        update_gait_motion.toe_right_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
+
+        // heel position
+        update_gait_motion.heel_right_position = update_gait_motion.toe_right_position;
+        update_gait_motion.heel_right_position.x -= orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+        update_gait_motion.heel_right_position.y -= orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+
+
+        // pass on swinging foot position
+        update_gait_motion.heel_left_position = model.heel_left_position;
+        update_gait_motion.toe_left_position = model.toe_left_position;
+
+        //  update head position
+        update_gait_motion.head_position = update_gait_motion.pelvis_position;
+        update_gait_motion.head_position.z = update_gait_motion.pelvis_position.z 
+                                                    + model.height * (TRUNK_HEIGHT_SCALING_FACTOR 
+                                                                    + NECK_SCALING_FACTOR);
+
+
+    }
+
+    // update shoulder rotation
+    // the shoulder rotation is perpendicular to the agent orientation
+    Point shoulder_orientation = agent.destination.Rotate90Deg().Normalized();
+    if (orientation.y >= 0)
+    {
+        update_gait_motion.shoulder_rotation_angle_z = std::atan2(shoulder_orientation.y, shoulder_orientation.x);
+    }
+    else 
+    {
+        update_gait_motion.shoulder_rotation_angle_z = std::atan2(shoulder_orientation.y, shoulder_orientation.x) + 2 * M_PI;
+    }
+
+    // printf("Velocity: %f, %f\n", update_gait_motion.velocity.x, update_gait_motion.velocity.y);
+    // printf("Xcom: %f, %f\n", update_gait_motion.Xcom.x, update_gait_motion.Xcom.y);
+    // printf("Pelvis position: %f, %f\n", update_gait_motion.pelvis_position.x, update_gait_motion.pelvis_position.y);
+    // printf("Stepping foot index: %d\n", update_gait_motion.stepping_foot_index);
+    // printf("Step duration: %d\n", update_gait_motion.step_duration);
+    // printf("Step timer: %d\n", update_gait_motion.step_timer);
+    // printf("Heel left position: %f, %f\n", update_gait_motion.heel_left_position.x, update_gait_motion.heel_left_position.y);
+    // printf("Heel right position: %f, %f\n", update_gait_motion.heel_right_position.x, update_gait_motion.heel_right_position.y);
+
+    // std::cin.get();
+
+    return  update_gait_motion;
+
+    // to investigate: - why are the feet shot backard ?
+ 
 }

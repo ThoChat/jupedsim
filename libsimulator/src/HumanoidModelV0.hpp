@@ -88,11 +88,18 @@ private:
     static double PushingForceLength(double A, double B, double r, double distance);
 
 
-    HumanoidModelV0Update ComputeGaitMotion(
+    HumanoidModelV0Update ComputeMotionHof2008(
                             const HumanoidModelV0Data& model,
                             const HumanoidModelV0Update& update,
                             double dT) 
                             const;
+
+    HumanoidModelV0Update ComputeMotionPhysicalInteraction(
+                        const HumanoidModelV0Data& model,
+                        const HumanoidModelV0Update& update,
+                        const GenericAgent& agent,
+                        double dT) 
+                        const;
 
 
     /*#########################################################################
