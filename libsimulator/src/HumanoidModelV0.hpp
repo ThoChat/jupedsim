@@ -95,11 +95,10 @@ private:
                             const;
 
     HumanoidModelV0Update ComputeMotionPhysicalInteraction(
-                        const HumanoidModelV0Data& model,
-                        const HumanoidModelV0Update& update,
-                        const GenericAgent& agent,
-                        double dT) 
-                        const;
+                                            const HumanoidModelV0Data& model,
+                                            const HumanoidModelV0Update& update,
+                                            double dT
+                                    ) const;          
 
 
     /*#########################################################################
