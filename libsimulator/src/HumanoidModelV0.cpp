@@ -82,10 +82,12 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     bool has_nearby_wall = std::any_of(
         walls.cbegin(),
         walls.cend(),
-        [&ped ](const LineSegment& wall) {
+        [&ped, &model ](const LineSegment& wall) {
             const Point closest_point = wall.ShortestPoint(ped.pos);
-            const double distance = (ped.pos - closest_point).Norm();
-            return distance < 0.75;
+            const double distance = std::min( (model.heel_left_position.To2D() - closest_point).Norm()
+                                            , (model.heel_right_position.To2D() - closest_point).Norm()     
+                                            );
+            return distance < 0.75 * model.height/1.75;
         }
     );
 
@@ -119,7 +121,10 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         // change radius to prevent the feet to enter walls (temporary)
         // init_model.radius = 2;
 
-        // change joint position to match the initial position and direction
+        // change joint position to creat the initial standing position and direction
+        init_model.step_duration = 0; // to force a step from standing position
+        init_model.step_timer = 0; // to initiate the gait cycle
+
 
         // pelvis
         init_model.pelvis_position.x = ped.pos.x;
@@ -385,10 +390,31 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
     //copy current updare pointer values
     HumanoidModelV0Update update_gait_motion = update;
 
+    Point orientation = update_gait_motion.velocity.Normalized(); 
+    Point normal_orientation = orientation.Rotate90Deg();
+
     // parameters (have to be added with the other parameters of the model)
-    double sc = 0.75; // model.height * 0.42; // prefered step length (0.75 in the paper) (To Do: controle this with spreferend speed)
+    double sc = 0.75 * model.height/1.75; // model.height * 0.42; // prefered step length (0.75 in the paper) (To Do: controle this with spreferend speed)
     double wc = model.height * PELVIS_WIDTH_SCALING_FACTOR; // prefered strid width (0.1 in the paper)
     double Tc = 0.5; // prefered step duration
+    // double Tc;
+    // double step_length;
+    // if(sc/update_gait_motion.velocity.Norm()>0.6)
+    // {   
+    //     Tc = 0.3; 
+    //     step_length = sc/2;
+    //     // update_gait_motion.velocity = orientation * sc * 0.5 / Tc; // set the velocity to make a step of sc/2 in 0.3s
+    // } 
+    // else if (sc/update_gait_motion.velocity.Norm()<0.1)
+    // {
+    //     Tc = 0.3; 
+    //     step_length = sc/2;
+    // }
+    // else 
+    // {
+    //     Tc = sc/update_gait_motion.velocity.Norm();
+    //     step_length = sc;
+    // } // prefered step duration, scales up with spreferend speed (0.5 is default for 1.5 m/s, with 0.75m step length) 
     double w0 = std::sqrt(9.81 / (model.height * (LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR)));
     double bx = sc / (std::exp(w0 * Tc) - 1); // step length offset
     double by = wc / (std::exp(w0 * Tc) + 1); // step width offset
@@ -397,16 +423,13 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
     // Precomputation
     double step_width = by * (std::exp(w0 * Tc) + 1 ) / (1 - k1*0.5*(std::exp(w0 * Tc) - 1 ));
     double step_length = update_gait_motion.velocity.Norm() * Tc; // prefered step length;
-    if (step_length > model.height*0.5) // Limit step length
+    if (step_length > model.height * 0.5) // Limit step length
     {
-        step_length = model.height*0.5;
+        step_length = model.height * 0.5;
         std::cout << "## step length limit##" << std::endl;
     }
     update_gait_motion.step_timer = model.step_timer;
 
-    Point orientation = update_gait_motion.velocity.Normalized(); // To do: make sure the agent do not turn more than 90 degrees in one step
-    Point normal_orientation = orientation.Rotate90Deg();
-    Point BoS_center; // position of the Base of Support (center of the support feet)
 
 
     // if step_timer == 0: compute the next step
@@ -419,27 +442,57 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
         else 
         {update_gait_motion.stepping_foot_index = 1;}
 
-        // compute next Xcom position
+        Point CoP; // center of pressure. This determine the position of the support foot
+        // if(model.step_duration > 0) // if step_duration > 0 the agent is continuing a gait cycle
+        // {
+            // compute next Xcom position
+            update_gait_motion.Xcom =   model.Xcom 
+                                        + orientation * step_length 
+                                        - normal_orientation * step_width * update_gait_motion.stepping_foot_index;
 
-        update_gait_motion.Xcom =   model.Xcom 
-                                    + orientation * step_length 
-                                    - normal_orientation * step_width * update_gait_motion.stepping_foot_index;
+            // The CoP (approximated here by the support heel) is change intantaneously
+            CoP = update_gait_motion.Xcom 
+                        - orientation * bx
+                        - normal_orientation * by * update_gait_motion.stepping_foot_index ;
 
-        // The CoP (approximated here by the support heel) is change intantaneously
-        Point CoP = update_gait_motion.Xcom 
-                    - orientation * bx
-                    - normal_orientation * by * update_gait_motion.stepping_foot_index ;
+            // compute the next step duration
+            update_gait_motion.step_duration = static_cast<int>(
+            std::round(
+                (1/(w0*dT))
+                * std::log( (step_length/ (update_gait_motion.Xcom - CoP).ScalarProduct(orientation)) + 1)
+            )
+            );
+            // set step timer
+            update_gait_motion.step_timer = update_gait_motion.step_duration;
+        // }
+        // else // if step_duration == 0 the agent is in a standing position, and initiate the get cycle
+        // {
+        //     // The CoP is the center of the support foot
+        //     if (update_gait_motion.stepping_foot_index == 1) // right foot support, left foot stepping
+        //     {
+        //         CoP = (model.heel_right_position + model.toe_right_position).To2D() * 0.5 ;
+        //     }
+        //     else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
+        //     {
+        //         CoP = (model.heel_left_position + model.toe_left_position).To2D() * 0.5 ;
+        //     }
 
-        // compute the next step duration
-        update_gait_motion.step_duration = static_cast<int>(
-        std::round(
-            (1/(w0*dT))
-            * std::log( (step_length/ (update_gait_motion.Xcom - CoP).ScalarProduct(orientation)) + 1)
-        )
-        );
-        // set step timer
-        update_gait_motion.step_timer = update_gait_motion.step_duration;
+        //     // compute next Xcom position with restect to the CoP
+        //     update_gait_motion.Xcom =   CoP 
+        //                                 + orientation * step_length 
+        //                                 + normal_orientation * wc * update_gait_motion.stepping_foot_index;
 
+        //     // compute the first step duration
+        //     update_gait_motion.step_duration = static_cast<int>(
+        //     std::round(
+        //         (1/(w0*dT))
+        //         * std::log( (step_length/ (update_gait_motion.Xcom - CoP).ScalarProduct(orientation)) + 1)
+        //     )
+        //     );
+        //     // set step timer
+        //     update_gait_motion.step_timer = update_gait_motion.step_duration;
+
+        // }
 
 
         // move the support foot to the CoP
@@ -453,8 +506,6 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
             update_gait_motion.toe_right_position.y = CoP.y + orientation.y * model.height * FOOT_FORWARD_SCALING_FACTOR ;
             update_gait_motion.toe_right_position.z = 0.0;
 
-            // new BoS
-            BoS_center = update_gait_motion.toe_right_position.To2D();// = (update_gait_motion.heel_right_position.To2D() + update_gait_motion.toe_right_position.To2D()) * 0.5;
 
             // pass on swinging foot position
             update_gait_motion.heel_left_position = model.heel_left_position;
@@ -470,8 +521,6 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
             update_gait_motion.toe_left_position.y = CoP.y + orientation.y * model.height * FOOT_FORWARD_SCALING_FACTOR;
             update_gait_motion.toe_left_position.z = 0.0;
 
-            // new BoS
-            BoS_center = update_gait_motion.toe_left_position.To2D(); // = (update_gait_motion.heel_left_position.To2D() + update_gait_motion.toe_left_position.To2D()) * 0.5;
 
             // pass on swinging foot position
             update_gait_motion.heel_right_position = model.heel_right_position;
@@ -493,7 +542,6 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
 
         if(update_gait_motion.stepping_foot_index == 1) // right foot support, left foot stepping
         {
-            
             swinging_foot_displacement = (
                                             update_gait_motion.Xcom - model.heel_left_position.To2D()
                                             + orientation * (step_length - bx - model.height * FOOT_BACKWARD_SCALING_FACTOR) 
@@ -512,8 +560,11 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
 
             // update suport foot position
             update_gait_motion.heel_right_position = model.heel_right_position;
-            update_gait_motion.toe_right_position = model.toe_right_position;
-            BoS_center = update_gait_motion.toe_right_position.To2D();// = (update_gait_motion.heel_right_position.To2D() + update_gait_motion.toe_right_position.To2D()) * 0.5;
+            update_gait_motion.toe_right_position.x = update_gait_motion.heel_right_position.x 
+                                                    + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+            update_gait_motion.toe_right_position.y = update_gait_motion.heel_right_position.y 
+                                                    + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+            update_gait_motion.toe_right_position.z = 0.0;
         }
         else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
         {
@@ -535,8 +586,12 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
 
             // update support foot position
             update_gait_motion.heel_left_position = model.heel_left_position;
-            update_gait_motion.toe_left_position = model.toe_left_position;
-            BoS_center = update_gait_motion.toe_left_position.To2D();// = (update_gait_motion.heel_left_position.To2D() + update_gait_motion.toe_left_position.To2D()) * 0.5;
+            update_gait_motion.toe_left_position.x = update_gait_motion.heel_left_position.x 
+                                                    + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+            update_gait_motion.toe_left_position.y = update_gait_motion.heel_left_position.y 
+                                                    + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+            update_gait_motion.toe_left_position.z = 0.0;
+          
         }
         // support foot (CoP) stays in position, the other foot moves toward the potential best next step position
     }
@@ -587,35 +642,37 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
     }
 
     // //#############
-    // // std::cout << " "<< std::endl;
-
-    // Point swinging_foot_displacement = (
-    //                                             orientation * (step_length - bx) 
-    //                                             + normal_orientation * (step_width + by * update_gait_motion.stepping_foot_index)
-    //                                         )
-    //                                         * (2/static_cast<double>(model.step_duration));
-
-    // plot. everything:
+    // print everything:
     // Point CoP = update_gait_motion.Xcom 
     //             - orientation * bx
     //             - normal_orientation * by * update_gait_motion.stepping_foot_index ;
-    // std::cout << "Actual Step duration: " << (1/w0)
-    //     * std::log( (step_length/ (update_gait_motion.Xcom - CoP).ScalarProduct(orientation)) + 1) << std::endl;
+    // std::cout << "Actual Step duration: " << (1/(w0))
+    //             * std::log( (step_length/ (update_gait_motion.Xcom - CoP).ScalarProduct(orientation)) + 1) << std::endl;
     // std::cout << "Step duration: " << update_gait_motion.step_duration << std::endl;
     // std::cout << "Step timer: " << update_gait_motion.step_timer << std::endl;
+    // std::cout << "Tc: " << Tc << std::endl;
     // std::cout << " Step length: " << step_length << std::endl;
+    // // std::cout << "Step width: " << step_width << std::endl;
     // std::cout << "Stepping foot index: " << update_gait_motion.stepping_foot_index << std::endl;
     // std::cout << "Xcom: " << update_gait_motion.Xcom.x << ", " 
     //             << update_gait_motion.Xcom.y << std::endl;   
+    // std::cout << "CoP: " << CoP.x << ", "  << CoP.y << std::endl;   
+    // std::cout << "bx: " << bx << ",by: "  << by << std::endl; 
     // std::cout << "Previous pelvis position: " << model.pelvis_position.x << ", " 
     // << model.pelvis_position.y << std::endl; 
     // std::cout << "Updated pelvis position: " << update_gait_motion.pelvis_position.x << ", " 
     //             << update_gait_motion.pelvis_position.y << std::endl;    
+    // std::cout << "Orientation: " << orientation.x << ", " << orientation.y << std::endl;
     // std::cout << "Heel right position: " << update_gait_motion.heel_right_position.x << ", " 
     //             << update_gait_motion.heel_right_position.y << std::endl;
     // std::cout << "Heel left position: " << update_gait_motion.heel_left_position.x << ", " 
     //             << update_gait_motion.heel_left_position.y << std::endl;
+    // std::cout << "Xcom - heel_left_position " << (update_gait_motion.Xcom - model.heel_left_position.To2D()).x << ", "
+    // << (update_gait_motion.Xcom - model.heel_left_position.To2D()).y << std::endl;
+    // std::cout << "pelvis - Xcom "<< (update_gait_motion.Xcom - update_gait_motion.pelvis_position.To2D()).Norm()<< std::endl;
+    // std::cout << "update_gait_motion.Xcom - model.Xcom " << (update_gait_motion.Xcom - model.Xcom).Norm() << std::endl;
 
+    
     // std::cin.get();
 // //#############
 
@@ -640,6 +697,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionPhysicalInteraction(
 
 
     update_gait_motion.step_timer = 0; // reset step timer to force new step after colision avoided 
+    update_gait_motion.step_duration = 0; // reset step duration to forse a step from a standing position
     
     // pelvis position
     update_gait_motion.pelvis_position.x = model.pelvis_position.x + update_gait_motion.velocity.x * dT;
@@ -703,5 +761,6 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionPhysicalInteraction(
 
 
 
-// To Do:   
+// To Do:   - ajust the pelvis height acording to position relative to support foot
+//          - make the sopport foot rotate with the velocity direction
 //          - understand why the model alway reach it's step length limit
