@@ -552,6 +552,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
             update_gait_motion.toe_right_position.y = update_gait_motion.heel_right_position.y 
                                                     + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
             update_gait_motion.toe_right_position.z = 0.0;
+
         }
         else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
         {
@@ -578,21 +579,35 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
             update_gait_motion.toe_left_position.y = update_gait_motion.heel_left_position.y 
                                                     + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
             update_gait_motion.toe_left_position.z = 0.0;
-          
+
         }
         // support foot (CoP) stays in position, the other foot moves toward the potential best next step position
     }
 
-    // update pelvis position
-    // the pelvis moves towards the Base of support (center of the feet)
-    // Point CoM_2d = (model.pelvis_position.To2D() + update_gait_motion.Xcom * dT * w0) / (1 + dT * w0);
-    Point CoM_displacement =  (update_gait_motion.Xcom - model.pelvis_position.To2D()) * w0 * dT;
-    update_gait_motion.pelvis_position.x = model.pelvis_position.x + CoM_displacement.x;
-    update_gait_motion.pelvis_position.y = model.pelvis_position.y + CoM_displacement.y;
-    update_gait_motion.pelvis_position.z = model.height * ( LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR);
-
-    // agent update position is set to the pelvis position
-    update_gait_motion.position = update_gait_motion.pelvis_position.To2D();
+        // update pelvis position
+        // the pelvis moves towards the Base of support (center of the feet)
+        // Point CoM_2d = (model.pelvis_position.To2D() + update_gait_motion.Xcom * dT * w0) / (1 + dT * w0);
+        Point CoM_displacement =  (update_gait_motion.Xcom - model.pelvis_position.To2D()) * w0 * dT;
+        update_gait_motion.pelvis_position.x = model.pelvis_position.x + CoM_displacement.x;
+        update_gait_motion.pelvis_position.y = model.pelvis_position.y + CoM_displacement.y;
+        // z-position of the pelvis is contuted with the relative placement of the pelvis and support foot
+        if (update_gait_motion.stepping_foot_index == 1) // right foot support, left foot stepping
+        {
+            // the height of the pelvis is based on the Leg length and position of the hip relative to the support foot
+            // pyhtagore with leg legth and support foot-hip positions
+            Point support_hip_position = update_gait_motion.pelvis_position.To2D() -  normal_orientation * model.height * PELVIS_WIDTH_SCALING_FACTOR * 0.5;
+            update_gait_motion.pelvis_position.z =  sqrt(std::pow(model.height * (ANKLE_SCALING_FACTOR + LEG_SCALING_FACTOR), 2)
+                                                    - std::pow((support_hip_position - model.heel_right_position.To2D()).Norm(),2));
+        }
+        else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
+        {
+            Point support_hip_position = update_gait_motion.pelvis_position.To2D() +  normal_orientation * model.height * PELVIS_WIDTH_SCALING_FACTOR * 0.5;
+            update_gait_motion.pelvis_position.z =  sqrt(std::pow(model.height * (ANKLE_SCALING_FACTOR + LEG_SCALING_FACTOR), 2)
+                                                    - std::pow((support_hip_position - model.heel_left_position.To2D()).Norm(),2));
+        }
+        
+        // agent update position is set to the pelvis position
+        update_gait_motion.position = update_gait_motion.pelvis_position.To2D();    
     
     //  update head position
     update_gait_motion.head_position = update_gait_motion.pelvis_position;
@@ -658,6 +673,8 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
     // << (update_gait_motion.Xcom - model.heel_left_position.To2D()).y << std::endl;
     // std::cout << "pelvis - Xcom "<< (update_gait_motion.Xcom - update_gait_motion.pelvis_position.To2D()).Norm()<< std::endl;
     // std::cout << "update_gait_motion.Xcom - model.Xcom " << (update_gait_motion.Xcom - model.Xcom).Norm() << std::endl;
+    // std::cout << "pelvis_position.z " << update_gait_motion.pelvis_position.z << std::endl;
+
 
     
     // std::cin.get();
@@ -748,6 +765,4 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionPhysicalInteraction(
 
 
 
-// To Do:   - ajust the pelvis height acording to position relative to support foot
-//          - make the sopport foot rotate with the velocity direction
-//          - understand why the model alway reach it's step length limit (because the speed is controle by step length)
+// To Do:   - make the sopport foot rotate with the velocity direction
