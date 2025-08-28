@@ -396,25 +396,12 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
     // parameters (have to be added with the other parameters of the model)
     double sc = 0.75 * model.height/1.75; // model.height * 0.42; // prefered step length (0.75 in the paper) (To Do: controle this with spreferend speed)
     double wc = model.height * PELVIS_WIDTH_SCALING_FACTOR; // prefered strid width (0.1 in the paper)
-    double Tc = 0.5; // prefered step duration
-    // double Tc;
-    // double step_length;
-    // if(sc/update_gait_motion.velocity.Norm()>0.6)
-    // {   
-    //     Tc = 0.3; 
-    //     step_length = sc/2;
-    //     // update_gait_motion.velocity = orientation * sc * 0.5 / Tc; // set the velocity to make a step of sc/2 in 0.3s
-    // } 
-    // else if (sc/update_gait_motion.velocity.Norm()<0.1)
-    // {
-    //     Tc = 0.3; 
-    //     step_length = sc/2;
-    // }
-    // else 
-    // {
-    //     Tc = sc/update_gait_motion.velocity.Norm();
-    //     step_length = sc;
-    // } // prefered step duration, scales up with spreferend speed (0.5 is default for 1.5 m/s, with 0.75m step length) 
+    double Tc = std::min(sc/update_gait_motion.velocity.Norm(), 0.6); 
+    if (Tc<0.1)
+    {
+        Tc=0.1; sc = 0.3;
+    }
+
     double w0 = std::sqrt(9.81 / (model.height * (LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR)));
     double bx = sc / (std::exp(w0 * Tc) - 1); // step length offset
     double by = wc / (std::exp(w0 * Tc) + 1); // step width offset
@@ -422,7 +409,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
 
     // Precomputation
     double step_width = by * (std::exp(w0 * Tc) + 1 ) / (1 - k1*0.5*(std::exp(w0 * Tc) - 1 ));
-    double step_length = update_gait_motion.velocity.Norm() * Tc; // prefered step length;
+    double step_length = sc; // prefered step length;
     if (step_length > model.height * 0.5) // Limit step length
     {
         step_length = model.height * 0.5;
@@ -763,4 +750,4 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionPhysicalInteraction(
 
 // To Do:   - ajust the pelvis height acording to position relative to support foot
 //          - make the sopport foot rotate with the velocity direction
-//          - understand why the model alway reach it's step length limit
+//          - understand why the model alway reach it's step length limit (because the speed is controle by step length)
