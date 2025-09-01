@@ -101,7 +101,7 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
 
     bool physical_interaction_flag = has_nearby_agent || has_nearby_wall || abrupt_change_in_velocity_angle;
-
+    // physical_interaction_flag = true; // this shut of the locomotion model
 
 
 
@@ -395,6 +395,7 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
 
     // parameters (have to be added with the other parameters of the model)
     double sc = 0.75 * model.height/1.75; // model.height * 0.42; // prefered step length (0.75 in the paper) (To Do: controle this with spreferend speed)
+    if (model.step_duration == 0 ) {sc = 0.1;} //  model.step_duration == 0 after, standing position (phy. interaction, or initialisation)
     double wc = model.height * PELVIS_WIDTH_SCALING_FACTOR; // prefered strid width (0.1 in the paper)
     double Tc = std::min(sc/update_gait_motion.velocity.Norm(), 0.6); 
     if (Tc<0.1)
@@ -586,7 +587,6 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
 
         // update pelvis position
         // the pelvis moves towards the Base of support (center of the feet)
-        // Point CoM_2d = (model.pelvis_position.To2D() + update_gait_motion.Xcom * dT * w0) / (1 + dT * w0);
         Point CoM_displacement =  (update_gait_motion.Xcom - model.pelvis_position.To2D()) * w0 * dT;
         update_gait_motion.pelvis_position.x = model.pelvis_position.x + CoM_displacement.x;
         update_gait_motion.pelvis_position.y = model.pelvis_position.y + CoM_displacement.y;
