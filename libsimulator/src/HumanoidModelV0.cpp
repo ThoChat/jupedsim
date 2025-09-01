@@ -9,6 +9,7 @@
 #include "OperationalModelType.hpp"
 #include "Simulation.hpp"
 #include "HumanoidModelV0Data.hpp"
+#include "GeometricFunctions.hpp"
 
 #include <Logger.hpp>
 #include <iostream>
@@ -83,11 +84,27 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         walls.cbegin(),
         walls.cend(),
         [&ped, &model ](const LineSegment& wall) {
+            const Point orientation = model.velocity.Normalized();
+            const Point normal_oriention = model.velocity.Normalized().Rotate90Deg();
+            const Point interaction_ray_point_right = model.pelvis_position.To2D() 
+                                                    + orientation
+                                                    - normal_oriention * model.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
+            const Point interaction_ray_point_left = model.pelvis_position.To2D() 
+                                                    + orientation
+                                                    + normal_oriention * model.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
+            const LineSegment interaction_ray_right(model.pelvis_position.To2D() 
+                                                    - normal_oriention * model.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5
+                                                    , interaction_ray_point_right);
+            const LineSegment interaction_ray_left(model.pelvis_position.To2D()
+                                                    + normal_oriention * model.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5
+                                                    , interaction_ray_point_left);
+            
             const Point closest_point = wall.ShortestPoint(ped.pos);
-            const double distance = std::min( (model.heel_left_position.To2D() - closest_point).Norm()
-                                            , (model.heel_right_position.To2D() - closest_point).Norm()     
-                                            );
-            return distance < 0.75 * model.height/1.75;
+            const double distance = (ped.pos - closest_point).Norm();
+            return intersects(wall,interaction_ray_right) 
+                    || intersects(wall,interaction_ray_left) 
+                    || distance < model.radius *1.5
+                    ;
         }
     );
 
@@ -385,8 +402,6 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
 
 {
 
-
-
     //copy current updare pointer values
     HumanoidModelV0Update update_gait_motion = update;
 
@@ -523,64 +538,75 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
         update_gait_motion.stepping_foot_index = model.stepping_foot_index;
         update_gait_motion.Xcom = model.Xcom;
 
-        double step_completion_factor = 1.0 - (static_cast<double>(update_gait_motion.step_timer) / update_gait_motion.step_duration);
-
-        Point swinging_foot_displacement; 
-        
-
-        if(update_gait_motion.stepping_foot_index == 1) // right foot support, left foot stepping
+        // animate a double support by skipping either 5 frames of 5% of the step timer
+        if (update_gait_motion.step_timer > update_gait_motion.step_duration - 5)
         {
-            swinging_foot_displacement = (
-                                            update_gait_motion.Xcom - model.heel_left_position.To2D()
-                                            + orientation * (step_length - bx - model.height * FOOT_BACKWARD_SCALING_FACTOR) 
-                                            + normal_orientation * (step_width )
-                                        )
-                                        * (1/static_cast<double>(model.step_timer));
-            update_gait_motion.heel_left_position.x = model.heel_left_position.x + swinging_foot_displacement.x;
-            update_gait_motion.heel_left_position.y = model.heel_left_position.y + swinging_foot_displacement.y;
-            update_gait_motion.heel_left_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
-
-            update_gait_motion.toe_left_position.x = update_gait_motion.heel_left_position.x 
-                                                    + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_left_position.y = update_gait_motion.heel_left_position.y 
-                                                    + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_left_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
-
-            // update suport foot position
+            // fixed feet position
             update_gait_motion.heel_right_position = model.heel_right_position;
-            update_gait_motion.toe_right_position.x = update_gait_motion.heel_right_position.x 
-                                                    + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_right_position.y = update_gait_motion.heel_right_position.y 
-                                                    + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_right_position.z = 0.0;
-
-        }
-        else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
-        {
-            swinging_foot_displacement = (
-                                            update_gait_motion.Xcom - model.heel_right_position.To2D()
-                                            + orientation * (step_length - bx - model.height * FOOT_BACKWARD_SCALING_FACTOR) 
-                                            - normal_orientation * (step_width ) 
-                                        )
-                                        * (1/static_cast<double>(model.step_timer));
-            update_gait_motion.heel_right_position.x = model.heel_right_position.x + swinging_foot_displacement.x;
-            update_gait_motion.heel_right_position.y = model.heel_right_position.y + swinging_foot_displacement.y;
-            update_gait_motion.heel_right_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);    
-
-            update_gait_motion.toe_right_position.x = update_gait_motion.heel_right_position.x 
-                                                    + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_right_position.y = update_gait_motion.heel_right_position.y 
-                                                    + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_right_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
-
-            // update support foot position
             update_gait_motion.heel_left_position = model.heel_left_position;
-            update_gait_motion.toe_left_position.x = update_gait_motion.heel_left_position.x 
-                                                    + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_left_position.y = update_gait_motion.heel_left_position.y 
-                                                    + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
-            update_gait_motion.toe_left_position.z = 0.0;
+            update_gait_motion.toe_right_position = model.toe_right_position;
+            update_gait_motion.toe_left_position = model.toe_left_position;
+        }
+        else{
+            double step_completion_factor = 1.0 - (static_cast<double>(update_gait_motion.step_timer) / (update_gait_motion.step_duration - 3));
 
+            Point swinging_foot_displacement; 
+            
+
+            if(update_gait_motion.stepping_foot_index == 1) // right foot support, left foot stepping
+            {
+                swinging_foot_displacement = (
+                                                update_gait_motion.Xcom - model.heel_left_position.To2D()
+                                                + orientation * (step_length - bx - model.height * FOOT_BACKWARD_SCALING_FACTOR) 
+                                                + normal_orientation * (step_width )
+                                            )
+                                            * (1/static_cast<double>(model.step_timer));
+                update_gait_motion.heel_left_position.x = model.heel_left_position.x + swinging_foot_displacement.x;
+                update_gait_motion.heel_left_position.y = model.heel_left_position.y + swinging_foot_displacement.y;
+                update_gait_motion.heel_left_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
+
+                update_gait_motion.toe_left_position.x = update_gait_motion.heel_left_position.x 
+                                                        + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_left_position.y = update_gait_motion.heel_left_position.y 
+                                                        + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_left_position.z =  -4*0.25*step_completion_factor*(step_completion_factor-1);
+
+                // update suport foot position
+                update_gait_motion.heel_right_position = model.heel_right_position;
+                update_gait_motion.toe_right_position.x = update_gait_motion.heel_right_position.x 
+                                                        + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_right_position.y = update_gait_motion.heel_right_position.y 
+                                                        + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_right_position.z = 0.0;
+
+            }
+            else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
+            {
+                swinging_foot_displacement = (
+                                                update_gait_motion.Xcom - model.heel_right_position.To2D()
+                                                + orientation * (step_length - bx - model.height * FOOT_BACKWARD_SCALING_FACTOR) 
+                                                - normal_orientation * (step_width ) 
+                                            )
+                                            * (1/static_cast<double>(model.step_timer));
+                update_gait_motion.heel_right_position.x = model.heel_right_position.x + swinging_foot_displacement.x;
+                update_gait_motion.heel_right_position.y = model.heel_right_position.y + swinging_foot_displacement.y;
+                update_gait_motion.heel_right_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);    
+
+                update_gait_motion.toe_right_position.x = update_gait_motion.heel_right_position.x 
+                                                        + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_right_position.y = update_gait_motion.heel_right_position.y 
+                                                        + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_right_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
+
+                // update support foot position
+                update_gait_motion.heel_left_position = model.heel_left_position;
+                update_gait_motion.toe_left_position.x = update_gait_motion.heel_left_position.x 
+                                                        + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_left_position.y = update_gait_motion.heel_left_position.y 
+                                                        + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_left_position.z = 0.0;
+
+            }
         }
         // support foot (CoP) stays in position, the other foot moves toward the potential best next step position
     }
