@@ -9,7 +9,6 @@
 #include "HumanoidModelV0Data.hpp"
 #include "UniqueID.hpp"
 
-#include <Eigen/Dense>
 
 
 struct GenericAgent;
@@ -89,31 +88,18 @@ private:
     static double PushingForceLength(double A, double B, double r, double distance);
 
 
-
-    Eigen::MatrixXd ComputeJointAnglesStepDoubleSupports(
-                            const GenericAgent& agent,
-                            double step_length, 
-                            double step_width)
-                            const;
-
-    Eigen::MatrixXd ComputeJointAnglesGaitSingleSupport(
-                            const GenericAgent& agent,
-                            double step_length, 
-                            double step_width, 
-                            double step_duration) 
-                            const;
-                            
-    Eigen::MatrixXd ComputeJointPositionGait(
+    HumanoidModelV0Update ComputeMotionHof2008(
                             const HumanoidModelV0Data& model,
                             const HumanoidModelV0Update& update,
                             double dT) 
                             const;
 
-    Eigen::MatrixXd ComputeJointPositionsfromJointAngles (
-                            const GenericAgent& agent,
-                            const HumanoidModelV0Update& update,
-                            Eigen::MatrixXd joint_angles_matrix)
-                            const;
+    HumanoidModelV0Update ComputeMotionPhysicalInteraction(
+                                            const HumanoidModelV0Data& model,
+                                            const HumanoidModelV0Update& update,
+                                            double dT
+                                    ) const;          
+
 
     /*#########################################################################
     ###     Relative to the Humanoid Representation Paradigm of agents      ###
@@ -130,37 +116,13 @@ private:
     static constexpr double SHOULDER_WIDTH_SCALING_FACTOR = 0.45/1.7; 
     static constexpr double TRUNK_WIDTH_SCALING_FACTOR = 0.1470; // called l_r previously
     static constexpr double TRUNK_HEIGHT_SCALING_FACTOR = 0.3495; 
-    static constexpr double PELVIS_WIDTH_SCALING_FACTOR = 0.4 / 1.7; 
+    static constexpr double PELVIS_WIDTH_SCALING_FACTOR = 0.3 / 1.7; 
     static constexpr double LEG_SCALING_FACTOR = 0.4791; //0.2522 (shank) + 0.2269 (thigh)
     static constexpr double ANKLE_SCALING_FACTOR = 0.0451; 
     static constexpr double FOOT_FORWARD_SCALING_FACTOR = 0.1470/2; // 
-    static constexpr double FOOT_BACKWARD_SCALING_FACTOR = 0.1470/4; // 
+    static constexpr double FOOT_BACKWARD_SCALING_FACTOR = 0.1470/2; // 
     static constexpr double FOOT_WIDTH_SCALING_FACTOR = 0.1470*8/50; // 
 
-    // have to be set private later
-    /**
-     * Denavit-Hartenberg matrix transformation
-     * This function calculates the Denavit-Hartenberg matrix based on the given parameters.
-     * The Denavit-Hartenberg convention is a standardized way to represent the joint parameters of a robotic manipulator.
-     * It is used to describe the relationship between the joint angles and the position and orientation of the end-effector.
-     * @param theta joint angle
-     * @param d distance along the previous z-axis
-     * @param a distance along the current x-axis
-     * @param alpha angle between the previous z-axis and the current z-axis
-     * @return Denavit-Hartenberg matrix
-    
-     */
-    Eigen::Matrix4d DHTransformationMatrix(
-    double theta, 
-    double d, 
-    double r, 
-    double alpha) const;
-
-    Eigen::Matrix4d CreateTransformationMatrix( const Eigen::Vector3d &translation, 
-                                    const Eigen::Vector3d &rotation) const;
-
-
-    
 
     
 

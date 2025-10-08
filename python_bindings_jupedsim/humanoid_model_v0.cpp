@@ -34,7 +34,7 @@ void init_humanoid_model_v0(py::module_& m)
                         int step_duration,
                         int step_timer,
                         int stepping_foot_index,
-                        std::tuple<double, double> step_target,
+                        std::tuple<double, double> Xcom,
                         // humanoid body variables
                         std::tuple<double, double, double> head_position, 
                         std::tuple<double, double, double> pelvis_position,
@@ -43,7 +43,9 @@ void init_humanoid_model_v0(py::module_& m)
                         double trunk_rotation_angle_x,
                         double trunk_rotation_angle_y,
                         std::tuple<double, double, double> heel_right_position, 
-                        std::tuple<double, double, double> heel_left_position
+                        std::tuple<double, double, double> heel_left_position,
+                        std::tuple<double, double, double> toe_right_position,
+                        std::tuple<double, double, double> toe_left_position
                         ) 
                         {
                 return JPS_HumanoidModelV0AgentParameters{
@@ -63,7 +65,7 @@ void init_humanoid_model_v0(py::module_& m)
                     step_duration,
                     step_timer,
                     stepping_foot_index,
-                    intoJPS_Point(step_target),
+                    intoJPS_Point(Xcom),
                     intoJPS_Point3D(head_position),
                     intoJPS_Point3D(pelvis_position),
                     pelvis_rotation_angle_z,
@@ -71,7 +73,9 @@ void init_humanoid_model_v0(py::module_& m)
                     trunk_rotation_angle_x,
                     trunk_rotation_angle_y,
                     intoJPS_Point3D(heel_right_position),
-                    intoJPS_Point3D(heel_left_position)
+                    intoJPS_Point3D(heel_left_position),
+                    intoJPS_Point3D(toe_right_position),
+                    intoJPS_Point3D(toe_left_position)
                     };
             }),
             py::kw_only(),
@@ -91,7 +95,7 @@ void init_humanoid_model_v0(py::module_& m)
             py::arg("step_duration"),
             py::arg("step_timer"),
             py::arg("stepping_foot_index"),
-            py::arg("step_target"),
+            py::arg("Xcom"),
             py::arg("head_position"),
             py::arg("pelvis_position"),
             py::arg("pelvis_rotation_angle_z"),
@@ -99,17 +103,20 @@ void init_humanoid_model_v0(py::module_& m)
             py::arg("trunk_rotation_angle_x"),
             py::arg("trunk_rotation_angle_y"),
             py::arg("heel_right_position"),
-            py::arg("heel_left_position")
+            py::arg("heel_left_position"),
+            py::arg("toe_right_position"),
+            py::arg("toe_left_position")
             )
         .def("__repr__", [](const JPS_HumanoidModelV0AgentParameters& p) {
             return fmt::format(
                 "position: {}, orientation: {}, journey_id: {}, stage_id: {},"
                 "velocity: {}, mass: {}, desiredSpeed: {},"
                 "reactionTime: {}, agentScale: {}, obstacleScale: {}, forceDistance: {},"
-                "radius: {}, height: {}, step_duration: {}, step_timer: {}, stepping_foot_index: {}, step_target: {},"
+                "radius: {}, height: {}, step_duration: {}, step_timer: {}, stepping_foot_index: {}, Xcom: {},"
                 "head_position: {}, pelvis_position: {}, pelvis_rotation_angle_z: {},"
                 "shoulder_rotation_angle_z: {}, trunk_rotation_angle_x: {},"
-                "trunk_rotation_angle_y: {}, heel_right_position: {}, heel_left_position: {},",
+                "trunk_rotation_angle_y: {}, heel_right_position: {}, heel_left_position: {},"
+                "toe_right_position: {}, toe_left_position: {}",
                 intoTuple(p.position),
                 intoTuple(p.orientation),
                 p.journeyId,
@@ -126,7 +133,7 @@ void init_humanoid_model_v0(py::module_& m)
                 p.step_duration,
                 p.step_timer,
                 p.stepping_foot_index,
-                intoTuple(p.step_target),
+                intoTuple(p.Xcom),
                 intoTuple3D(p.head_position),
                 intoTuple3D(p.pelvis_position),
                 p.pelvis_rotation_angle_z,
@@ -134,7 +141,9 @@ void init_humanoid_model_v0(py::module_& m)
                 p.trunk_rotation_angle_x,
                 p.trunk_rotation_angle_y,
                 intoTuple3D(p.heel_right_position),
-                intoTuple3D(p.heel_left_position)
+                intoTuple3D(p.heel_left_position),
+                intoTuple3D(p.toe_right_position),
+                intoTuple3D(p.toe_left_position)
                 );
         });
     py::class_<JPS_HumanoidModelV0Builder_Wrapper>(m, "HumanoidModelV0Builder")
@@ -254,12 +263,12 @@ void init_humanoid_model_v0(py::module_& m)
                 JPS_HumanoidModelV0State_SetSteppingFootIndex(w.handle, stepping_foot_index);
             })
         .def_property(
-            "step_target",
+            "Xcom",
             [](const JPS_HumanoidModelV0State_Wrapper& w) {
-                return intoTuple(JPS_HumanoidModelV0State_GetStepTarget(w.handle));
+                return intoTuple(JPS_HumanoidModelV0State_GetXcom(w.handle));
             },
-            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> step_target) {
-                JPS_HumanoidModelV0State_SetStepTarget(w.handle, intoJPS_Point(step_target));
+            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double> Xcom) {
+                JPS_HumanoidModelV0State_SetXcom(w.handle, intoJPS_Point(Xcom));
             })
         .def_property(
             "head_position",
@@ -324,6 +333,22 @@ void init_humanoid_model_v0(py::module_& m)
             },
             [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double, double> heel_left_position) {
                 JPS_HumanoidModelV0State_SetHeelLeftPosition(w.handle, intoJPS_Point3D(heel_left_position));
+            })
+        .def_property(
+            "toe_right_position",   
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return intoTuple3D(JPS_HumanoidModelV0State_GetToeRightPosition(w.handle));
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double, double> toe_right_position) {
+                JPS_HumanoidModelV0State_SetToeRightPosition(w.handle, intoJPS_Point3D(toe_right_position));
+            })
+        .def_property(
+            "toe_left_position",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return intoTuple3D(JPS_HumanoidModelV0State_GetToeLeftPosition(w.handle));
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, std::tuple<double, double, double> toe_left_position) {
+                JPS_HumanoidModelV0State_SetToeLeftPosition(w.handle, intoJPS_Point3D(toe_left_position));
             })
             ;
 }

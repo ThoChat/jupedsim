@@ -56,6 +56,8 @@ class HumanoidModelV0AgentParameters:
         trunk_rotation_angle_y: trunk rotation angle along the frontal axis (x) of this agent. [in rad]
         heel_right_position: 3D Vector of the cartesian coordinates of the right heel position of this agent. [in m]
         heel_left_position: 3D Vector of the cartesian coordinates of the left heel position of this agent. [in m]
+        toe_right_position: 3D Vector of the cartesian coordinates of the right toe position of this agent. [in m]
+        toe_left_position: 3D Vector of the cartesian coordinates of the left toe position of this agent. [in m]
     """
 
     # todo write force equation from paper
@@ -84,7 +86,7 @@ class HumanoidModelV0AgentParameters:
     stepping_foot_index: int = (
         1  # -1 == right foot stepping/left foot support, 0 == double stance, 1 == left foot stepping/right foot support
     )
-    step_target: tuple[float, float] = (0.0, 0.0)
+    Xcom: tuple[float, float] = (0.0, 0.0)
     ## Variables for body parts
     head_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     pelvis_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
@@ -94,6 +96,8 @@ class HumanoidModelV0AgentParameters:
     trunk_rotation_angle_y: float = 0.0
     heel_right_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     heel_left_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    toe_right_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    toe_left_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
     def as_native(
         self,
@@ -115,7 +119,7 @@ class HumanoidModelV0AgentParameters:
             step_duration=self.step_duration,
             step_timer=self.step_timer,
             stepping_foot_index=self.stepping_foot_index,
-            step_target=self.step_target,
+            Xcom=self.Xcom,
             head_position=self.head_position,
             pelvis_position=self.pelvis_position,
             pelvis_rotation_angle_z=self.pelvis_rotation_angle_z,
@@ -124,6 +128,8 @@ class HumanoidModelV0AgentParameters:
             trunk_rotation_angle_y=self.trunk_rotation_angle_y,
             heel_right_position=self.heel_right_position,
             heel_left_position=self.heel_left_position,
+            toe_right_position=self.toe_right_position,
+            toe_left_position=self.toe_left_position,
         )
 
 
@@ -242,13 +248,13 @@ class HumanoidModelV0State:
         self._obj.stepping_foot_index = stepping_foot_index
 
     @property
-    def step_target(self) -> tuple[float, float]:
-        """target position of the current stepping foot."""
-        return self._obj.step_target
+    def Xcom(self) -> tuple[float, float]:
+        """Position of the Extrapolated center of mass."""
+        return self._obj.Xcom
 
-    @step_target.setter
-    def step_target(self, step_target):
-        self._obj.step_target = step_target
+    @Xcom.setter
+    def Xcom(self, Xcom):
+        self._obj.Xcom = Xcom
 
     @property
     def head_position(self) -> tuple[float, float, float]:
@@ -321,3 +327,21 @@ class HumanoidModelV0State:
     @heel_left_position.setter
     def heel_left_position(self, heel_left_position):
         self._obj.heel_left_position = heel_left_position
+
+    @property
+    def toe_right_position(self) -> tuple[float, float, float]:
+        """right toe position of this agent."""
+        return self._obj.toe_right_position
+
+    @toe_right_position.setter
+    def toe_right_position(self, toe_right_position):
+        self._obj.toe_right_position = toe_right_position
+
+    @property
+    def toe_left_position(self) -> tuple[float, float, float]:
+        """left toe position of this agent."""
+        return self._obj.toe_left_position
+
+    @toe_left_position.setter
+    def toe_left_position(self, toe_left_position):
+        self._obj.toe_left_position = toe_left_position

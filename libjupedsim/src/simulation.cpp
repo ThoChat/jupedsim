@@ -357,7 +357,7 @@ JPS_AgentId JPS_Simulation_AddHumanoidModelV0Agent(
                 parameters.step_duration,
                 parameters.step_timer,
                 parameters.stepping_foot_index,
-                intoPoint(parameters.step_target), 
+                intoPoint(parameters.Xcom), 
                 intoPoint3D(parameters.head_position),
                 intoPoint3D(parameters.pelvis_position),
                 parameters.pelvis_rotation_angle_z,
@@ -365,7 +365,9 @@ JPS_AgentId JPS_Simulation_AddHumanoidModelV0Agent(
                 parameters.trunk_rotation_angle_x,
                 parameters.trunk_rotation_angle_y,
                 intoPoint3D(parameters.heel_right_position),
-                intoPoint3D(parameters.heel_left_position)
+                intoPoint3D(parameters.heel_left_position),
+                intoPoint3D(parameters.toe_right_position),
+                intoPoint3D(parameters.toe_left_position)
                 }};
         result = simulation->AddAgent(std::move(agent));
     } catch(const std::exception& ex) {

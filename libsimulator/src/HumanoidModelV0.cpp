@@ -9,12 +9,13 @@
 #include "OperationalModelType.hpp"
 #include "Simulation.hpp"
 #include "HumanoidModelV0Data.hpp"
+#include "GeometricFunctions.hpp"
 
 #include <Logger.hpp>
 #include <iostream>
 #include <stdexcept>
 #include <cmath>
-#include <Eigen/Dense>
+
 
 HumanoidModelV0::HumanoidModelV0(double bodyForce_, double friction_)
     : bodyForce(bodyForce_), friction(friction_){};
@@ -60,165 +61,184 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
         });
     forces += obstacle_f / model.mass;
 
+
     // creating update of pelvis position based on the collision avoidance model
     update.velocity = model.velocity + forces * dT;
     update.position = ped.pos + update.velocity * dT;
 
 
-    /// #### Humanoid model #####
 
-    // initialise the updated joint positions matrix
-    Eigen::MatrixXd updated_joint_positions_matrix; 
-    updated_joint_positions_matrix = Eigen::MatrixXd::Zero(11, 3); // 11 joints, 3 positions each
-
-    // Rows: joints * 11, Columns: x/y/z rotation, 
-    // the referencial of the coordinate in linked to the orientation of the agent
-    // x == sagittal, y == frontal, z == vertical (up) axis                    
-    // list of all simulated joints
-    /**
-    0 - right heel
-    1 - right ankle
-    2 - right hip
-    3 - left hip
-    4 - left ankle
-    5 - left heel
-    6 - pelvis/CoM
-    7 - right shoulder
-    8 - C7 / neck
-    9 - left shoulder
-    10 - head 
-     **/
-
-
-    // Steps computation
-    if (model.step_timer == 0) // double support
-    {
-
-
-        // Compute the next step_duration (int number of time step require to complete the step)
-        // constant stepping time of 0.5 for an agent of 1.7m
-        update.step_duration = static_cast<int>(std::round((model.height * 0.5 / (1.7 * dT))));
-        update.step_timer=update.step_duration;
-
-        // Update stepping_foot_index
-        if (model.stepping_foot_index == 1) {
-            update.stepping_foot_index = -1; // switch to right foot stepping
-        } else {
-            update.stepping_foot_index = 1;  // switch to left foot stepping
+    // Physical interaction flag
+    
+    bool has_nearby_agent = std::any_of(
+        neighborhood.cbegin(),
+        neighborhood.cend(),
+        [&ped ](const GenericAgent& neighbor) {
+            if (neighbor.id == ped.id) return false;
+            const double distance = (ped.pos - neighbor.pos).Norm();
+            return distance < std::sqrt( 2 / M_PI) ; // 1 agent/m^2 
         }
-        ///////////
+    );
 
-        // initialise posture 
-        if (model.head_position.z <= 0.001) 
+    bool has_nearby_wall = std::any_of(
+        walls.cbegin(),
+        walls.cend(),
+        [&ped, &model ](const LineSegment& wall) {
+            const Point orientation = model.velocity.Normalized();
+            const Point normal_oriention = model.velocity.Normalized().Rotate90Deg();
+            const Point interaction_ray_point_right = model.pelvis_position.To2D() 
+                                                    + orientation
+                                                    - normal_oriention * model.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
+            const Point interaction_ray_point_left = model.pelvis_position.To2D() 
+                                                    + orientation
+                                                    + normal_oriention * model.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
+            const LineSegment interaction_ray_right(model.pelvis_position.To2D() 
+                                                    - normal_oriention * model.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5
+                                                    , interaction_ray_point_right);
+            const LineSegment interaction_ray_left(model.pelvis_position.To2D()
+                                                    + normal_oriention * model.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5
+                                                    , interaction_ray_point_left);
+            
+            const Point closest_point = wall.ShortestPoint(ped.pos);
+            const double distance = (ped.pos - closest_point).Norm();
+            return intersects(wall,interaction_ray_right) 
+                    || intersects(wall,interaction_ray_left) 
+                    || distance < model.radius *1.5
+                    ;
+        }
+    );
+
+    bool abrupt_change_in_velocity_angle = false;
+    double angle_limit = M_PI / 2; 
+    if (model.velocity.Normalized().ScalarProduct(update.velocity.Normalized()) < std::cos(angle_limit) 
+        && model.velocity.Norm() > 0.001) // if the agent was not moving, do not change the orientation
+    {
+        abrupt_change_in_velocity_angle = true;
+    }
+
+
+    bool physical_interaction_flag = has_nearby_agent || has_nearby_wall || abrupt_change_in_velocity_angle;
+    // physical_interaction_flag = true; // this shut of the locomotion model
+
+
+
+    /// #### Humanoid paradigm #####
+
+
+    // create the update containing the full body motion after gait computation
+    HumanoidModelV0Update update_gait_motion;
+    
+    
+    if (model.head_position.z <= 0.001) 
         {
+        //################### initialise posture //###################
         // Create a new instance of HumanoidModelV0Data
-        auto init_model = std::make_unique<HumanoidModelV0Data>(model); //copy current model
-        // change joint position to match the initial position and direction
+        HumanoidModelV0Data init_model = model; // copy current model 
+
+        // change radius to prevent the feet to enter walls (temporary)
+        // init_model.radius = 2;
+
+        // change joint position to creat the initial standing position and direction
+        init_model.step_duration = 0; // to force a step from standing position
+        init_model.step_timer = 0; // to initiate the gait cycle
+
+
+        // pelvis
+        init_model.pelvis_position.x = ped.pos.x;
+        init_model.pelvis_position.y = ped.pos.y;
+        init_model.pelvis_position.z = model.height * ( LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR);
+
+        // std::cout << "Pelvis init position: " << init_model.pelvis_position.x << ", "
+        //                                     << init_model.pelvis_position.y  << std::endl;
 
         // head
-        init_model->head_position.x = ped.pos.x;
-        init_model->head_position.y = ped.pos.y;
-        init_model->head_position.z = model.height * (  ANKLE_SCALING_FACTOR
+        init_model.head_position.x = ped.pos.x + update.velocity.x * dT; // here the CoM moves forward to initiate the walking motion
+        init_model.head_position.y = ped.pos.y + update.velocity.x * dT;
+        init_model.head_position.z = model.height * (  ANKLE_SCALING_FACTOR
                                                         + LEG_SCALING_FACTOR 
                                                         + TRUNK_HEIGHT_SCALING_FACTOR
                                                         + NECK_SCALING_FACTOR);
 
-        Point normal_orientation = update.velocity.Normalized().Rotate90Deg();
+        // Xcom
+        // double w0 = std::sqrt(9.81 / (model.height * ( LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR)));
+        init_model.Xcom = ped.pos;
+
+        Point orientation = update.velocity.Normalized();
+        Point normal_orientation = orientation.Rotate90Deg();
+        
         // right foot
-        init_model->heel_right_position.x = (ped.pos - normal_orientation*( model.height 
-                                                                            * PELVIS_WIDTH_SCALING_FACTOR * 0.5)).x;
-        init_model->heel_right_position.y = (ped.pos - normal_orientation*( model.height 
-                                                                            * PELVIS_WIDTH_SCALING_FACTOR* 0.5)).y;
-        init_model->heel_right_position.z = 0.0;
+        // # heel
+        init_model.heel_right_position.x = (ped.pos.x - normal_orientation.x * model.height 
+                                                                            * PELVIS_WIDTH_SCALING_FACTOR * 0.5);
+        init_model.heel_right_position.y = (ped.pos.y - normal_orientation.y* model.height 
+                                                                            * PELVIS_WIDTH_SCALING_FACTOR* 0.5);
+        init_model.heel_right_position.z = 0.0;
+ 
+
+        // # toe
+        init_model.toe_right_position = init_model.heel_right_position;
+        init_model.toe_right_position.x += orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+        init_model.toe_right_position.y += orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
 
         // left foot
-        init_model->heel_left_position.x = (ped.pos + normal_orientation*(  model.height 
-                                                                            * PELVIS_WIDTH_SCALING_FACTOR* 0.5)).x;
-        init_model->heel_left_position.y = (ped.pos + normal_orientation*(  model.height 
-                                                                            * PELVIS_WIDTH_SCALING_FACTOR* 0.5)).y;
-        init_model->heel_left_position.z = 0.0;
+        init_model.heel_left_position.x = (ped.pos.x + normal_orientation.x * model.height 
+                                                                            * PELVIS_WIDTH_SCALING_FACTOR * 0.5);
+        init_model.heel_left_position.y = (ped.pos.y + normal_orientation.y* model.height 
+                                                                            * PELVIS_WIDTH_SCALING_FACTOR* 0.5);
+        init_model.heel_left_position.z = 0.0;
+        // # toe
+        init_model.toe_left_position = init_model.heel_left_position;
+        init_model.toe_left_position.x += orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+        init_model.toe_left_position.y += orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
 
-        // compute update based on initialized state
-        updated_joint_positions_matrix = ComputeJointPositionGait(*init_model, update, dT); 
-        
-         
+        // print normal_orientation
+        // std::cout << "Normal orientation: " << normal_orientation.x << ", " << normal_orientation.y << std::endl;
+
+ 
+        // initial step index 
+        // the Closest foot in the agent's orientation is considered to be the folmer stepping foot
+        if ((init_model.heel_right_position.To2D() - init_model.pelvis_position.To2D()).ScalarProduct(update.velocity) < ((init_model.heel_left_position.To2D() - init_model.pelvis_position.To2D()).ScalarProduct(update.velocity)) )
+        {
+            init_model.stepping_foot_index = 1; // left foot support, right foot stepping
         }
         else
         {
-        // compute update based on previous state
-        updated_joint_positions_matrix = ComputeJointPositionGait(model, update, dT);
+            init_model.stepping_foot_index = -1; // right foot support, left foot stepping
+        }
+        //###########################################################
+
+
+
+        // compute update based on initialized state
+        update_gait_motion = ComputeMotionHof2008(init_model, update, dT); 
+
+        
+        
+
+        }
+    else
+        {
+        // compute update based on previous state and physical_interaction_flag
+        // if physical_interaction_flag ist true the motion is governed by the navigation 
+        // else the gait motion is computed based on Hof 2008. locomotion model.
+        if(physical_interaction_flag)
+        {
+            // update_gait_motion = ComputeMotionPhysicalInteraction(model, update, ped, dT);
+            update_gait_motion = ComputeMotionPhysicalInteraction(model, update, dT);
+        }
+        else
+        {
+            update_gait_motion = ComputeMotionHof2008(model, update, dT);
         }
         
-
-        
-    } 
-    else // single support
-    {
-        
-        // pass on stepping_foot_index and step_duration
-        update.stepping_foot_index = model.stepping_foot_index;
-        update.step_duration = model.step_duration;
-        // update step timer
-        update.step_timer = model.step_timer - 1;
-        ///////////
+        }
 
 
-        // New Single Support Gait function
-        updated_joint_positions_matrix = ComputeJointPositionGait(model, update, dT);
+    // apply the update 
+    update = update_gait_motion;
+    update.position = update_gait_motion.pelvis_position.To2D(); // update the position of the agent to the pelvis position
 
 
-
-    }
-
-    // Update position of the joints 
-    //  General position = pelvis position
-    update.position.x = updated_joint_positions_matrix(6, 0);
-    update.position.y = updated_joint_positions_matrix(6, 1);
-
-    // // head position
-    update.head_position.x = updated_joint_positions_matrix(10, 0);
-    update.head_position.y = updated_joint_positions_matrix(10, 1);
-    update.head_position.z = updated_joint_positions_matrix(10, 2);
-
-    // // pelvis position (3D)
-    update.pelvis_position.x = updated_joint_positions_matrix(6, 0);
-    update.pelvis_position.y = updated_joint_positions_matrix(6, 1);
-    update.pelvis_position.z = updated_joint_positions_matrix(6, 2);
-
-    // // right heel position
-    update.heel_right_position.x = updated_joint_positions_matrix(0, 0);
-    update.heel_right_position.y = updated_joint_positions_matrix(0, 1);
-    update.heel_right_position.z = updated_joint_positions_matrix(0, 2);
-    
-    // // left heel position
-    update.heel_left_position.x = updated_joint_positions_matrix(5, 0);
-    update.heel_left_position.y = updated_joint_positions_matrix(5, 1);
-    update.heel_left_position.z = updated_joint_positions_matrix(5, 2);
-
-
-
-    // ## shoulders
-    update.shoulder_rotation_angle_z = 0.0;
-    // ## trunk
-    // ### along the frontal axis (x) of this agent
-    update.trunk_rotation_angle_x = 0.0;
-    // ### along sagittal axis (y) of this agent
-    update.trunk_rotation_angle_y = 0.0;
-
-    // print the updated joint positions
-
-    // // std::cout << "Pelvis: " << update.position.x <<", "<< update.position.y << std::endl;
-    // std::cout << "Right Heel: " << update.heel_right_position.x << ", " 
-    //                             << update.heel_right_position.y << ", " 
-    //                             << update.heel_right_position.z << std::endl;
-    // std::cout << "Left Heel: "  << update.heel_left_position.x << ", " 
-    //                             << update.heel_left_position.y << ", " 
-    //                             << update.heel_left_position.z << std::endl;
-
-    // // // pause
-    // std::cin.get();  
-    // // clear the system console
-    // std::system("clear");
 
  
     return update;
@@ -228,6 +248,7 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
 {
     auto& model = std::get<HumanoidModelV0Data>(agent.model);
     const auto& upd = std::get<HumanoidModelV0Update>(update);
+
     // update the SFM navigation
     agent.pos = upd.position;
     model.velocity = upd.velocity;
@@ -238,7 +259,7 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
     model.step_timer = upd.step_timer;
     model.stepping_foot_index = upd.stepping_foot_index;
 
-    model.step_target= upd.step_target;
+    model.Xcom= upd.Xcom;
 
 
     // # body motion variables
@@ -250,6 +271,8 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
     model.trunk_rotation_angle_y = upd.trunk_rotation_angle_y;
     model.heel_right_position = upd.heel_right_position;
     model.heel_left_position = upd.heel_left_position;
+    model.toe_right_position = upd.toe_right_position;
+    model.toe_left_position = upd.toe_left_position;
 }
 
 
@@ -356,14 +379,13 @@ Point HumanoidModelV0::ForceBetweenPoints(
 {
     // todo reduce range of force to 180 degrees
     const double dist = (pt1 - pt2).Norm();
-    double pushing_force_length = PushingForceLength(A, B, radius, dist) * 0; // if this is 0 agents bumps into each other 
+    double pushing_force_length = PushingForceLength(A, B, radius, dist) ; // if this is 0 agents bumps into each other 
     double friction_force_length = 0;
     const Point n_ij = (pt1 - pt2).Normalized();
     const Point tangent = n_ij.Rotate90Deg();
     if(dist < radius) {
         pushing_force_length += this->bodyForce * (radius - dist);
-        friction_force_length =
-            this->friction * (radius - dist) * (velocity.ScalarProduct(tangent));
+        friction_force_length = this->friction * (radius - dist) * (velocity.ScalarProduct(tangent));
     }
     return n_ij * pushing_force_length + tangent * friction_force_length;
 }
@@ -371,512 +393,402 @@ Point HumanoidModelV0::ForceBetweenPoints(
 
 /***************** Function For Humanoid motion *****************/
 
-/*** Matrix opperators using Eigen ***/
-// Denavit-Hartenberg (DH) convention
-// compute T^{n-1}_n
-Eigen::Matrix4d HumanoidModelV0::DHTransformationMatrix(
-    double theta, 
-    double d, 
-    double r, 
-    double alpha) const
-    {
-    Eigen::Matrix4d mat;
-    mat << cos(theta), -sin(theta)*cos(alpha), sin(theta)*sin(alpha), r*cos(theta),
-            sin(theta), cos(theta)*cos(alpha), -cos(theta)*sin(alpha), r*sin(theta),
-            0, sin(alpha), cos(alpha), d,
-            0, 0, 0, 1;
-    return mat;
-}
 
-/*** rotation matrix  ***/
- 
-
-Eigen::Matrix4d HumanoidModelV0::CreateTransformationMatrix(
-    const Eigen::Vector3d &translation,
-    const Eigen::Vector3d &rotation
-) const {
-    
-    double roll = rotation[0], pitch = rotation[1], yaw = rotation[2];
-    
-    Eigen::AngleAxisd rollAngle(roll, Eigen::Vector3d::UnitX());
-    Eigen::AngleAxisd pitchAngle(pitch, Eigen::Vector3d::UnitY());
-    Eigen::AngleAxisd yawAngle(yaw, Eigen::Vector3d::UnitZ());
-    
-    Eigen::Quaterniond MergedRotations = yawAngle * pitchAngle * rollAngle;
-    Eigen::Matrix3d RotationMatrix = MergedRotations.toRotationMatrix();
-
-    // Create transformation matrix
-    Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
-    T.block(0,0,3,3) = RotationMatrix;  // Or use rotationQuaternionsMethod
-    T.block(0,3,3,1) = translation;
-    
-    return T;
-}
-
-
-
-Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionGait(
+HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
                                             const HumanoidModelV0Data& model,
                                             const HumanoidModelV0Update& update,
                                             double dT
                                     ) const
 
 {
-    //#### Precomputation
 
-    // initialise the updated joint angles matrix
-    Eigen::MatrixXd updated_joint_positions_matrix(11, 3); // 11 joints, 3 angles each
+    //copy current updare pointer values
+    HumanoidModelV0Update update_gait_motion = update;
 
-    double leg_length = model.height * (LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR); 
-    double pelvis_width = model.height * PELVIS_WIDTH_SCALING_FACTOR;
+    Point orientation = update_gait_motion.velocity.Normalized(); 
+    Point normal_orientation = orientation.Rotate90Deg();
 
-    // compute step_complition_factor
-    // this represent the avancement of the curent step. this factor == 1 when the step is over.
-    double step_complition_factor = 1.0 - (static_cast<double>(update.step_timer) / update.step_duration);
-
-    //#######
-    
-
-    if(update.stepping_foot_index == 1) // if the right foot is support foot (left foot stepping)
+    // parameters (have to be added with the other parameters of the model)
+    double sc = 0.75 * model.height/1.75; // model.height * 0.42; // prefered step length (0.75 in the paper) (To Do: controle this with spreferend speed)
+    if (model.step_duration == 0 ) {sc = 0.1;} //  model.step_duration == 0 after, standing position (phy. interaction, or initialisation)
+    double wc = model.height * PELVIS_WIDTH_SCALING_FACTOR; // prefered strid width (0.1 in the paper)
+    double Tc = std::min(sc/update_gait_motion.velocity.Norm(), 0.6); 
+    if (Tc<0.1)
     {
-        // Step 1: computation of the next stepping foot position
-        // left foot stepping
-        updated_joint_positions_matrix.row(5) <<    model.heel_left_position.x + update.velocity.x * dT,
-                                                    model.heel_left_position.y + update.velocity.y * dT,
-                                                    -0.4*step_complition_factor*(step_complition_factor-1); 
-                                                    // the vertical displacement of the stepping foot is 
-                                                    // a parabola with a maximum at 0.1m/ z=0.40(t)(t - 1);
-                                                     
-
-        // Step 2: computation of the pelvis and support hip position
-        // the center of the pelvis is placed between both feet
-        updated_joint_positions_matrix(6, 0) = model.heel_right_position.x + (updated_joint_positions_matrix(5, 0)-model.heel_right_position.x)/2;
-        updated_joint_positions_matrix(6, 1) = model.heel_right_position.y + (updated_joint_positions_matrix(5, 1)-model.heel_right_position.y)/2;
-
-        // position of the support hip (right hip)
-        Point normal_orientation = update.velocity.Normalized().Rotate90Deg();
-        Point3D support_hip_position;
-
-        support_hip_position.x = updated_joint_positions_matrix(6, 0) - pelvis_width * 0.5 * normal_orientation.x;
-        support_hip_position.y = updated_joint_positions_matrix(6, 1) - pelvis_width * 0.5 * normal_orientation.y;
-        support_hip_position.z = model.heel_right_position.z; // to insure a planar computation of distance_support_hip_foot_xy
-
-        double distance_support_hip_foot_xy = (support_hip_position - model.heel_right_position).Norm();
-
-        // the height of the pelvis is based on the Leg length and position of the hip relative to the support foot
-        // pyhtagore with leg legth and support foot-hip positions
-        updated_joint_positions_matrix(6, 2) =  sqrt(std::pow(leg_length, 2)- std::pow(distance_support_hip_foot_xy,2));
-
-        // Step 3: The support foot (right foot) remain at the same place (on the ground)
-        updated_joint_positions_matrix(0, 0) = model.heel_right_position.x;
-        updated_joint_positions_matrix(0, 1) = model.heel_right_position.y;
-        updated_joint_positions_matrix(0, 2) = 0;                               
-                                                
-    } 
-    else // if the left foot is support foot (right foot stepping)
-    {
-        // Step 1: computation of the next stepping foot position
-        // left foot stepping
-        updated_joint_positions_matrix.row(0) <<    model.heel_right_position.x + update.velocity.x * dT,
-                                                    model.heel_right_position.y + update.velocity.y * dT,
-                                                    -0.4*step_complition_factor*(step_complition_factor-1); 
-                                            // the vertical displacement of the stepping foot is 
-                                            // a parabola with a maximum at 0.1m;
-
-        
-        // Step 2: computation of the pelvis and support hip position
-        // the center of the pelvis is placed between both feet
-        updated_joint_positions_matrix(6, 0) = model.heel_left_position.x + (updated_joint_positions_matrix(0, 0)-model.heel_left_position.x)/2;
-        updated_joint_positions_matrix(6, 1) = model.heel_left_position.y + (updated_joint_positions_matrix(0, 1)-model.heel_left_position.y)/2;
-
-        // position of the support hip (right hip)
-        Point normal_orientation = update.velocity.Normalized().Rotate90Deg();
-        Point3D support_hip_position;
-
-        support_hip_position.x = updated_joint_positions_matrix(6, 0) + pelvis_width * 0.5 * normal_orientation.x;
-        support_hip_position.y = updated_joint_positions_matrix(6, 1) + pelvis_width * 0.5 * normal_orientation.y;
-        support_hip_position.z = model.heel_left_position.z; // to insure a planar computation of distance_support_hip_foot_xy
-
-        double distance_support_hip_foot_xy = (support_hip_position - model.heel_left_position).Norm();
-
-        // the height of the pelvis is based on the Leg length and position of the hip relative to the support foot
-        // pyhtagore with leg legth and support foot-hip positions
-        updated_joint_positions_matrix(6, 2) =  sqrt(std::pow(leg_length, 2)- std::pow(distance_support_hip_foot_xy,2));
-
-        // Step 3: The support foot (right foot) remain at the same place (on the ground)
-        updated_joint_positions_matrix(5, 0) = model.heel_left_position.x;
-        updated_joint_positions_matrix(5, 1) = model.heel_left_position.y;
-        updated_joint_positions_matrix(5, 2) = 0; 
-
+        Tc=0.1; sc = 0.3;
     }
 
-    // Spet 4: update head position
-    updated_joint_positions_matrix(10, 0) = updated_joint_positions_matrix(6, 0);
-    updated_joint_positions_matrix(10, 1) = updated_joint_positions_matrix(6, 1);
-    updated_joint_positions_matrix(10, 2) = updated_joint_positions_matrix(6, 2) 
+    double w0 = std::sqrt(9.81 / (model.height * (LEG_SCALING_FACTOR + ANKLE_SCALING_FACTOR)));
+    double bx = sc / (std::exp(w0 * Tc) - 1); // step length offset
+    double by = wc / (std::exp(w0 * Tc) + 1); // step width offset
+    double k1 = 0.1; // control gain for control feedback loop
+
+    // Precomputation
+    double step_width = by * (std::exp(w0 * Tc) + 1 ) / (1 - k1*0.5*(std::exp(w0 * Tc) - 1 ));
+    double step_length = sc; // prefered step length;
+    if (step_length > model.height * 0.5) // Limit step length
+    {
+        step_length = model.height * 0.5;
+        std::cout << "## step length limit##" << std::endl;
+    }
+    update_gait_motion.step_timer = model.step_timer;
+
+
+
+    // if step_timer == 0: compute the next step
+    if (update_gait_motion.step_timer == 0)
+    {
+        // switch support foot
+        // update_gait_motion.stepping_foot_index = -1 * model.stepping_foot_index;// 1 == left foot swinging; -1 == right foot swinging
+        if (model.stepping_foot_index == 1)
+        {update_gait_motion.stepping_foot_index = -1;}
+        else 
+        {update_gait_motion.stepping_foot_index = 1;}
+
+        Point CoP; // center of pressure. This determine the position of the support foot
+        // if(model.step_duration > 0) // if step_duration > 0 the agent is continuing a gait cycle
+        // {
+            // compute next Xcom position
+            update_gait_motion.Xcom =   model.Xcom 
+                                        + orientation * step_length 
+                                        - normal_orientation * step_width * update_gait_motion.stepping_foot_index;
+
+            // The CoP (approximated here by the support heel) is change intantaneously
+            CoP = update_gait_motion.Xcom 
+                        - orientation * bx
+                        - normal_orientation * by * update_gait_motion.stepping_foot_index ;
+
+            // compute the next step duration
+            update_gait_motion.step_duration = static_cast<int>(
+            std::round(
+                (1/(w0*dT))
+                * std::log( (step_length/ (update_gait_motion.Xcom - CoP).ScalarProduct(orientation)) + 1)
+            )
+            );
+            // set step timer
+            update_gait_motion.step_timer = update_gait_motion.step_duration;
+        // }
+        // else // if step_duration == 0 the agent is in a standing position, and initiate the get cycle
+        // {
+        //     // The CoP is the center of the support foot
+        //     if (update_gait_motion.stepping_foot_index == 1) // right foot support, left foot stepping
+        //     {
+        //         CoP = (model.heel_right_position + model.toe_right_position).To2D() * 0.5 ;
+        //     }
+        //     else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
+        //     {
+        //         CoP = (model.heel_left_position + model.toe_left_position).To2D() * 0.5 ;
+        //     }
+
+        //     // compute next Xcom position with restect to the CoP
+        //     update_gait_motion.Xcom =   CoP 
+        //                                 + orientation * step_length 
+        //                                 + normal_orientation * wc * update_gait_motion.stepping_foot_index;
+
+        //     // compute the first step duration
+        //     update_gait_motion.step_duration = static_cast<int>(
+        //     std::round(
+        //         (1/(w0*dT))
+        //         * std::log( (step_length/ (update_gait_motion.Xcom - CoP).ScalarProduct(orientation)) + 1)
+        //     )
+        //     );
+        //     // set step timer
+        //     update_gait_motion.step_timer = update_gait_motion.step_duration;
+
+        // }
+
+
+        // move the support foot to the CoP
+        if(update_gait_motion.stepping_foot_index == 1) // right foot support, left foot stepping
+        {
+            update_gait_motion.heel_right_position.x = CoP.x - orientation.x * model.height * FOOT_BACKWARD_SCALING_FACTOR;
+            update_gait_motion.heel_right_position.y = CoP.y - orientation.y * model.height * FOOT_BACKWARD_SCALING_FACTOR;
+            update_gait_motion.heel_right_position.z = 0.0;
+
+            update_gait_motion.toe_right_position.x = CoP.x + orientation.x * model.height * FOOT_FORWARD_SCALING_FACTOR ;
+            update_gait_motion.toe_right_position.y = CoP.y + orientation.y * model.height * FOOT_FORWARD_SCALING_FACTOR ;
+            update_gait_motion.toe_right_position.z = 0.0;
+
+
+            // pass on swinging foot position
+            update_gait_motion.heel_left_position = model.heel_left_position;
+            update_gait_motion.toe_left_position = model.toe_left_position;
+        }
+        else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
+        {
+            update_gait_motion.heel_left_position.x = CoP.x - orientation.x * model.height * FOOT_BACKWARD_SCALING_FACTOR;
+            update_gait_motion.heel_left_position.y = CoP.y - orientation.y * model.height * FOOT_BACKWARD_SCALING_FACTOR;
+            update_gait_motion.heel_left_position.z = 0.0;
+
+            update_gait_motion.toe_left_position.x = CoP.x + orientation.x * model.height * FOOT_FORWARD_SCALING_FACTOR;
+            update_gait_motion.toe_left_position.y = CoP.y + orientation.y * model.height * FOOT_FORWARD_SCALING_FACTOR;
+            update_gait_motion.toe_left_position.z = 0.0;
+
+
+            // pass on swinging foot position
+            update_gait_motion.heel_right_position = model.heel_right_position;
+            update_gait_motion.toe_right_position = model.toe_right_position;
+        }
+        
+    }
+    else{
+        update_gait_motion.step_timer -= 1; // decrement step timer
+        // pass on the current step variables
+        update_gait_motion.step_duration = model.step_duration;
+        update_gait_motion.stepping_foot_index = model.stepping_foot_index;
+        update_gait_motion.Xcom = model.Xcom;
+
+        // animate a double support by skipping either 5 frames of 5% of the step timer
+        if (update_gait_motion.step_timer > update_gait_motion.step_duration - 5)
+        {
+            // fixed feet position
+            update_gait_motion.heel_right_position = model.heel_right_position;
+            update_gait_motion.heel_left_position = model.heel_left_position;
+            update_gait_motion.toe_right_position = model.toe_right_position;
+            update_gait_motion.toe_left_position = model.toe_left_position;
+        }
+        else{
+            double step_completion_factor = 1.0 - (static_cast<double>(update_gait_motion.step_timer) / (update_gait_motion.step_duration - 3));
+
+            Point swinging_foot_displacement; 
+            
+
+            if(update_gait_motion.stepping_foot_index == 1) // right foot support, left foot stepping
+            {
+                swinging_foot_displacement = (
+                                                update_gait_motion.Xcom - model.heel_left_position.To2D()
+                                                + orientation * (step_length - bx - model.height * FOOT_BACKWARD_SCALING_FACTOR) 
+                                                + normal_orientation * (step_width )
+                                            )
+                                            * (1/static_cast<double>(model.step_timer));
+                update_gait_motion.heel_left_position.x = model.heel_left_position.x + swinging_foot_displacement.x;
+                update_gait_motion.heel_left_position.y = model.heel_left_position.y + swinging_foot_displacement.y;
+                update_gait_motion.heel_left_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
+
+                update_gait_motion.toe_left_position.x = update_gait_motion.heel_left_position.x 
+                                                        + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_left_position.y = update_gait_motion.heel_left_position.y 
+                                                        + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_left_position.z =  -4*0.25*step_completion_factor*(step_completion_factor-1);
+
+                // update suport foot position
+                update_gait_motion.heel_right_position = model.heel_right_position;
+                update_gait_motion.toe_right_position.x = update_gait_motion.heel_right_position.x 
+                                                        + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_right_position.y = update_gait_motion.heel_right_position.y 
+                                                        + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_right_position.z = 0.0;
+
+            }
+            else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
+            {
+                swinging_foot_displacement = (
+                                                update_gait_motion.Xcom - model.heel_right_position.To2D()
+                                                + orientation * (step_length - bx - model.height * FOOT_BACKWARD_SCALING_FACTOR) 
+                                                - normal_orientation * (step_width ) 
+                                            )
+                                            * (1/static_cast<double>(model.step_timer));
+                update_gait_motion.heel_right_position.x = model.heel_right_position.x + swinging_foot_displacement.x;
+                update_gait_motion.heel_right_position.y = model.heel_right_position.y + swinging_foot_displacement.y;
+                update_gait_motion.heel_right_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);    
+
+                update_gait_motion.toe_right_position.x = update_gait_motion.heel_right_position.x 
+                                                        + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_right_position.y = update_gait_motion.heel_right_position.y 
+                                                        + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_right_position.z = -4*0.25*step_completion_factor*(step_completion_factor-1);
+
+                // update support foot position
+                update_gait_motion.heel_left_position = model.heel_left_position;
+                update_gait_motion.toe_left_position.x = update_gait_motion.heel_left_position.x 
+                                                        + orientation.x * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_left_position.y = update_gait_motion.heel_left_position.y 
+                                                        + orientation.y * model.height * (FOOT_FORWARD_SCALING_FACTOR + FOOT_BACKWARD_SCALING_FACTOR);
+                update_gait_motion.toe_left_position.z = 0.0;
+
+            }
+        }
+        // support foot (CoP) stays in position, the other foot moves toward the potential best next step position
+    }
+
+        // update pelvis position
+        // the pelvis moves towards the Base of support (center of the feet)
+        Point CoM_displacement =  (update_gait_motion.Xcom - model.pelvis_position.To2D()) * w0 * dT;
+        update_gait_motion.pelvis_position.x = model.pelvis_position.x + CoM_displacement.x;
+        update_gait_motion.pelvis_position.y = model.pelvis_position.y + CoM_displacement.y;
+        // z-position of the pelvis is contuted with the relative placement of the pelvis and support foot
+        if (update_gait_motion.stepping_foot_index == 1) // right foot support, left foot stepping
+        {
+            // the height of the pelvis is based on the Leg length and position of the hip relative to the support foot
+            // pyhtagore with leg legth and support foot-hip positions
+            Point support_hip_position = update_gait_motion.pelvis_position.To2D() -  normal_orientation * model.height * PELVIS_WIDTH_SCALING_FACTOR * 0.5;
+            update_gait_motion.pelvis_position.z =  sqrt(std::pow(model.height * (ANKLE_SCALING_FACTOR + LEG_SCALING_FACTOR), 2)
+                                                    - std::pow((support_hip_position - model.heel_right_position.To2D()).Norm(),2));
+        }
+        else if (update_gait_motion.stepping_foot_index == -1) // left foot support, right foot stepping
+        {
+            Point support_hip_position = update_gait_motion.pelvis_position.To2D() +  normal_orientation * model.height * PELVIS_WIDTH_SCALING_FACTOR * 0.5;
+            update_gait_motion.pelvis_position.z =  sqrt(std::pow(model.height * (ANKLE_SCALING_FACTOR + LEG_SCALING_FACTOR), 2)
+                                                    - std::pow((support_hip_position - model.heel_left_position.To2D()).Norm(),2));
+        }
+        
+        // agent update position is set to the pelvis position
+        update_gait_motion.position = update_gait_motion.pelvis_position.To2D();    
+    
+    //  update head position
+    update_gait_motion.head_position = update_gait_motion.pelvis_position;
+    update_gait_motion.head_position.z = update_gait_motion.pelvis_position.z
                                                 + model.height * (TRUNK_HEIGHT_SCALING_FACTOR 
                                                                 + NECK_SCALING_FACTOR);
 
 
-    return updated_joint_positions_matrix;
-
-}
-
-// In this function the motion of a step is initiated after a double support phase.
-// The function computes the joint angles then the joint position 
-//  based on the step length, step width, and the current model state.
-// should return: update.stepping_foot_index, update.step_timer update.joint_angles_matrix update.joint_positions_matrix
-Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesStepDoubleSupports(
-                                        const GenericAgent& agent,
-                                        double step_length, 
-                                        double step_width) const
-{
-    // Get the model data from the agent
-    auto model = std::get<HumanoidModelV0Data>(agent.model);
-
-    // initialise the updated joint angles matrix
-    Eigen::MatrixXd updated_joint_angles_matrix(11, 3); // 11 joints, 3 angles each
-
-    
-
-    // Rotation 
-    // only walk without rotation is implemented for now (rotation_index != 0)
-
-
-    double theta, phi_a;
-
-    theta = asin(step_length / (2 * model.height * LEG_SCALING_FACTOR));;
-    phi_a = asin((model.height * PELVIS_WIDTH_SCALING_FACTOR  - step_width) 
-            / (2 * model.height * LEG_SCALING_FACTOR));
-
-    
-    // Update joint angles
-    if (model.stepping_foot_index == 1) // if the right foot is support foot (left foot stepping)
+    // pelvis rotation
+    // following the line in between both feet
+    Point in_between_feet_vector = update_gait_motion.heel_right_position.To2D()
+                                    - update_gait_motion.heel_left_position.To2D();
+    // compute the angle of the pelvis rotation (between 0 an 2*pi)
+    if (in_between_feet_vector.y >= 0) 
     {
-        // right ankle
-        updated_joint_angles_matrix.row(1) <<    phi_a,        
-                                                - theta, 
-                                                0; 
-        // right hip
-        updated_joint_angles_matrix.row(2) <<   -phi_a, 
-                                                theta,
-                                                0; 
-        // pelvis-trunk
-        updated_joint_angles_matrix.row(6) <<   0, 
-                                                0,
-                                                0; 
-        // left hip    
-        updated_joint_angles_matrix.row(3) <<   - phi_a, 
-                                                - theta, 
-                                                0; 
-        // left ankle
-        updated_joint_angles_matrix.row(4) <<   phi_a, 
-                                                theta, 
-                                                0;
-
-    } 
-    else if (model.stepping_foot_index == -1) // if support foot is the left foot, right foot stepping 
-    { 
-        // left ankle
-        updated_joint_angles_matrix.row(4) <<   -phi_a,        
-                                                -theta, 
-                                                0; 
-        // left hip
-        updated_joint_angles_matrix.row(3) <<   phi_a , 
-                                                theta,
-                                                0; 
-        // pelvis-trunk
-        updated_joint_angles_matrix.row(6) <<   0, 
-                                                0,
-                                                0; 
-        // right hip    
-        updated_joint_angles_matrix.row(2) <<   phi_a, 
-                                                -theta, 
-                                                0; 
-        // right ankle
-        updated_joint_angles_matrix.row(1) <<   -phi_a, 
-                                                theta, 
-                                                0;
-    }
-
-
-    return updated_joint_angles_matrix;
-
-    // ... thenUpdate joint positions
-    // call function UpdateLimbPositions to compute the new joint positions
-
-
-}
-
-
-
-
-Eigen::MatrixXd HumanoidModelV0::ComputeJointAnglesGaitSingleSupport(const GenericAgent& agent,
-                                        double step_length, 
-                                        double step_width, 
-                                        // the following argument have to be removed in the future
-                                        double step_duration
-                                    ) const
-
-{
-    auto model = std::get<HumanoidModelV0Data>(agent.model);
-
-    // initialise the updated joint angles matrix
-    Eigen::MatrixXd updated_joint_angles_matrix(11, 3); // 11 joints, 3 angles each
-
-
-    // compute step_complition_factor
-    // this represent the avancement of the curent step. this factor == 1 when the step is over.
-    double step_complition_factor = 1 - model.step_timer/step_duration; 
-
-    // Rotation 
-    // only walk without rotation is implemented for now (rotation_index != 0)
-    double traveled_step_length; // length traveled by the stepping foot during this time step (former "sl_p")
-    double lean_angle; // What is this angle ? // It allows the head to oscillate perdendicularly to the walking direction, so the head trajectory looks like a sine wave
-
-    if (model.step_timer > step_duration/2) {
-        traveled_step_length = 2 * std::pow(step_complition_factor, 2) //
-                                    * (step_complition_factor + step_length) - step_length; 
-        lean_angle  =  (4 * step_complition_factor)*M_PI/180 ;
+        update_gait_motion.pelvis_rotation_angle_z = std::atan2(in_between_feet_vector.y, in_between_feet_vector.x);
+        // update_gait_motion.shoulder_rotation_angle_z = M_PI - update_gait_motion.pelvis_rotation_angle_z; // shoulder rotation is opposite to pelvis rotation
     }
     else 
     {
-        traveled_step_length = step_length - 2 * std::pow(1-step_complition_factor, 2) 
-                                    * (2 * step_length);
-        lean_angle  =  (4 - 4 * step_complition_factor)*M_PI/180 ;
+        update_gait_motion.pelvis_rotation_angle_z = std::atan2(in_between_feet_vector.y, in_between_feet_vector.x) + 2 * M_PI;
+        // update_gait_motion.shoulder_rotation_angle_z = M_PI - update_gait_motion.pelvis_rotation_angle_z; // shoulder rotation is opposite to pelvis rotation
     }
 
-    double theta, phi_a;
-    // only walk without rotation is implemented for now (rotation_index != 0)  
-    theta = asin(traveled_step_length / (2 * model.height * LEG_SCALING_FACTOR));
-    phi_a = asin(((model.height * PELVIS_WIDTH_SCALING_FACTOR - step_width) 
-            / (2 * model.height * LEG_SCALING_FACTOR))+ lean_angle);
-
-
-    // Update joint angles
-    if (model.stepping_foot_index == 1) // if the right foot is support foot (left foot stepping)
+    // shoulder rotation
+    // the shoulder rotation is perpendicular to the agent orientation
+    if (orientation.y >= 0)
     {
-         // right ankle
-        updated_joint_angles_matrix.row(1) <<    phi_a,        
-                                                - theta, 
-                                                0; 
-        // right hip
-        updated_joint_angles_matrix.row(2) <<   -phi_a, 
-                                                theta,
-                                                0; 
-        // pelvis-trunk
-        updated_joint_angles_matrix.row(6) <<   0, 
-                                                0,
-                                                0; 
-        // left hip    
-        updated_joint_angles_matrix.row(3) <<   - phi_a, 
-                                                - theta, 
-                                                0; 
-        // left ankle
-        updated_joint_angles_matrix.row(4) <<   phi_a, 
-                                                theta, 
-                                                0;
-
-    } 
-    else if (model.stepping_foot_index == -1) // if support foot is the left foot, right foot stepping 
-    { 
-       // left ankle
-        updated_joint_angles_matrix.row(4) <<   -phi_a,        
-                                                -theta, 
-                                                0; 
-        // left hip
-        updated_joint_angles_matrix.row(3) <<   phi_a , 
-                                                theta,
-                                                0; 
-        // pelvis-trunk
-        updated_joint_angles_matrix.row(6) <<   0, 
-                                                0,
-                                                0; 
-        // right hip    
-        updated_joint_angles_matrix.row(2) <<   phi_a, 
-                                                -theta, 
-                                                0; 
-        // right ankle
-        updated_joint_angles_matrix.row(1) <<   -phi_a, 
-                                                theta, 
-                                                0;
+        update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x);
+    }
+    else 
+    {
+        update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x) + 2 * M_PI;
     }
 
-    
-    return updated_joint_angles_matrix;
-    
-    // ... thenUpdate joint positions
-    // call function UpdateLimbPositions to compute the new joint positions
+    // //#############
+    // print everything:
+    // Point CoP = update_gait_motion.Xcom 
+    //             - orientation * bx
+    //             - normal_orientation * by * update_gait_motion.stepping_foot_index ;
+    // std::cout << "Actual Step duration: " << (1/(w0))
+    //             * std::log( (step_length/ (update_gait_motion.Xcom - CoP).ScalarProduct(orientation)) + 1) << std::endl;
+    // std::cout << "Step duration: " << update_gait_motion.step_duration << std::endl;
+    // std::cout << "Step timer: " << update_gait_motion.step_timer << std::endl;
+    // std::cout << "Tc: " << Tc << std::endl;
+    // std::cout << " Step length: " << step_length << std::endl;
+    // // std::cout << "Step width: " << step_width << std::endl;
+    // std::cout << "Stepping foot index: " << update_gait_motion.stepping_foot_index << std::endl;
+    // std::cout << "Xcom: " << update_gait_motion.Xcom.x << ", " 
+    //             << update_gait_motion.Xcom.y << std::endl;   
+    // std::cout << "CoP: " << CoP.x << ", "  << CoP.y << std::endl;   
+    // std::cout << "bx: " << bx << ",by: "  << by << std::endl; 
+    // std::cout << "Previous pelvis position: " << model.pelvis_position.x << ", " 
+    // << model.pelvis_position.y << std::endl; 
+    // std::cout << "Updated pelvis position: " << update_gait_motion.pelvis_position.x << ", " 
+    //             << update_gait_motion.pelvis_position.y << std::endl;    
+    // std::cout << "Orientation: " << orientation.x << ", " << orientation.y << std::endl;
+    // std::cout << "Heel right position: " << update_gait_motion.heel_right_position.x << ", " 
+    //             << update_gait_motion.heel_right_position.y << std::endl;
+    // std::cout << "Heel left position: " << update_gait_motion.heel_left_position.x << ", " 
+    //             << update_gait_motion.heel_left_position.y << std::endl;
+    // std::cout << "Xcom - heel_left_position " << (update_gait_motion.Xcom - model.heel_left_position.To2D()).x << ", "
+    // << (update_gait_motion.Xcom - model.heel_left_position.To2D()).y << std::endl;
+    // std::cout << "pelvis - Xcom "<< (update_gait_motion.Xcom - update_gait_motion.pelvis_position.To2D()).Norm()<< std::endl;
+    // std::cout << "update_gait_motion.Xcom - model.Xcom " << (update_gait_motion.Xcom - model.Xcom).Norm() << std::endl;
+    // std::cout << "pelvis_position.z " << update_gait_motion.pelvis_position.z << std::endl;
 
+
+    
+    // std::cin.get();
+// //#############
+
+
+    
+
+    return  update_gait_motion;
 
 }
 
 
-
-Eigen::MatrixXd HumanoidModelV0::ComputeJointPositionsfromJointAngles (
-                            const GenericAgent& agent,
-                            const HumanoidModelV0Update& update, // this is the orientation angle of the agent's frame
-                            Eigen::MatrixXd updated_joint_angles_matrix
-                    
-    ) const
+HumanoidModelV0Update HumanoidModelV0::ComputeMotionPhysicalInteraction(
+                                            const HumanoidModelV0Data& model,
+                                            const HumanoidModelV0Update& update,
+                                            double dT
+                                    ) const
 {
- 
+    // only the pelvis moves with the model velocity, the rest of the body is fixed and orriented as the velocity
+    HumanoidModelV0Update update_gait_motion = update;
+    Point orientation = update_gait_motion.velocity.Normalized(); // To do: make sure the
+    Point normal_orientation = orientation.Rotate90Deg();
+
+
+    update_gait_motion.step_timer = 0; // reset step timer to force new step after colision avoided 
+    update_gait_motion.step_duration = 0; // reset step duration to forse a step from a standing position
     
-    // Get the model data from the agent
-    auto model = std::get<HumanoidModelV0Data>(agent.model);
+    // pelvis position
+    update_gait_motion.pelvis_position.x = model.pelvis_position.x + update_gait_motion.velocity.x * dT;
+    update_gait_motion.pelvis_position.y = model.pelvis_position.y + update_gait_motion.velocity.y * dT;
+    update_gait_motion.pelvis_position.z = model.pelvis_position.z; 
 
-    
-    // initialise the updated joint positions matrix
-    Eigen::MatrixXd updated_joint_positions_matrix; 
-    updated_joint_positions_matrix = Eigen::MatrixXd::Zero(11, 3); // 11 joints, 3 positions each
+    // update Xcom position
+    update_gait_motion.Xcom = update_gait_motion.pelvis_position.To2D() + orientation * model.radius;
 
-
-    // Compute all segment lengths based on the model height
-    // double foot_forward_length = model.height * FOOT_FORWARD_LENGTH_SCALING_FACTOR;
-    double foot_backward_length = model.height * FOOT_BACKWARD_SCALING_FACTOR;
-    double ankle_length = model.height * ANKLE_SCALING_FACTOR;
-    double leg_length = model.height * LEG_SCALING_FACTOR; 
-    double pelvis_width = model.height * PELVIS_WIDTH_SCALING_FACTOR;
-    double neck_length = model.height * NECK_SCALING_FACTOR;
-    // double shoulder_width = model.height * SHOULDER_WIDTH_SCALING_FACTOR;
-    double trunk_length = model.height * TRUNK_HEIGHT_SCALING_FACTOR;
-    // double trunk_width = model.height * TRUNK_WIDTH_SCALING_FACTOR;
+    // update head position
+    update_gait_motion.head_position = update_gait_motion.pelvis_position;
+    update_gait_motion.head_position.z = model.head_position.z;
 
 
-
-    // Tranformation from the Agent frame to the World frame
-    double updated_orientation_angle = acos(update.velocity.Normalized().x);
-    if (update.velocity.Normalized().x < 0) {
-        updated_orientation_angle = 2 * M_PI - updated_orientation_angle; // adjust the angle to be in the range [0, 2*pi] 
+    // shoulder rotation
+    // the shoulder rotation is perpendicular to the agent orientation
+    if (orientation.y >= 0)
+    {
+        update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x);
     }
-    // this transformation is used to compute the position of the joints in the world frame
-    Eigen::Matrix4d T_world_agent = CreateTransformationMatrix(
-        Eigen::Vector3d(update.position.x, update.position.y, leg_length+ankle_length), 
-        Eigen::Vector3d(0, 0, updated_orientation_angle) // rotation vector (yaw angle)
-    );
-    Eigen::Vector4d origin_vector ={0,0,0,1}; // origin vector for the computation of the joint positions
+    else 
+    {
+        update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x) + 2 * M_PI;
+    }
 
-    // pelvis ==> no translation, only rotation
-    Eigen::Matrix4d T_agent_pelvis = CreateTransformationMatrix(
-        Eigen::Vector3d(0, 0, 0), // no translation
-        Eigen::Vector3d(updated_joint_angles_matrix.row(6)) // rotation of the pelvis
-    );
-    Eigen::Vector4d pelvis_vector =     T_world_agent   
-                                        * T_agent_pelvis * origin_vector; // position of the pelvis in the world frame
-    updated_joint_positions_matrix.row(6) <<    pelvis_vector[0], 
-                                                pelvis_vector[1], 
-                                                pelvis_vector[2]; // update the position of the pelvis
 
-    //  right hip ==> translation of -pelvis_width/2 along the y-axis 
-    Eigen::Matrix4d T_pelvis_righthip  = CreateTransformationMatrix(
-        Eigen::Vector3d(-pelvis_width/2, 0, 0),  // translation of -pelvis_width/2 along the y-axis 
-        Eigen::Vector3d(updated_joint_angles_matrix.row(2)) // rotation of the right hip joint
-    ); 
-
-    Eigen::Vector4d right_hip_vector =  T_world_agent 
-                                        * T_agent_pelvis 
-                                        * T_pelvis_righthip * origin_vector; // position of the right hip in the world frame
-    updated_joint_positions_matrix.row(2) <<    right_hip_vector[0], 
-                                                right_hip_vector[1], 
-                                                right_hip_vector[2]; // update the position of the right hip
+    // left foot
+    update_gait_motion.heel_left_position.x = update_gait_motion.pelvis_position.x 
+                                            + normal_orientation.x * model.height * PELVIS_WIDTH_SCALING_FACTOR *0.5;
+    update_gait_motion.heel_left_position.y = update_gait_motion.pelvis_position.y 
+                                            + normal_orientation.y * model.height * PELVIS_WIDTH_SCALING_FACTOR *0.5;
+    update_gait_motion.heel_left_position.z = 0;
     
-    //  right ankle ==> translation of -leg_length along the z-axis
-    Eigen::Matrix4d T_righthip_rightankle = CreateTransformationMatrix(
-        Eigen::Vector3d(0, 0, -leg_length), // translation of -leg_length along the z-axis
-        Eigen::Vector3d(updated_joint_angles_matrix.row(1)) // rotation of the right ankle joint
-    );
-    
-    Eigen::Vector4d right_ankle_vector =    T_world_agent 
-                                            * T_agent_pelvis 
-                                            * T_pelvis_righthip 
-                                            * T_righthip_rightankle * origin_vector;
-    updated_joint_positions_matrix.row(1) <<    right_ankle_vector[0],
-                                                right_ankle_vector[1], 
-                                                right_ankle_vector[2]; // update the position of the right ankle
-                                                
-    //  right heel ==> translation of -ankle_length along the z-axis and -foot_backward_length along the x-axis
-    Eigen::Matrix4d T_rightankle_rightheel = CreateTransformationMatrix(
-        Eigen::Vector3d(-foot_backward_length, 0, -ankle_length),               
-        Eigen::Vector3d(0, 0, 0) // no rotation for the heel
-    );
-    Eigen::Vector4d right_heel_vector =     T_world_agent 
-                                            * T_agent_pelvis
-                                            * T_pelvis_righthip 
-                                            * T_righthip_rightankle 
-                                            * T_rightankle_rightheel * origin_vector;
-    updated_joint_positions_matrix.row(0) <<    right_heel_vector[0],
-                                                right_heel_vector[1], 
-                                                right_heel_vector[2]; // update the position of the right heel
 
-    //  left hip ==> translation of pelvis_width/2 along the y-axis
-    Eigen::Matrix4d T_pelvis_lefthip = CreateTransformationMatrix(
-        Eigen::Vector3d(pelvis_width/2, 0, 0), // translation of pelvis_width/2 along the y-axis 
-        Eigen::Vector3d(updated_joint_angles_matrix.row(3)) // rotation of the left hip joint
-    );
-    
-    Eigen::Vector4d left_hip_vector =      T_world_agent 
-                                            * T_agent_pelvis 
-                                            * T_pelvis_lefthip * origin_vector;
-                                            
-    updated_joint_positions_matrix.row(3) <<    left_hip_vector[0],
-                                                left_hip_vector[1], 
-                                                left_hip_vector[2]; // update the position of the left hip
-    //  left ankle ==> translation of -leg_length along the z-axis
-    Eigen::Matrix4d T_lefthip_leftankle = CreateTransformationMatrix(
-        Eigen::Vector3d(0, 0, -leg_length), // translation of -leg_length along the z-axis
-        Eigen::Vector3d(updated_joint_angles_matrix.row(4)) // rotation of the left ankle joint
-    );
-    
-    Eigen::Vector4d left_ankle_vector =    T_world_agent 
-                                            * T_agent_pelvis 
-                                            * T_pelvis_lefthip 
-                                            * T_lefthip_leftankle * origin_vector;
-    updated_joint_positions_matrix.row(4) <<    left_ankle_vector[0],
-                                                left_ankle_vector[1], 
-                                                left_ankle_vector[2]; // update the position of the left ankle
+    update_gait_motion.toe_left_position.x = update_gait_motion.heel_left_position.x 
+                                            + orientation.x * model.height * (FOOT_BACKWARD_SCALING_FACTOR + FOOT_FORWARD_SCALING_FACTOR);
+    update_gait_motion.toe_left_position.y = update_gait_motion.heel_left_position.y
+                                            + orientation.y * model.height * (FOOT_BACKWARD_SCALING_FACTOR + FOOT_FORWARD_SCALING_FACTOR);
+    update_gait_motion.toe_left_position.z = 0;
 
-    //  left heel ==> translation of -ankle_length along the z-axis and -foot_backward_length along the x-axis
-    Eigen::Matrix4d T_leftankle_leftheel = CreateTransformationMatrix(
-        Eigen::Vector3d(-foot_backward_length, 0, -ankle_length), // translation of -foot_backward_length along the x-axis and -ankle_length along the z-axis
-        Eigen::Vector3d(0, 0, 0) // no rotation for the heel
-    );
-    Eigen::Vector4d left_heel_vector =     T_world_agent 
-                                            * T_agent_pelvis
-                                            * T_pelvis_lefthip 
-                                            * T_lefthip_leftankle 
-                                            * T_leftankle_leftheel * origin_vector;
-    updated_joint_positions_matrix.row(5) <<    left_heel_vector[0],
-                                                left_heel_vector[1], 
-                                                left_heel_vector[2]; // update the position of the left heel
-
-    //  C7/trunk ==> translation of trunk_length along the z-axis 
-    Eigen::Matrix4d T_pelvis_trunk = CreateTransformationMatrix(
-        Eigen::Vector3d(0, 0, trunk_length), // translation of trunk_length along the z-axis
-        Eigen::Vector3d(updated_joint_angles_matrix.row(8)) // rotation of the trunk joint
-    );
-    Eigen::Vector4d trunk_vector =        T_world_agent 
-                                            * T_agent_pelvis 
-                                            * T_pelvis_trunk * origin_vector;
-    updated_joint_positions_matrix.row(8) <<    trunk_vector[0],
-                                                trunk_vector[1], 
-                                                trunk_vector[2]; // update the position of the trunk
-
-    //  head ==> translation of neck_length along the z-axis
-    Eigen::Matrix4d T_trunk_head = CreateTransformationMatrix(
-        Eigen::Vector3d(0, 0, neck_length), // translation of neck_length along the z-axis
-        Eigen::Vector3d(updated_joint_angles_matrix.row(10)) // rotation of the head joint
-    );
-    Eigen::Vector4d head_vector =         T_world_agent 
-                                            * T_agent_pelvis 
-                                            * T_pelvis_trunk 
-                                            * T_trunk_head * origin_vector;
-    updated_joint_positions_matrix.row(10) <<   head_vector[0],
-                                                head_vector[1], 
-                                                head_vector[2]; // update the position of the head
+    // right foot
+    update_gait_motion.heel_right_position.x = update_gait_motion.pelvis_position.x 
+                                            - normal_orientation.x * model.height * PELVIS_WIDTH_SCALING_FACTOR *0.5;
+    update_gait_motion.heel_right_position.y = update_gait_motion.pelvis_position.y 
+                                            - normal_orientation.y * model.height * PELVIS_WIDTH_SCALING_FACTOR *0.5;
+    update_gait_motion.heel_right_position.z = 0;
 
 
-    return updated_joint_positions_matrix;
+    update_gait_motion.toe_right_position.x = update_gait_motion.heel_right_position.x 
+                                            + orientation.x * model.height * (FOOT_BACKWARD_SCALING_FACTOR + FOOT_FORWARD_SCALING_FACTOR);
+    update_gait_motion.toe_right_position.y = update_gait_motion.heel_right_position.y
+                                            + orientation.y * model.height * (FOOT_BACKWARD_SCALING_FACTOR + FOOT_FORWARD_SCALING_FACTOR);
+    update_gait_motion.toe_right_position.z = 0;
+
+    return update_gait_motion; // return the updated gait motion
+
 }
 
 
 
+
+
+
+// To Do:   - make the sopport foot rotate with the velocity direction

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 #pragma once
 
+#include "Point.hpp"
 #include <fmt/format.h>
-
 #include <cmath>
 #include <iostream>
 #include <string>
@@ -34,6 +34,7 @@ public:
     /// dot product
     inline double ScalarProduct(const Point3D& v) const { return x * v.x + y * v.y + z*v.z; }
 
+    inline Point To2D() const { return Point(x, y); }
 
     /// Tests that the vector is length 1
     /// @return length == 1
