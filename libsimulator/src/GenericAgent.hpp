@@ -7,6 +7,7 @@
 #include "OperationalModel.hpp"
 #include "Point.hpp"
 #include "SocialForceModelData.hpp"
+#include "SocialForceModelIPPData.hpp"
 #include "UniqueID.hpp"
 #include "Visitor.hpp"
 
@@ -34,7 +35,8 @@ struct GenericAgent {
         CollisionFreeSpeedModelData,
         CollisionFreeSpeedModelV2Data,
         AnticipationVelocityModelData,
-        SocialForceModelData>;
+        SocialForceModelData,
+        SocialForceModelIPPData>;
     Model model{};
 
     GenericAgent(
@@ -92,6 +94,20 @@ struct fmt::formatter<GenericAgent> {
                         m);
                 }},
             [&ctx, &agent](const SocialForceModelData& m) {
+                return fmt::format_to(
+                    ctx.out(),
+                    "Agent[id={}, journey={}, stage={}, destination={}, waypoint={}, pos={}, "
+                    "orientation={}, model={})",
+                    agent.id,
+                    agent.journeyId,
+                    agent.stageId,
+                    agent.destination,
+                    agent.target,
+                    agent.pos,
+                    agent.orientation,
+                    m);
+            },
+            [&ctx, &agent](const SocialForceModelIPPData& m) {
                 return fmt::format_to(
                     ctx.out(),
                     "Agent[id={}, journey={}, stage={}, destination={}, waypoint={}, pos={}, "

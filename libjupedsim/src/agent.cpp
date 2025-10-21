@@ -93,6 +93,8 @@ JPS_ModelType JPS_Agent_GetModelType(JPS_Agent handle)
             return JPS_AnticipationVelocityModel;
         case 4:
             return JPS_SocialForceModel;
+        case 5:
+            return JPS_SocialForceModelIPP;
     }
     UNREACHABLE();
 }
@@ -189,6 +191,27 @@ JPS_Agent_GetSocialForceModelState(JPS_Agent handle, JPS_ErrorMessage* errorMess
     try {
         auto& model = std::get<SocialForceModelData>(agent->model);
         return reinterpret_cast<JPS_SocialForceModelState>(&model);
+    } catch(const std::exception& ex) {
+        if(errorMessage) {
+            *errorMessage = reinterpret_cast<JPS_ErrorMessage>(new JPS_ErrorMessage_t{ex.what()});
+        }
+    } catch(...) {
+        if(errorMessage) {
+            *errorMessage = reinterpret_cast<JPS_ErrorMessage>(
+                new JPS_ErrorMessage_t{"Unknown internal error."});
+        }
+    }
+    return nullptr;
+}
+
+JPS_SocialForceModelIPPState
+JPS_Agent_GetSocialForceModelIPPState(JPS_Agent handle, JPS_ErrorMessage* errorMessage)
+{
+    assert(handle);
+    const auto agent = reinterpret_cast<GenericAgent*>(handle);
+    try {
+        auto& model = std::get<SocialForceModelIPPData>(agent->model);
+        return reinterpret_cast<JPS_SocialForceModelIPPState>(&model);
     } catch(const std::exception& ex) {
         if(errorMessage) {
             *errorMessage = reinterpret_cast<JPS_ErrorMessage>(new JPS_ErrorMessage_t{ex.what()});

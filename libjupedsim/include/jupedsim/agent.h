@@ -8,6 +8,7 @@
 #include "export.h"
 #include "generalized_centrifugal_force_model.h"
 #include "social_force_model.h"
+#include "social_force_model_IPP.h"
 #include "types.h"
 
 #include <stdbool.h> /*NOLINT(modernize-deprecated-headers)*/
@@ -105,6 +106,17 @@ JPS_Agent_GetCollisionFreeSpeedModelState(JPS_Agent handle, JPS_ErrorMessage* er
  */
 JUPEDSIM_API JPS_SocialForceModelState
 JPS_Agent_GetSocialForceModelState(JPS_Agent handle, JPS_ErrorMessage* errorMessage);
+
+/**
+ * Access Social Force model with Inverted Pendulum Paradigm for agent representation state.
+ * Precondition: Agent needs to use Social Force model with Inverted Pendulum model
+ * @param handle of the agent to access.
+ * @param[out] errorMessage if not NULL: will be set to a JPS_ErrorMessage in case of an error.
+ * @return state or NULL on error
+ */
+JUPEDSIM_API JPS_SocialForceModelIPPState
+JPS_Agent_GetSocialForceModelIPPState(JPS_Agent handle, JPS_ErrorMessage* errorMessage);
+
 
 /**
  * Access Collision Free Speed model V2 state.
