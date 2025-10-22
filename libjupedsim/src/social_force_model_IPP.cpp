@@ -68,6 +68,37 @@ JPS_SocialForceModelIPPState_SetVelocity(JPS_SocialForceModelIPPState handle, JP
     state->velocity = intoPoint(velocity);
 }
 
+JUPEDSIM_API JPS_Point JPS_SocialForceModelIPPState_GetGroundSupportPosition(JPS_SocialForceModelIPPState handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const SocialForceModelIPPData*>(handle);
+    return intoJPS_Point(state->ground_support_position);
+}
+
+JUPEDSIM_API void
+JPS_SocialForceModelIPPState_SetGroundSupportPosition(JPS_SocialForceModelIPPState handle, JPS_Point ground_support_position)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<SocialForceModelIPPData*>(handle);
+    state->ground_support_position = intoPoint(ground_support_position);;
+}
+
+
+JUPEDSIM_API JPS_Point JPS_SocialForceModelIPPState_GetGroundSupportVelocity(JPS_SocialForceModelIPPState handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const SocialForceModelIPPData*>(handle);
+    return intoJPS_Point(state->ground_support_velocity);
+}
+
+JUPEDSIM_API void
+JPS_SocialForceModelIPPState_SetGroundSupportVelocity(JPS_SocialForceModelIPPState handle, JPS_Point ground_support_velocity)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<SocialForceModelIPPData*>(handle);
+    state->ground_support_velocity = intoPoint(ground_support_velocity);;
+}
+
 JUPEDSIM_API double JPS_SocialForceModelIPPState_GetMass(JPS_SocialForceModelIPPState handle)
 {
     assert(handle);

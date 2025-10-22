@@ -386,6 +386,8 @@ JPS_AgentId JPS_Simulation_AddSocialForceModelIPPAgent(
             intoPoint(parameters.orientation),
             SocialForceModelIPPData{
                 intoPoint(parameters.velocity),
+                intoPoint(parameters.ground_support_position),
+                intoPoint(parameters.ground_support_velocity),
                 parameters.mass,
                 parameters.desiredSpeed,
                 parameters.reactionTime,

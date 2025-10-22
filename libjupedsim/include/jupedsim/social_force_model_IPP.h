@@ -63,6 +63,38 @@ JUPEDSIM_API void
 JPS_SocialForceModelIPPState_SetVelocity(JPS_SocialForceModelIPPState handle, JPS_Point velocity);
 
 /**
+ * Read ground support position of this agent.
+ * @param handle of the Agent to access.
+ * @return Ground support position of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_SocialForceModelIPPState_GetGroundSupportPosition(JPS_SocialForceModelIPPState handle);
+
+/**
+ * Write Ground support position of this agent.
+ * @param handle of the Agent to access.
+ * @param Ground support position of this agent.
+ */
+JUPEDSIM_API void
+JPS_SocialForceModelIPPState_SetGroundSupportPosition(JPS_SocialForceModelIPPState handle, JPS_Point ground_support_position);
+
+
+/**
+ * Read ground support position of this agent.
+ * @param handle of the Agent to access.
+ * @return Ground support position of this agent.
+ */
+JUPEDSIM_API JPS_Point JPS_SocialForceModelIPPState_GetGroundSupportVelocity(JPS_SocialForceModelIPPState handle);
+
+/**
+ * Write Ground support position of this agent.
+ * @param handle of the Agent to access.
+ * @param Ground support position of this agent.
+ */
+JUPEDSIM_API void
+JPS_SocialForceModelIPPState_SetGroundSupportVelocity(JPS_SocialForceModelIPPState handle, JPS_Point ground_support_position);
+
+
+/**
  * Read mass of this agent.
  * @param handle of the Agent to access.
  * @return mass in kg of this agent
@@ -192,6 +224,14 @@ typedef struct JPS_SocialForceModelIPPAgentParameters {
      * Initial velocity of the Agent
      */
     JPS_Point velocity = {0, 0};
+    /**
+     * Initial Ground support position of the Agent
+     */
+    JPS_Point ground_support_position = {0, 0};
+    /**
+     * Initial Ground support velocity of the Agent
+     */
+    JPS_Point ground_support_velocity = {0, 0};
     /**
      * Mass of the agent
      */
