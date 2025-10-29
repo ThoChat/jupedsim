@@ -36,67 +36,102 @@ OperationalModelUpdate SocialForceModelIPP::ComputeNewPosition(
 {
     const auto& model = std::get<SocialForceModelIPPData>(ped.model);
     SocialForceModelIPPUpdate update{};
-    auto forces = DrivingForce(ped);
-
+    
     const auto neighborhood = neighborhoodSearch.GetNeighboringAgents(ped.pos, this->_cutOffRadius);
-    Point F_rep;
+    const auto& walls = geometry.LineSegmentsInApproxDistanceTo(ped.pos);
+
+    // Collision avoidance model: Social Forces
+    auto social_forces = DrivingForce(ped);
+    Point F_rep_agents;
     for(const auto& neighbor : neighborhood) {
         if(neighbor.id == ped.id) {
             continue;
         }
-        F_rep += AgentForce(ped, neighbor);
+        F_rep_agents += AgentSocialForce(ped, neighbor);
     }
-    forces += F_rep / model.mass;
-    const auto& walls = geometry.LineSegmentsInApproxDistanceTo(ped.pos);
+    social_forces += F_rep_agents / model.mass;
 
-    const auto obstacle_f = std::accumulate(
+    const auto F_social_obstacles = std::accumulate(
         walls.cbegin(),
         walls.cend(),
         Point(0, 0),
         [this, &ped](const auto& acc, const auto& element) {
-            return acc + ObstacleForce(ped, element);
+            return acc + ObstacleSocialForce(ped, element);
         });
-    forces += obstacle_f / model.mass;
+    social_forces += F_social_obstacles / model.mass;
 
 
 
-    // IPP model parameteres
-    // Model Antoine
-    // Point vb = 1; // balancing speed
-    // double lambda_u = 0.5; // unbalancing rate
-    // double lambda_b = 1; // Balancing rate
+    // Physical interactions: Contact forces
+    Point contact_forces;
+    for(const auto& neighbor : neighborhood) {
+        if(neighbor.id == ped.id) {
+            continue;
+        }
+        F_rep_agents += AgentContactForce(ped, neighbor);
+    }
+    contact_forces += F_rep_agents / model.mass;
 
-    // update.velocity = model.velocity + ( ( - vb - model.velocity) * lambda_u - model.velocity + forces) * dT;
-    
-    // update.ground_support_velocity =    model.ground_support_velocity + 
-    //                                     (   
-    //                                         (vb - model.velocity) * lambda_b 
-    //                                     )* dT;
-                    
-    // update.position = ped.pos + update.velocity * dT;
-    // update.ground_support_position = model.ground_support_position + update.ground_support_velocity * dT;
+    const auto F_contact_obstacles = std::accumulate(
+        walls.cbegin(),
+        walls.cend(),
+        Point(0, 0),
+        [this, &ped](const auto& acc, const auto& element) {
+            return acc + ObstacleSocialForce(ped, element);
+        });
+    contact_forces += F_contact_obstacles / model.mass;
 
 
 
-
-
-    // // model perso 
-    double lambda_friction = 0.5; 
-    Point vb = 1; // balancing speed
-    double lambda_u = 0.5; // unbalancing rate
-    double lambda_b = 10; // Balancing rate
-
-    update.velocity = model.velocity + ( ( - vb - model.velocity) * lambda_u - model.velocity + forces) * dT;
-    update.position = ped.pos + update.velocity * dT;
-    update.ground_support_velocity =    model.ground_support_velocity + 
+    if (contact_forces.Norm() < 0.01) {
+        // Locomotion mode
+        // The upper body follow the gorund support
+        // ## ground support 
+        update.ground_support_velocity =    model.ground_support_velocity + 
                                         (   
-                                            (ped.pos - model.ground_support_position) * lambda_b 
-                                            - model.ground_support_velocity * lambda_friction
+                                            social_forces
                                         )* dT;
-    update.ground_support_position = model.ground_support_position + update.ground_support_velocity * dT;
+        update.ground_support_position = model.ground_support_position + update.ground_support_velocity * dT;
+
+        // ## upper body
+        update.velocity = model.velocity 
+                                    + ( 
+                                        (update.ground_support_position - ped.pos) * LAMBDA_LOCOMOTION_1 
+                                        + (update.ground_support_velocity - model.velocity) * LAMBDA_LOCOMOTION_2
+                                        - model.velocity * LAMBDA_LOCOMOTION_3
+                                    ) * dT;
+        update.position = ped.pos + update.velocity * dT;
+
+
+
+    } else {
+        // Recovery mode
+        // The ground support follow the upper body, The contact and colision avoidance comes from the upper body
+        // ## upper body
+        update.velocity = model.velocity 
+                                    + ( 
+                                        social_forces
+                                        + contact_forces
+                                        - model.velocity * LAMBDA_RECOVERY_3
+                                    ) * dT;
+        update.position = ped.pos + update.velocity * dT;
+
+        // ## ground support
+        update.ground_support_velocity =    model.ground_support_velocity +
+                                        (   
+                                            (update.position - model.ground_support_position) * LAMBDA_RECOVERY_1 
+                                            + (update.velocity - model.ground_support_velocity) * LAMBDA_RECOVERY_2
+                                            - model.ground_support_velocity * LAMBDA_RECOVERY_3
+                                        )* dT;
+        update.ground_support_position = model.ground_support_position + update.ground_support_velocity * dT;
+    }
+
+
+
+    
 
     // printf(
-    //     "pos=(%.2f, %.2f), vel=(%.2f, %.2f), gs_pos=(%.2f, %.2f), gs_vel=(%.2f, %.2f)\n",
+    //     "pos=(%.2f, %.2f), vel=(%.2f, %.2f), gs_pos=(%.2f, %.2f), gs_vel=(%.2f, %.2f)\n forces=(%.2f, %.2f)\n",
     //     update.position.x,
     //     update.position.y,
     //     update.velocity.x,
@@ -104,7 +139,8 @@ OperationalModelUpdate SocialForceModelIPP::ComputeNewPosition(
     //     update.ground_support_position.x,
     //     update.ground_support_position.y,
     //     update.ground_support_velocity.x,
-    //     update.ground_support_velocity.y);
+    //     update.ground_support_velocity.y,
+    //     forces.x, forces.y);
     // std::cin.get(); //pause
 
     return update;
@@ -190,48 +226,82 @@ double SocialForceModelIPP::PushingForceLength(double A, double B, double r, dou
     return A * exp((r - distance) / B);
 }
 
-Point SocialForceModelIPP::AgentForce(const GenericAgent& ped1, const GenericAgent& ped2) const
+Point SocialForceModelIPP::AgentSocialForce(const GenericAgent& ped1, const GenericAgent& ped2) const
 {
     const auto& model1 = std::get<SocialForceModelIPPData>(ped1.model);
     const auto& model2 = std::get<SocialForceModelIPPData>(ped2.model);
 
     const double total_radius = model1.radius + model2.radius;
 
-    return ForceBetweenPoints(
+    return SocialForceBetweenPoints(
         ped1.pos,
         ped2.pos,
         model1.agentScale,
         model1.forceDistance,
+        total_radius);
+};
+
+Point SocialForceModelIPP::ObstacleSocialForce(const GenericAgent& agent, const LineSegment& segment) const
+{
+    const auto& model = std::get<SocialForceModelIPPData>(agent.model);
+    const Point pt = segment.ShortestPoint(agent.pos);
+    return SocialForceBetweenPoints(
+        agent.pos, pt, model.obstacleScale, model.forceDistance, model.radius);
+}
+
+Point SocialForceModelIPP::AgentContactForce(const GenericAgent& ped1, const GenericAgent& ped2) const
+{
+    const auto& model1 = std::get<SocialForceModelIPPData>(ped1.model);
+    const auto& model2 = std::get<SocialForceModelIPPData>(ped2.model);
+
+    const double total_radius = model1.radius + model2.radius;
+
+    return ContactForceBetweenPoints(
+        ped1.pos,
+        ped2.pos,
         total_radius,
         model2.velocity - model1.velocity);
 };
 
-Point SocialForceModelIPP::ObstacleForce(const GenericAgent& agent, const LineSegment& segment) const
+Point SocialForceModelIPP::ObstacleContactForce(const GenericAgent& agent, const LineSegment& segment) const
 {
     const auto& model = std::get<SocialForceModelIPPData>(agent.model);
     const Point pt = segment.ShortestPoint(agent.pos);
-    return ForceBetweenPoints(
-        agent.pos, pt, model.obstacleScale, model.forceDistance, model.radius, model.velocity);
+    return ContactForceBetweenPoints(
+        agent.pos, pt, model.radius, model.velocity);
 }
 
-Point SocialForceModelIPP::ForceBetweenPoints(
+
+Point SocialForceModelIPP::SocialForceBetweenPoints(
     const Point pt1,
     const Point pt2,
     const double A,
     const double B,
+    const double radius) const
+{
+    // todo reduce range of force to 180 degrees
+    const double dist = (pt1 - pt2).Norm();
+    double pushing_force_norm = PushingForceLength(A, B, radius, dist); // if == 0, the SF model is removed, only physical interactions are taken into account 
+    const Point n_ij = (pt1 - pt2).Normalized();
+    return n_ij * pushing_force_norm;
+}
+
+Point SocialForceModelIPP::ContactForceBetweenPoints(
+    const Point pt1,
+    const Point pt2,
     const double radius,
     const Point velocity) const
 {
     // todo reduce range of force to 180 degrees
     const double dist = (pt1 - pt2).Norm();
-    double pushing_force_length = PushingForceLength(A, B, radius, dist);
-    double friction_force_length = 0;
+    double pushing_force_norm = 0;
+    double friction_force_norm = 0;
     const Point n_ij = (pt1 - pt2).Normalized();
     const Point tangent = n_ij.Rotate90Deg();
     if(dist < radius) {
-        pushing_force_length += this->bodyForce * (radius - dist);
-        friction_force_length =
+        pushing_force_norm += this->bodyForce * (radius - dist);
+        friction_force_norm =
             this->friction * (radius - dist) * (velocity.ScalarProduct(tangent));
     }
-    return n_ij * pushing_force_length + tangent * friction_force_length;
+    return n_ij * pushing_force_norm + tangent * friction_force_norm;
 }
