@@ -22,6 +22,7 @@ void init_social_force_model_IPP(py::module_& m)
                         std::tuple<double, double> velocity,
                         std::tuple<double, double> ground_support_position,
                         std::tuple<double, double> ground_support_velocity,
+                        double height,
                         double mass,
                         double desiredSpeed,
                         double reactionTime,
@@ -37,6 +38,7 @@ void init_social_force_model_IPP(py::module_& m)
                     intoJPS_Point(velocity),
                     intoJPS_Point(ground_support_position),
                     intoJPS_Point(ground_support_velocity),
+                    height,
                     mass,
                     desiredSpeed,
                     reactionTime,
@@ -53,6 +55,7 @@ void init_social_force_model_IPP(py::module_& m)
             py::arg("velocity"),
             py::arg("ground_support_position"),
             py::arg("ground_support_velocity"),
+            py::arg("height"),
             py::arg("mass"),
             py::arg("desired_speed"),
             py::arg("reaction_time"),
@@ -63,7 +66,7 @@ void init_social_force_model_IPP(py::module_& m)
         .def("__repr__", [](const JPS_SocialForceModelIPPAgentParameters& p) {
             return fmt::format(
                 "position: {}, orientation: {}, journey_id: {}, stage_id: {},"
-                "velocity: {}, ground_support_position: {}, ground_support_velocity: {}, mass: {}, desiredSpeed: {},"
+                "velocity: {}, ground_support_position: {}, ground_support_velocity: {}, height: {}, mass: {}, desiredSpeed: {},"
                 "reactionTime: {}, agentScale: {}, obstacleScale: {}, forceDistance: {}, radius: "
                 "{}",
                 intoTuple(p.position),
@@ -73,6 +76,7 @@ void init_social_force_model_IPP(py::module_& m)
                 intoTuple(p.velocity),
                 intoTuple(p.ground_support_position),
                 intoTuple(p.ground_support_velocity),
+                p.height,
                 p.mass,
                 p.desiredSpeed,
                 p.reactionTime,
@@ -126,6 +130,14 @@ void init_social_force_model_IPP(py::module_& m)
             [](JPS_SocialForceModelIPPState_Wrapper& w, std::tuple<double, double> ground_support_velocity) {
                 JPS_SocialForceModelIPPState_SetGroundSupportVelocity(
                     w.handle, intoJPS_Point(ground_support_velocity));
+            })
+        .def_property(
+            "height",
+            [](const JPS_SocialForceModelIPPState_Wrapper& w) {
+                return JPS_SocialForceModelIPPState_GetHeight(w.handle);
+            },
+            [](JPS_SocialForceModelIPPState_Wrapper& w, double height) {
+                JPS_SocialForceModelIPPState_SetHeight(w.handle, height);
             })
         .def_property(
             "mass",

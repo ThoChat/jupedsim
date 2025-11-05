@@ -108,11 +108,16 @@ OperationalModelUpdate SocialForceModelIPP::ComputeNewPosition(
         // Recovery mode
         // The ground support follow the upper body, The contact and colision avoidance comes from the upper body
         // ## upper body
+        // double lean_angle = atan2(Distance(ped.pos, model.ground_support_position)
+        //                         , LEG_SCALING_FACTOR * model.height);
+        // Point gravity_force =   (ped.pos - model.ground_support_position).Normalized() 
+        //                         * model.mass * g * sin(lean_angle); 
         update.velocity = model.velocity 
                                     + ( 
                                         social_forces
                                         + contact_forces
-                                        - model.velocity * LAMBDA_RECOVERY_3
+                                        // + gravity_force
+                                        // - model.velocity * LAMBDA_RECOVERY_3
                                     ) * dT;
         update.position = ped.pos + update.velocity * dT;
 
@@ -231,14 +236,14 @@ Point SocialForceModelIPP::AgentSocialForce(const GenericAgent& ped1, const Gene
     const auto& model1 = std::get<SocialForceModelIPPData>(ped1.model);
     const auto& model2 = std::get<SocialForceModelIPPData>(ped2.model);
 
-    const double total_radius = model1.radius + model2.radius;
+    const double radiuses_sum = model1.radius + model2.radius;
 
     return SocialForceBetweenPoints(
         ped1.pos,
         ped2.pos,
         model1.agentScale,
         model1.forceDistance,
-        total_radius);
+        radiuses_sum);
 };
 
 Point SocialForceModelIPP::ObstacleSocialForce(const GenericAgent& agent, const LineSegment& segment) const
@@ -254,12 +259,12 @@ Point SocialForceModelIPP::AgentContactForce(const GenericAgent& ped1, const Gen
     const auto& model1 = std::get<SocialForceModelIPPData>(ped1.model);
     const auto& model2 = std::get<SocialForceModelIPPData>(ped2.model);
 
-    const double total_radius = model1.radius + model2.radius;
+    const double radiuses_sum = model1.radius + model2.radius;
 
     return ContactForceBetweenPoints(
         ped1.pos,
         ped2.pos,
-        total_radius,
+        radiuses_sum,
         model2.velocity - model1.velocity);
 };
 
@@ -277,11 +282,11 @@ Point SocialForceModelIPP::SocialForceBetweenPoints(
     const Point pt2,
     const double A,
     const double B,
-    const double radius) const
+    const double radiuses_sum) const
 {
     // todo reduce range of force to 180 degrees
     const double dist = (pt1 - pt2).Norm();
-    double pushing_force_norm = PushingForceLength(A, B, radius, dist); // if == 0, the SF model is removed, only physical interactions are taken into account 
+    double pushing_force_norm = PushingForceLength(A, B, radiuses_sum, dist); // if == 0, the SF model is removed, only physical interactions are taken into account 
     const Point n_ij = (pt1 - pt2).Normalized();
     return n_ij * pushing_force_norm;
 }
@@ -289,7 +294,7 @@ Point SocialForceModelIPP::SocialForceBetweenPoints(
 Point SocialForceModelIPP::ContactForceBetweenPoints(
     const Point pt1,
     const Point pt2,
-    const double radius,
+    const double radiuses_sum,
     const Point velocity) const
 {
     // todo reduce range of force to 180 degrees
@@ -298,10 +303,20 @@ Point SocialForceModelIPP::ContactForceBetweenPoints(
     double friction_force_norm = 0;
     const Point n_ij = (pt1 - pt2).Normalized();
     const Point tangent = n_ij.Rotate90Deg();
-    if(dist < radius) {
-        pushing_force_norm += this->bodyForce * (radius - dist);
+    if(dist < radiuses_sum) {
+        pushing_force_norm += std::pow(1 - (dist / radiuses_sum), 1.5);
+        // original SFM: this->bodyForce * (radiuses_sum - dist);
         friction_force_norm =
-            this->friction * (radius - dist) * (velocity.ScalarProduct(tangent));
+            this->friction * (radiuses_sum - dist) * (velocity.ScalarProduct(tangent));
     }
     return n_ij * pushing_force_norm + tangent * friction_force_norm;
 }
+
+/*
+To Do:
+    - compute GS circle radius based on it (the height will have to be exported in the output file)
+    - Add contact between feets
+    - Add gravity term during recovery phase
+
+
+*/

@@ -76,6 +76,7 @@ class SocialForceModelIPPAgentParameters:
         velocity: current velocity of the agent.
         ground_support_position: current position of the center of the ground support circle
         ground_support_velocity: current velocity of the center of the ground support circle
+        height: height of the agent. [in m]
         mass: mass of the agent. [in kg] (is called m)
         desired_speed: desired Speed of the agent. [in m/s] (is called v0)
         reaction_time: reaction Time of the agent. [in s] (is called :math:`\\tau`)
@@ -93,6 +94,7 @@ class SocialForceModelIPPAgentParameters:
     velocity: tuple[float, float] = (0.0, 0.0)
     ground_support_position: tuple[float, float] = (0.0, 0.0)
     ground_support_velocity: tuple[float, float] = (0.0, 0.0)
+    height: float = 1.65  # rought overall adult height average [m]
     # the values are from paper. doi is in class description
     mass: float = 80.0  # [kg] is called m
     desired_speed: float = (
@@ -115,6 +117,7 @@ class SocialForceModelIPPAgentParameters:
         velocity: tuple[float, float] = (0.0, 0.0),
         ground_support_position: tuple[float, float] = (0.0, 0.0),
         ground_support_velocity: tuple[float, float] = (0.0, 0.0),
+        height: float = 1.65,
         mass: float = 80.0,
         desired_speed: float = 0.8,
         reaction_time: float = 0.5,
@@ -136,6 +139,7 @@ class SocialForceModelIPPAgentParameters:
         self.velocity = velocity
         self.ground_support_position = ground_support_position
         self.ground_support_velocity = ground_support_velocity
+        self.height = height
         self.mass = mass
         self.radius = radius
 
@@ -219,6 +223,7 @@ class SocialForceModelIPPAgentParameters:
             velocity=self.velocity,
             ground_support_position=self.ground_support_position,
             ground_support_velocity=self.ground_support_velocity,
+            height=self.height,
             mass=self.mass,
             desired_speed=self.desired_speed,
             reaction_time=self.reaction_time,
@@ -259,6 +264,15 @@ class SocialForceModelIPPState:
     @ground_support_velocity.setter
     def ground_support_velocity(self, ground_support_velocity):
         self._obj.ground_support_velocity = ground_support_velocity
+
+    @property
+    def height(self) -> float:
+        """height of this agent."""
+        return self._obj.height
+
+    @height.setter
+    def height(self, height):
+        self._obj.height = height
 
     @property
     def mass(self) -> float:

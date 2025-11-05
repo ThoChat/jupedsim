@@ -93,6 +93,20 @@ JUPEDSIM_API JPS_Point JPS_SocialForceModelIPPState_GetGroundSupportVelocity(JPS
 JUPEDSIM_API void
 JPS_SocialForceModelIPPState_SetGroundSupportVelocity(JPS_SocialForceModelIPPState handle, JPS_Point ground_support_position);
 
+/**
+ * Read height of this agent.
+ * @param handle of the Agent to access.
+ * @return height in kg of this agent
+ */
+JUPEDSIM_API double JPS_SocialForceModelIPPState_GetHeight(JPS_SocialForceModelIPPState handle);
+
+/**
+ * Write height of this agent.
+ * @param handle of the Agent to access.
+ * @param height in kg of this agent.
+ */
+JUPEDSIM_API void JPS_SocialForceModelIPPState_SetHeight(JPS_SocialForceModelIPPState handle, double height);
+
 
 /**
  * Read mass of this agent.
@@ -232,6 +246,10 @@ typedef struct JPS_SocialForceModelIPPAgentParameters {
      * Initial Ground support velocity of the Agent
      */
     JPS_Point ground_support_velocity = {0, 0};
+    /**
+     * Height of the agent
+     */
+    double height = 1.65;
     /**
      * Mass of the agent
      */

@@ -6,6 +6,7 @@ struct SocialForceModelIPPData {
     Point velocity{}; // v
     Point ground_support_position{}; // position of the circle on the ground that represent the groud support
     Point ground_support_velocity{}; // velocity of the circle on the ground that represent the groud support
+    double height{}; // height of the agent
     double mass{}; // m
     double desiredSpeed{}; // v0
     double reactionTime{}; // tau
@@ -25,10 +26,11 @@ struct fmt::formatter<SocialForceModelIPPData> {
     {
         return fmt::format_to(
             ctx.out(),
-            "SFM[velocity={}, ground_support_position={} ,ground_support_velocity={} ,m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}])",
+            "SFM[velocity={}, ground_support_position={} ,ground_support_velocity={} ,height={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}])",
             m.velocity,
             m.ground_support_position,
             m.ground_support_velocity,
+            m.height,
             m.mass,
             m.desiredSpeed,
             m.reactionTime,
