@@ -16,6 +16,9 @@
 #include <stdexcept>
 #include <cmath>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 HumanoidModelV0::HumanoidModelV0(double bodyForce_, double friction_)
     : bodyForce(bodyForce_), friction(friction_){};
@@ -24,7 +27,7 @@ OperationalModelType HumanoidModelV0::Type() const
 {
     return OperationalModelType::HUMANOID_V0;
 }
-
+ 
 std::unique_ptr<OperationalModel> HumanoidModelV0::Clone() const
 {
     return std::make_unique<HumanoidModelV0>(*this);
@@ -39,36 +42,67 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 {
     const auto& model = std::get<HumanoidModelV0Data>(ped.model);
     HumanoidModelV0Update update{};
-    auto forces = DrivingForce(ped);
+    
 
     const auto neighborhood = neighborhoodSearch.GetNeighboringAgents(ped.pos, this->_cutOffRadius);
-    Point F_rep;
+    const auto& walls = geometry.LineSegmentsInApproxDistanceTo(ped.pos);
+
+    // Collision avoidance model: Social Forces
+    auto social_forces = DrivingForce(ped);
+    Point F_rep_agents;
     for(const auto& neighbor : neighborhood) {
         if(neighbor.id == ped.id) {
             continue;
         }
-        F_rep += AgentForce(ped, neighbor);  
+        F_rep_agents += AgentSocialForce(ped, neighbor);
     }
-    forces += F_rep / model.mass;
-    const auto& walls = geometry.LineSegmentsInApproxDistanceTo(ped.pos);
+    social_forces += F_rep_agents / model.mass;
 
-    const auto obstacle_f = std::accumulate(
+    const auto F_social_obstacles = std::accumulate(
         walls.cbegin(),
         walls.cend(),
         Point(0, 0),
         [this, &ped](const auto& acc, const auto& element) {
-            return acc + ObstacleForce(ped, element);
+            return acc + ObstacleSocialForce(ped, element);
         });
-    forces += obstacle_f / model.mass;
+    social_forces += F_social_obstacles / model.mass;
+
+
+
+    // Physical interactions: Contact forces
+    Point contact_forces;
+    double Torque_rep_agents;
+    for(const auto& neighbor : neighborhood) {
+        if(neighbor.id == ped.id) {
+            continue;
+        }
+        F_rep_agents += AgentContactForce(ped, neighbor);
+        Torque_rep_agents += AgentTorque(ped, neighbor, SHOULDER_WIDTH_SCALING_FACTOR) / 6.5; // Inertia of shoulder rotation approximation
+    }
+    contact_forces += F_rep_agents / model.mass;
+
+    const auto F_contact_obstacles = std::accumulate(
+        walls.cbegin(),
+        walls.cend(),
+        Point(0, 0),
+        [this, &ped](const auto& acc, const auto& element) {
+            return acc + ObstacleSocialForce(ped, element);
+        });
+    contact_forces += F_contact_obstacles / model.mass;
+
+    double Torque_rep_obstacles = 0; // to be implemented
+
 
 
     // creating update of pelvis position based on the collision avoidance model
-    update.velocity = model.velocity + forces * dT;
+    update.velocity = model.velocity + (social_forces + contact_forces) * dT;
     update.position = ped.pos + update.velocity * dT;
 
-
+    update.shoulder_rotation_angle_z = model.shoulder_rotation_angle_z + (Torque_rep_agents + Torque_rep_obstacles) * dT * dT * 0.5; // is angular velocity necessary?
+    std::cout << "Torque_rep_agents: " << Torque_rep_agents << std::endl;
 
     // Physical interaction flag
+
     
     bool has_nearby_agent = std::any_of(
         neighborhood.cbegin(),
@@ -345,49 +379,168 @@ double HumanoidModelV0::PushingForceLength(double A, double B, double r, double 
     return A * exp((r - distance) / B);
 }
 
-Point HumanoidModelV0::AgentForce(const GenericAgent& ped1, const GenericAgent& ped2) const
+Point HumanoidModelV0::AgentSocialForce(const GenericAgent& ped1, const GenericAgent& ped2) const
 {
     const auto& model1 = std::get<HumanoidModelV0Data>(ped1.model);
     const auto& model2 = std::get<HumanoidModelV0Data>(ped2.model);
 
     const double total_radius = model1.radius + model2.radius;
 
-    return ForceBetweenPoints(
+    return SocialForceBetweenPoints(
         ped1.pos,
         ped2.pos,
         model1.agentScale,
         model1.forceDistance,
+        total_radius);
+};
+
+Point HumanoidModelV0::ObstacleSocialForce(const GenericAgent& agent, const LineSegment& segment) const
+{
+    const auto& model = std::get<HumanoidModelV0Data>(agent.model);
+    const Point pt = segment.ShortestPoint(agent.pos);
+    return SocialForceBetweenPoints(
+        agent.pos, pt, model.obstacleScale, model.forceDistance, model.radius);
+}
+
+Point HumanoidModelV0::AgentContactForce(const GenericAgent& ped1, const GenericAgent& ped2) const
+{
+    const auto& model1 = std::get<HumanoidModelV0Data>(ped1.model);
+    const auto& model2 = std::get<HumanoidModelV0Data>(ped2.model);
+
+    const double total_radius = model1.radius + model2.radius;
+
+    return ContactForceBetweenPoints(
+        ped1.pos,
+        ped2.pos,
         total_radius,
         model2.velocity - model1.velocity);
 };
 
-Point HumanoidModelV0::ObstacleForce(const GenericAgent& agent, const LineSegment& segment) const
+Point HumanoidModelV0::ObstacleContactForce(const GenericAgent& agent, const LineSegment& segment) const
 {
     const auto& model = std::get<HumanoidModelV0Data>(agent.model);
     const Point pt = segment.ShortestPoint(agent.pos);
-    return ForceBetweenPoints(
-        agent.pos, pt, model.obstacleScale, model.forceDistance, model.radius, model.velocity);
+    return ContactForceBetweenPoints(
+        agent.pos, pt, model.radius, model.velocity);
 }
 
-Point HumanoidModelV0::ForceBetweenPoints(
+
+Point HumanoidModelV0::SocialForceBetweenPoints(
     const Point pt1,
     const Point pt2,
     const double A,
     const double B,
+    const double radius) const
+{
+    // todo reduce range of force to 180 degrees
+    const double dist = (pt1 - pt2).Norm();
+    double pushing_force_norm = PushingForceLength(A, B, radius, dist); // if == 0, the SF model is removed, only physical interactions are taken into account 
+    const Point n_ij = (pt1 - pt2).Normalized();
+    return n_ij * pushing_force_norm;
+}
+
+Point HumanoidModelV0::ContactForceBetweenPoints(
+    const Point pt1,
+    const Point pt2,
     const double radius,
     const Point velocity) const
 {
     // todo reduce range of force to 180 degrees
     const double dist = (pt1 - pt2).Norm();
-    double pushing_force_length = PushingForceLength(A, B, radius, dist) ; // if this is 0 agents bumps into each other 
-    double friction_force_length = 0;
+    double pushing_force_norm = 0;
+    double friction_force_norm = 0;
     const Point n_ij = (pt1 - pt2).Normalized();
     const Point tangent = n_ij.Rotate90Deg();
     if(dist < radius) {
-        pushing_force_length += this->bodyForce * (radius - dist);
-        friction_force_length = this->friction * (radius - dist) * (velocity.ScalarProduct(tangent));
+        pushing_force_norm += this->bodyForce * (radius - dist);
+        friction_force_norm =
+            this->friction * (radius - dist) * (velocity.ScalarProduct(tangent));
     }
-    return n_ij * pushing_force_length + tangent * friction_force_length;
+    return n_ij * pushing_force_norm + tangent * friction_force_norm;
+}
+
+
+double HumanoidModelV0::AgentTorque(
+    const GenericAgent& ped1,
+    const GenericAgent& ped2,
+    const double SHOULDER_WIDTH_SCALING_FACTOR) const
+{
+    const auto& model1 = std::get<HumanoidModelV0Data>(ped1.model);
+    const auto& model2 = std::get<HumanoidModelV0Data>(ped2.model);
+
+
+    const double total_radius = model1.radius + model2.radius;
+
+    double force_length = 0;
+    double torque = 0;
+    double ped1_shoulder_right_x = ped1.pos.x + model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::cos(model1.shoulder_rotation_angle_z);
+    double ped1_shoulder_right_y = ped1.pos.y + model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::sin(model1.shoulder_rotation_angle_z);
+    double ped1_shoulder_left_x = ped1.pos.x - model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::cos(model1.shoulder_rotation_angle_z);
+    double ped1_shoulder_left_y = ped1.pos.y - model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::sin(model1.shoulder_rotation_angle_z);
+
+    double ped2_shoulder_right_x = ped2.pos.x + model2.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::cos(model2.shoulder_rotation_angle_z);
+    double ped2_shoulder_right_y = ped2.pos.y + model2.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::sin(model2.shoulder_rotation_angle_z);
+    double ped2_shoulder_left_x = ped2.pos.x - model2.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::cos(model2.shoulder_rotation_angle_z);
+    double ped2_shoulder_left_y = ped2.pos.y - model2.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::sin(model2.shoulder_rotation_angle_z);
+
+    double dist_right_right = std::sqrt( std::pow(ped1_shoulder_right_x - ped2_shoulder_right_x,2) 
+                                        + std::pow(ped1_shoulder_right_y - ped2_shoulder_right_y,2));
+    if(dist_right_right < total_radius) {
+        
+        force_length = this->bodyForce * (total_radius - dist_right_right);
+
+        Point ped2_to_ped1_direction = Point(
+            ped1_shoulder_right_x - ped2_shoulder_right_x,
+            ped1_shoulder_right_y - ped2_shoulder_right_y
+        ).Normalized();
+
+        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Rotate90Deg());
+        torque += force_length * dot_product * model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
+    }
+
+    double dist_right_left = std::sqrt( std::pow(ped1_shoulder_right_x - ped2_shoulder_left_x,2) 
+                                        + std::pow(ped1_shoulder_right_y - ped2_shoulder_left_y,2));
+    if(dist_right_left < total_radius) {
+
+        force_length = this->bodyForce * (total_radius - dist_right_left);
+
+        Point ped2_to_ped1_direction = Point(
+            ped1_shoulder_right_x - ped2_shoulder_left_x,
+            ped1_shoulder_right_y - ped2_shoulder_left_y
+        ).Normalized();
+
+        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Rotate90Deg());
+        torque += force_length * dot_product * model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
+    }
+
+    double dist_left_right = std::sqrt( std::pow(ped1_shoulder_left_x - ped2_shoulder_right_x,2) 
+                                        + std::pow(ped1_shoulder_left_y - ped2_shoulder_right_y,2));
+    if(dist_left_right < total_radius) {
+        force_length = this->bodyForce * (total_radius - dist_left_right);
+
+        Point ped2_to_ped1_direction = Point(
+            ped1_shoulder_left_x - ped2_shoulder_right_x,
+            ped1_shoulder_left_y - ped2_shoulder_right_y
+        ).Normalized();
+
+        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Rotate90Deg());
+        torque -= force_length * dot_product * model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
+    }
+
+    double dist_left_left = std::sqrt( std::pow(ped1_shoulder_left_x - ped2_shoulder_left_x,2) 
+                                        + std::pow(ped1_shoulder_left_y - ped2_shoulder_left_y,2));
+    if(dist_left_left < total_radius) {
+        force_length = this->bodyForce * (total_radius - dist_left_left);
+        Point ped2_to_ped1_direction = Point(
+            ped1_shoulder_left_x - ped2_shoulder_left_x,
+            ped1_shoulder_left_y - ped2_shoulder_left_y
+        ).Normalized();
+        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Rotate90Deg());
+        torque -= force_length * dot_product * model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
+    }
+    
+    return torque;
+
 }
 
 
