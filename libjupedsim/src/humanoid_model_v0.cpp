@@ -309,6 +309,20 @@ JPS_HumanoidModelV0State_SetShoulderRotationAngleZ(JPS_HumanoidModelV0State hand
     state->shoulder_rotation_angle_z = shoulder_rotation_angle_z;
 }
 
+JUPEDSIM_API double JPS_HumanoidModelV0State_GetShoulderRotationVelocityZ(JPS_HumanoidModelV0State handle)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<const HumanoidModelV0Data*>(handle);
+    return state->shoulder_rotation_velocity_z;
+}
+
+JUPEDSIM_API void
+JPS_HumanoidModelV0State_SetShoulderRotationVelocityZ(JPS_HumanoidModelV0State handle, double shoulder_rotation_velocity_z)
+{
+    assert(handle);
+    const auto state = reinterpret_cast<HumanoidModelV0Data*>(handle);
+    state->shoulder_rotation_velocity_z = shoulder_rotation_velocity_z;
+}
 
 JUPEDSIM_API double JPS_HumanoidModelV0State_GetTrunkRotationAngleX(JPS_HumanoidModelV0State handle)
 {

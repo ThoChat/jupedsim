@@ -31,6 +31,7 @@ struct HumanoidModelV0Data {
     Point3D pelvis_position{}; 
     double pelvis_rotation_angle_z{}; 
     double shoulder_rotation_angle_z{}; 
+    double shoulder_rotation_velocity_z{};
     double trunk_rotation_angle_x{}; 
     double trunk_rotation_angle_y{}; 
     Point3D heel_right_position{}; 
@@ -51,7 +52,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
     {
         return fmt::format_to(
             ctx.out(),
-            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, step_duration={}, step_timer={}, stepping_foot_index{}, Xcom={}, head_position={}, pelvis_position={}, pelvis_rotation_angle_z={}, shoulder_rotation_angle_z={}, trunk_rotation_angle_x={}, trunk_rotation_angle_y={}, heel_right_position={}, heel_left_position={}, toe_right_position={}, toe_left_position={}])",
+            "SFM([velocity={}, m={}, v0={}, tau={}, A_ped={}, A_obst={}, B={}, r={}, step_duration={}, step_timer={}, stepping_foot_index{}, Xcom={}, head_position={}, pelvis_position={}, pelvis_rotation_angle_z={}, shoulder_rotation_angle_z={}, shoulder_rotation_velocity_z={}, trunk_rotation_angle_x={}, trunk_rotation_angle_y={}, heel_right_position={}, heel_left_position={}, toe_right_position={}, toe_left_position={}])",
             m.velocity,
             m.mass,
             m.desiredSpeed,
@@ -69,6 +70,7 @@ struct fmt::formatter<HumanoidModelV0Data> {
             m.pelvis_position,
             m.pelvis_rotation_angle_z,
             m.shoulder_rotation_angle_z,
+            m.shoulder_rotation_velocity_z,
             m.trunk_rotation_angle_x,
             m.trunk_rotation_angle_y,
             m.heel_right_position,

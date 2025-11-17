@@ -22,6 +22,7 @@ struct HumanoidModelV0Update {
     double pelvis_rotation_angle_z{};
     // shoulder rotation
     double shoulder_rotation_angle_z{};
+    double shoulder_rotation_velocity_z{};
     // trunk rotation
     double trunk_rotation_angle_x{};
     double trunk_rotation_angle_y{};

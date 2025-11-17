@@ -362,6 +362,7 @@ JPS_AgentId JPS_Simulation_AddHumanoidModelV0Agent(
                 intoPoint3D(parameters.pelvis_position),
                 parameters.pelvis_rotation_angle_z,
                 parameters.shoulder_rotation_angle_z,
+                parameters.shoulder_rotation_velocity_z,
                 parameters.trunk_rotation_angle_x,
                 parameters.trunk_rotation_angle_y,
                 intoPoint3D(parameters.heel_right_position),

@@ -40,6 +40,7 @@ void init_humanoid_model_v0(py::module_& m)
                         std::tuple<double, double, double> pelvis_position,
                         double pelvis_rotation_angle_z,
                         double shoulder_rotation_angle_z,
+                        double shoulder_rotation_velocity_z,
                         double trunk_rotation_angle_x,
                         double trunk_rotation_angle_y,
                         std::tuple<double, double, double> heel_right_position, 
@@ -70,6 +71,7 @@ void init_humanoid_model_v0(py::module_& m)
                     intoJPS_Point3D(pelvis_position),
                     pelvis_rotation_angle_z,
                     shoulder_rotation_angle_z,
+                    shoulder_rotation_velocity_z,
                     trunk_rotation_angle_x,
                     trunk_rotation_angle_y,
                     intoJPS_Point3D(heel_right_position),
@@ -100,6 +102,7 @@ void init_humanoid_model_v0(py::module_& m)
             py::arg("pelvis_position"),
             py::arg("pelvis_rotation_angle_z"),
             py::arg("shoulder_rotation_angle_z"),
+            py::arg("shoulder_rotation_velocity_z"),
             py::arg("trunk_rotation_angle_x"),
             py::arg("trunk_rotation_angle_y"),
             py::arg("heel_right_position"),
@@ -114,7 +117,7 @@ void init_humanoid_model_v0(py::module_& m)
                 "reactionTime: {}, agentScale: {}, obstacleScale: {}, forceDistance: {},"
                 "radius: {}, height: {}, step_duration: {}, step_timer: {}, stepping_foot_index: {}, Xcom: {},"
                 "head_position: {}, pelvis_position: {}, pelvis_rotation_angle_z: {},"
-                "shoulder_rotation_angle_z: {}, trunk_rotation_angle_x: {},"
+                "shoulder_rotation_angle_z: {}, shoulder_rotation_velocity_z: {}, trunk_rotation_angle_x: {},"
                 "trunk_rotation_angle_y: {}, heel_right_position: {}, heel_left_position: {},"
                 "toe_right_position: {}, toe_left_position: {}",
                 intoTuple(p.position),
@@ -138,6 +141,7 @@ void init_humanoid_model_v0(py::module_& m)
                 intoTuple3D(p.pelvis_position),
                 p.pelvis_rotation_angle_z,
                 p.shoulder_rotation_angle_z,
+                p.shoulder_rotation_velocity_z,
                 p.trunk_rotation_angle_x,
                 p.trunk_rotation_angle_y,
                 intoTuple3D(p.heel_right_position),
@@ -301,6 +305,14 @@ void init_humanoid_model_v0(py::module_& m)
             },
             [](JPS_HumanoidModelV0State_Wrapper& w, double shoulder_rotation_angle_z) {
                 JPS_HumanoidModelV0State_SetShoulderRotationAngleZ(w.handle, shoulder_rotation_angle_z);
+            })
+        .def_property(
+            "shoulder_rotation_velocity_z",
+            [](const JPS_HumanoidModelV0State_Wrapper& w) {
+                return JPS_HumanoidModelV0State_GetShoulderRotationVelocityZ(w.handle);
+            },
+            [](JPS_HumanoidModelV0State_Wrapper& w, double shoulder_rotation_velocity_z) {
+                JPS_HumanoidModelV0State_SetShoulderRotationVelocityZ(w.handle, shoulder_rotation_velocity_z);
             })
         .def_property(
             "trunk_rotation_angle_x",

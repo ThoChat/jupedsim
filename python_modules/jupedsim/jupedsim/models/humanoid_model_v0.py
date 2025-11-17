@@ -52,6 +52,7 @@ class HumanoidModelV0AgentParameters:
         pelvis_position: 3D Vector of the cartesian coordinates of the pelvis position of this agent. [in m]
         pelvis_rotation_angle_z: pelvis rotation angle along the longitudinal axis (z) of this agent relative to the world. [in rad]
         shoulder_rotation_angle_z: shoulder rotation angle along the longitudinal axis (z) of this agent. [in rad]
+        shoulder_rotation_velocity_z: shoulder rotation velocity along the longitudinal axis (z) of this agent. [in rad/s]
         trunk_rotation_angle_x: trunk rotation angle along the frontal axis (x) of this agent. [in rad]
         trunk_rotation_angle_y: trunk rotation angle along the frontal axis (x) of this agent. [in rad]
         heel_right_position: 3D Vector of the cartesian coordinates of the right heel position of this agent. [in m]
@@ -92,6 +93,7 @@ class HumanoidModelV0AgentParameters:
     pelvis_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     pelvis_rotation_angle_z: float = 0.0
     shoulder_rotation_angle_z: float = 0.0
+    shoulder_rotation_velocity_z: float = 0.0
     trunk_rotation_angle_x: float = 0.0
     trunk_rotation_angle_y: float = 0.0
     heel_right_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
@@ -124,6 +126,7 @@ class HumanoidModelV0AgentParameters:
             pelvis_position=self.pelvis_position,
             pelvis_rotation_angle_z=self.pelvis_rotation_angle_z,
             shoulder_rotation_angle_z=self.shoulder_rotation_angle_z,
+            shoulder_rotation_velocity_z=self.shoulder_rotation_velocity_z,
             trunk_rotation_angle_x=self.trunk_rotation_angle_x,
             trunk_rotation_angle_y=self.trunk_rotation_angle_y,
             heel_right_position=self.heel_right_position,
@@ -291,6 +294,15 @@ class HumanoidModelV0State:
     @shoulder_rotation_angle_z.setter
     def shoulder_rotation_angle_z(self, shoulder_rotation_angle_z):
         self._obj.shoulder_rotation_angle_z = shoulder_rotation_angle_z
+        
+    @property
+    def shoulder_rotation_velocity_z(self) -> float:
+        """right shoulder rotation angle z of this agent."""
+        return self._obj.shoulder_rotation_velocity_z
+
+    @shoulder_rotation_velocity_z.setter
+    def shoulder_rotation_velocity_z(self, shoulder_rotation_velocity_z):
+        self._obj.shoulder_rotation_velocity_z = shoulder_rotation_velocity_z
 
     @property
     def trunk_rotation_angle_x(self) -> float:

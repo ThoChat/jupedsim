@@ -66,9 +66,13 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
             return acc + ObstacleSocialForce(ped, element);
         });
     social_forces += F_social_obstacles / model.mass;
+    Point orientation = model.velocity.Normalized(); 
+    Point normal_orientation = orientation.Rotate90Deg();
 
-
-
+    double recovery_torque = (std::atan2(normal_orientation.y, normal_orientation.x) - model.shoulder_rotation_angle_z);
+                                //  / std::abs(std::atan2(normal_orientation.y, normal_orientation.x) - model.shoulder_rotation_angle_z) 
+                                //     * std::pow(std::atan2(normal_orientation.y, normal_orientation.x) - model.shoulder_rotation_angle_z, 2); // Damping term for shoulder rotation
+    double damping_torque = - model.shoulder_rotation_velocity_z * 0.5;
     // Physical interactions: Contact forces
     Point contact_forces;
     double Torque_rep_agents;
@@ -97,9 +101,9 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
     // creating update of pelvis position based on the collision avoidance model
     update.velocity = model.velocity + (social_forces + contact_forces) * dT;
     update.position = ped.pos + update.velocity * dT;
+    update.shoulder_rotation_velocity_z = (damping_torque + recovery_torque + Torque_rep_agents + Torque_rep_obstacles) * dT;
+    update.shoulder_rotation_angle_z = model.shoulder_rotation_angle_z + update.shoulder_rotation_velocity_z * dT; 
 
-    update.shoulder_rotation_angle_z = model.shoulder_rotation_angle_z + (Torque_rep_agents + Torque_rep_obstacles) * dT * dT * 0.5; // is angular velocity necessary?
-    std::cout << "Torque_rep_agents: " << Torque_rep_agents << std::endl;
 
     // Physical interaction flag
 
@@ -199,7 +203,10 @@ OperationalModelUpdate HumanoidModelV0::ComputeNewPosition(
 
         Point orientation = update.velocity.Normalized();
         Point normal_orientation = orientation.Rotate90Deg();
-        
+
+        // shoulder
+        init_model.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x);
+
         // right foot
         // # heel
         init_model.heel_right_position.x = (ped.pos.x - normal_orientation.x * model.height 
@@ -300,6 +307,7 @@ void HumanoidModelV0::ApplyUpdate(const OperationalModelUpdate& update, GenericA
     model.head_position = upd.head_position; 
     model.pelvis_position = upd.pelvis_position;
     model.pelvis_rotation_angle_z = upd.pelvis_rotation_angle_z;
+    model.shoulder_rotation_velocity_z = upd.shoulder_rotation_velocity_z;
     model.shoulder_rotation_angle_z = upd.shoulder_rotation_angle_z;
     model.trunk_rotation_angle_x = upd.trunk_rotation_angle_x;
     model.trunk_rotation_angle_y = upd.trunk_rotation_angle_y;
@@ -459,6 +467,8 @@ Point HumanoidModelV0::ContactForceBetweenPoints(
     return n_ij * pushing_force_norm + tangent * friction_force_norm;
 }
 
+// Torque on ped1 due to ped2
+// only the contact torque caused by shoulder collisions is considered
 
 double HumanoidModelV0::AgentTorque(
     const GenericAgent& ped1,
@@ -469,10 +479,11 @@ double HumanoidModelV0::AgentTorque(
     const auto& model2 = std::get<HumanoidModelV0Data>(ped2.model);
 
 
-    const double total_radius = model1.radius + model2.radius;
+    const double total_radius = (model1.radius + model2.radius) * 0.8;
 
     double force_length = 0;
     double torque = 0;
+
     double ped1_shoulder_right_x = ped1.pos.x + model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::cos(model1.shoulder_rotation_angle_z);
     double ped1_shoulder_right_y = ped1.pos.y + model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::sin(model1.shoulder_rotation_angle_z);
     double ped1_shoulder_left_x = ped1.pos.x - model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::cos(model1.shoulder_rotation_angle_z);
@@ -483,59 +494,73 @@ double HumanoidModelV0::AgentTorque(
     double ped2_shoulder_left_x = ped2.pos.x - model2.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::cos(model2.shoulder_rotation_angle_z);
     double ped2_shoulder_left_y = ped2.pos.y - model2.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5 * std::sin(model2.shoulder_rotation_angle_z);
 
+    // The distance between the right shoulders of ped1 and ped2
     double dist_right_right = std::sqrt( std::pow(ped1_shoulder_right_x - ped2_shoulder_right_x,2) 
                                         + std::pow(ped1_shoulder_right_y - ped2_shoulder_right_y,2));
     if(dist_right_right < total_radius) {
         
         force_length = this->bodyForce * (total_radius - dist_right_right);
 
+        // The force direction given from the right shoulder of ped2 to the right shoulder of ped1
         Point ped2_to_ped1_direction = Point(
             ped1_shoulder_right_x - ped2_shoulder_right_x,
             ped1_shoulder_right_y - ped2_shoulder_right_y
         ).Normalized();
 
-        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Rotate90Deg());
+        // The torque on the CoM of ped1 due to the shoulder contact force
+        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Normalized());
         torque += force_length * dot_product * model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
     }
 
+    // The distance between the right shoulder of ped1 and the left shoulder of ped2
     double dist_right_left = std::sqrt( std::pow(ped1_shoulder_right_x - ped2_shoulder_left_x,2) 
                                         + std::pow(ped1_shoulder_right_y - ped2_shoulder_left_y,2));
     if(dist_right_left < total_radius) {
 
         force_length = this->bodyForce * (total_radius - dist_right_left);
 
+        // The force direction given from the left shoulder of ped2 to the right shoulder of ped1
         Point ped2_to_ped1_direction = Point(
             ped1_shoulder_right_x - ped2_shoulder_left_x,
             ped1_shoulder_right_y - ped2_shoulder_left_y
         ).Normalized();
 
-        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Rotate90Deg());
+        // The torque on the CoM of ped1 due to the shoulder contact force
+        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Normalized());
         torque += force_length * dot_product * model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
     }
 
+    // The distance between the left shoulder of ped1 and the right shoulder of ped2
     double dist_left_right = std::sqrt( std::pow(ped1_shoulder_left_x - ped2_shoulder_right_x,2) 
                                         + std::pow(ped1_shoulder_left_y - ped2_shoulder_right_y,2));
     if(dist_left_right < total_radius) {
         force_length = this->bodyForce * (total_radius - dist_left_right);
 
+        // The force direction given from the right shoulder of ped2 to the left shoulder of ped1
         Point ped2_to_ped1_direction = Point(
             ped1_shoulder_left_x - ped2_shoulder_right_x,
             ped1_shoulder_left_y - ped2_shoulder_right_y
         ).Normalized();
 
-        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Rotate90Deg());
+        // The torque on the CoM of ped1 due to the shoulder contact force
+        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Normalized());
         torque -= force_length * dot_product * model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
     }
 
+    // The distance between the left shoulders of ped1 and ped2
     double dist_left_left = std::sqrt( std::pow(ped1_shoulder_left_x - ped2_shoulder_left_x,2) 
                                         + std::pow(ped1_shoulder_left_y - ped2_shoulder_left_y,2));
     if(dist_left_left < total_radius) {
         force_length = this->bodyForce * (total_radius - dist_left_left);
+
+        // The force direction given from the left shoulder of ped2 to the left shoulder of ped1
         Point ped2_to_ped1_direction = Point(
             ped1_shoulder_left_x - ped2_shoulder_left_x,
             ped1_shoulder_left_y - ped2_shoulder_left_y
         ).Normalized();
-        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Rotate90Deg());
+
+        // The torque on the CoM of ped1 due to the shoulder contact force
+        double dot_product = ped2_to_ped1_direction.ScalarProduct(model1.velocity.Normalized());
         torque -= force_length * dot_product * model1.height * SHOULDER_WIDTH_SCALING_FACTOR * 0.5;
     }
     
@@ -813,14 +838,14 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionHof2008(
 
     // shoulder rotation
     // the shoulder rotation is perpendicular to the agent orientation
-    if (orientation.y >= 0)
-    {
-        update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x);
-    }
-    else 
-    {
-        update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x) + 2 * M_PI;
-    }
+    // if (orientation.y >= 0)
+    // {
+    //     update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x);
+    // }
+    // else 
+    // {
+    //     update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x) + 2 * M_PI;
+    // }
 
     // //#############
     // print everything:
@@ -897,14 +922,14 @@ HumanoidModelV0Update HumanoidModelV0::ComputeMotionPhysicalInteraction(
 
     // shoulder rotation
     // the shoulder rotation is perpendicular to the agent orientation
-    if (orientation.y >= 0)
-    {
-        update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x);
-    }
-    else 
-    {
-        update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x) + 2 * M_PI;
-    }
+    // if (orientation.y >= 0)
+    // {
+    //     update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x);
+    // }
+    // else 
+    // {
+    //     update_gait_motion.shoulder_rotation_angle_z = std::atan2(normal_orientation.y, normal_orientation.x) + 2 * M_PI;
+    // }
 
 
     // left foot
