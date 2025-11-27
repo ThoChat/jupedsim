@@ -21,16 +21,17 @@ private:
 
 public:
     // Models parameters and constants;
-    static constexpr double LAMBDA_LOCOMOTION_1 = 5; // model parameter that ajust the control on position during Locomotion phase
+    static constexpr double LAMBDA_LOCOMOTION_1 = 10; // model parameter that ajust the control on position during Locomotion phase
     static constexpr double LAMBDA_LOCOMOTION_2 = 5; // model parameter that ajust the control on velocity during Locomotion phase
     static constexpr double LAMBDA_LOCOMOTION_3 = 1; // model parameter that ajust the dissipation term during Locomotion phase
 
     static constexpr double LAMBDA_RECOVERY_1 = 10; // model parameter that ajust the control on position during Recovery phase
-    static constexpr double LAMBDA_RECOVERY_2 = 10; // model parameter that ajust the control on velocity during Recovery phase
+    static constexpr double LAMBDA_RECOVERY_2 = 5; // model parameter that ajust the control on velocity during Recovery phase
     static constexpr double LAMBDA_RECOVERY_3 = 1; // model parameter that ajust the dissipation term during Recovery phase
 
     // Scalin factors multiplied by the height [m] gives
-    static constexpr double GS_SCALING_FACTOR = 0.26/1.65; // Ground support circle radius in meters
+    static constexpr double GS_SCALING_FACTOR = 0.26 /(2*0.3*1.65) ; // Ground support circle radius in meters. 
+                                                                    //  Based on average adult foot length (26cm)
     static constexpr double LEG_SCALING_FACTOR = 0.5242; // Leg length in metters. 0.2522 (shank) + 0.2269 (thigh) + 0.0451 (ankle)
 
     static constexpr double g = 9.80665; // standard gravity acceleration in m/s^2

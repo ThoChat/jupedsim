@@ -40,6 +40,50 @@ OperationalModelUpdate SocialForceModelIPP::ComputeNewPosition(
     const auto neighborhood = neighborhoodSearch.GetNeighboringAgents(ped.pos, this->_cutOffRadius);
     const auto& walls = geometry.LineSegmentsInApproxDistanceTo(ped.pos);
 
+
+       // Physical interactions: Contact forces
+    // upper body contacts
+    Point upper_body_contact_forces;
+    Point F_contact_upper_body_neighbors;
+    for(const auto& neighbor : neighborhood) {
+        if(neighbor.id == ped.id) {
+            continue;
+        }
+        F_contact_upper_body_neighbors += AgentUpperBodyContactForce(ped, neighbor);
+    }
+    upper_body_contact_forces += F_contact_upper_body_neighbors ;
+
+    const auto F_contact_upper_body_obstacles = std::accumulate(
+        walls.cbegin(),
+        walls.cend(),
+        Point(0, 0),
+        [this, &ped](const auto& acc, const auto& element) {
+            return acc + ObstacleUpperBodyContactForce(ped, element);
+        });
+    upper_body_contact_forces += F_contact_upper_body_obstacles ;
+
+    // ground support contacts
+    Point ground_support_contact_forces;
+    Point F_contact_ground_support_neighbors;
+    for(const auto& neighbor : neighborhood) {
+        if(neighbor.id == ped.id) {
+            continue;
+        }
+        F_contact_ground_support_neighbors += AgentGroundSupportContactForce(ped, neighbor);
+    }
+    // ground_support_contact_forces += F_contact_ground_support_neighbors ;
+
+    const auto F_contact_ground_support_obstacles = std::accumulate(
+        walls.cbegin(),
+        walls.cend(),
+        Point(0, 0),
+        [this, &ped](auto acc, const auto& element) {
+            acc += ObstacleGroundSupportContactForce(ped, element);
+            return acc;
+        });
+    ground_support_contact_forces += F_contact_ground_support_obstacles ;
+
+
     // Collision avoidance model: Social Forces
     auto social_forces = DrivingForce(ped);
     Point F_rep_agents;
@@ -60,48 +104,13 @@ OperationalModelUpdate SocialForceModelIPP::ComputeNewPosition(
         });
     social_forces += F_social_obstacles / model.mass;
 
+    // desactivation of social forces for the Line Pushing simulation
+    // social_forces = Point(0,0);
 
 
-    // Physical interactions: Contact forces
-    // upper body contacts
-    Point upper_body_contact_forces;
-    for(const auto& neighbor : neighborhood) {
-        if(neighbor.id == ped.id) {
-            continue;
-        }
-        F_rep_agents += AgentUpperBodyContactForce(ped, neighbor);
-    }
-    upper_body_contact_forces += F_rep_agents / model.mass;
 
-    const auto F_contact_upper_body_obstacles = std::accumulate(
-        walls.cbegin(),
-        walls.cend(),
-        Point(0, 0),
-        [this, &ped](const auto& acc, const auto& element) {
-            return acc + ObstacleUpperBodyContactForce(ped, element);
-        });
-    upper_body_contact_forces += F_contact_upper_body_obstacles / model.mass;
-
-    // ground support contacts
-    Point ground_support_contact_forces;
-    for(const auto& neighbor : neighborhood) {
-        if(neighbor.id == ped.id) {
-            continue;
-        }
-        F_rep_agents += AgentGroundSupportContactForce(ped, neighbor);
-    }
-    ground_support_contact_forces += F_rep_agents / model.mass;
-
-    const auto F_contact_ground_support_obstacles = std::accumulate(
-        walls.cbegin(),
-        walls.cend(),
-        Point(0, 0),
-        [this, &ped](const auto& acc, const auto& element) {
-            return acc + ObstacleGroundSupportContactForce(ped, element);
-        });
-    ground_support_contact_forces += F_contact_ground_support_obstacles / model.mass;
-
-
+ 
+ 
 
     if (upper_body_contact_forces.Norm() <0.01 and ground_support_contact_forces.Norm() <0.01) {
         // Locomotion mode
@@ -146,7 +155,9 @@ OperationalModelUpdate SocialForceModelIPP::ComputeNewPosition(
         // ## ground support - follows the upper body (balance recovery)
         update.ground_support_velocity =   model.ground_support_velocity +
                                         (   
-                                            (update.position - model.ground_support_position) * LAMBDA_RECOVERY_1 
+                                            ground_support_contact_forces
+                                            
+                                            + (update.position - model.ground_support_position) * LAMBDA_RECOVERY_1 
                                             + (update.velocity - model.ground_support_velocity) * LAMBDA_RECOVERY_2
                                             - model.ground_support_velocity * LAMBDA_RECOVERY_3
                                         )* dT;
@@ -293,13 +304,14 @@ Point SocialForceModelIPP::AgentGroundSupportContactForce(const GenericAgent& pe
     const auto& model1 = std::get<SocialForceModelIPPData>(ped1.model);
     const auto& model2 = std::get<SocialForceModelIPPData>(ped2.model);
 
-    const double radiuses_sum = model1.radius + model2.radius;
+    const double radiuses_sum = model1.radius * GS_SCALING_FACTOR * model1.height
+                             + model2.radius * GS_SCALING_FACTOR * model2.height;
 
     return ContactForceBetweenPoints(
         model1.ground_support_position,
         model2.ground_support_position,
         radiuses_sum,
-        model2.velocity - model1.velocity);
+        model2.ground_support_velocity - model1.ground_support_velocity);
 };
 
 Point SocialForceModelIPP::ObstacleUpperBodyContactForce(const GenericAgent& agent, const LineSegment& segment) const
@@ -307,15 +319,21 @@ Point SocialForceModelIPP::ObstacleUpperBodyContactForce(const GenericAgent& age
     const auto& model = std::get<SocialForceModelIPPData>(agent.model);
     const Point pt = segment.ShortestPoint(agent.pos);
     return ContactForceBetweenPoints(
-        agent.pos, pt, model.radius, model.velocity);
+        agent.pos, 
+        pt, 
+        model.radius, 
+        model.velocity);
 }
 
 Point SocialForceModelIPP::ObstacleGroundSupportContactForce(const GenericAgent& agent, const LineSegment& segment) const
 {
     const auto& model = std::get<SocialForceModelIPPData>(agent.model);
-    const Point pt = segment.ShortestPoint(agent.pos);
+    const Point pt = segment.ShortestPoint(model.ground_support_position);
     return ContactForceBetweenPoints(
-        agent.pos, pt, model.radius, model.velocity);
+        model.ground_support_position, 
+        pt, 
+        model.radius * GS_SCALING_FACTOR * model.height, 
+        model.ground_support_velocity);
 }
 
 Point SocialForceModelIPP::SocialForceBetweenPoints(
@@ -345,10 +363,10 @@ Point SocialForceModelIPP::ContactForceBetweenPoints(
     const Point n_ij = (pt1 - pt2).Normalized();
     const Point tangent = n_ij.Rotate90Deg();
     if(dist < radiuses_sum) {
-        pushing_force_norm += std::pow(1 - (dist / radiuses_sum), 1.5);
+        pushing_force_norm = std::pow(1 - (dist / radiuses_sum), 1.5);
         // original SFM: this->bodyForce * (radiuses_sum - dist);
         friction_force_norm =
-            this->friction * (radiuses_sum - dist) * (velocity.ScalarProduct(tangent));
+            this->friction * (radiuses_sum - dist) * (velocity.ScalarProduct(tangent));    
     }
     return n_ij * pushing_force_norm + tangent * friction_force_norm;
 }
@@ -359,5 +377,8 @@ To Do:
     - Add contact between feets
     - Add gravity term during recovery phase
 
+Modif to remove:
+    - ground support radius = radius (change the scaling factor)
+    - no contact between agent at the upper body
 
 */
