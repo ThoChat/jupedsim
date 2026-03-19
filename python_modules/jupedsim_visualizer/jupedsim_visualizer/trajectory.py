@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 from jupedsim.internal.aabb import AABB
 from jupedsim.recording import Recording, RecordingFrame
-from vtkmodules.vtkCommonCore import vtkPoints
+from vtkmodules.vtkCommonCore import vtkFloatArray, vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtkmodules.vtkFiltersCore import vtkGlyph2D
 from vtkmodules.vtkFiltersSources import vtkRegularPolygonSource
@@ -10,6 +10,8 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 from jupedsim_visualizer.config import Colors, ZLayers
 
 GS_SCALING_FACTOR = 0.26 / (2 * 0.3 * 1.65)
+DEFAULT_AGENT_RADIUS = 0.15
+DEFAULT_AGENT_HEIGHT = 1.65
 
 
 def to_vtk_points(frame: RecordingFrame) -> vtkPoints:
@@ -31,6 +33,30 @@ def to_vtk_gs_points(frame: RecordingFrame) -> vtkPoints:
                 ZLayers.agents,
             )
     return points
+
+
+def _ground_support_radius(agent) -> float:
+    height = (
+        agent.height if agent.height is not None else DEFAULT_AGENT_HEIGHT
+    )
+    radius = (
+        agent.radius if agent.radius is not None else DEFAULT_AGENT_RADIUS
+    )
+    return radius * GS_SCALING_FACTOR * height
+
+
+def to_vtk_gs_polydata(frame: RecordingFrame) -> vtkPolyData:
+    polydata = vtkPolyData()
+    polydata.SetPoints(to_vtk_gs_points(frame))
+
+    radii = vtkFloatArray()
+    radii.SetName("ground_support_radius")
+    for agent in frame.agents:
+        if agent.ground_support_position is not None:
+            radii.InsertNextValue(_ground_support_radius(agent))
+
+    polydata.GetPointData().SetScalars(radii)
+    return polydata
 
 
 def build_link_polydata(frame: RecordingFrame) -> vtkPolyData:
@@ -107,18 +133,18 @@ class Trajectory:
 
     def _init_ipp(self, first_frame: RecordingFrame):
         # Ground support circles (smaller, different color)
-        gs_polydata = vtkPolyData()
-        gs_polydata.SetPoints(to_vtk_gs_points(first_frame))
+        gs_polydata = to_vtk_gs_polydata(first_frame)
         self.gs_polydata = gs_polydata
 
-        gs_radius = 0.15 * GS_SCALING_FACTOR * 1.65
         gs_polygon = vtkRegularPolygonSource()
-        gs_polygon.SetRadius(gs_radius)
+        gs_polygon.SetRadius(1.0)
         gs_polygon.SetNumberOfSides(24)
 
         gs_glyph = vtkGlyph2D()
         gs_glyph.SetSourceConnection(gs_polygon.GetOutputPort())
         gs_glyph.SetInputData(gs_polydata)
+        gs_glyph.SetScaleModeToScaleByScalar()
+        gs_glyph.SetScaleFactor(1.0)
         gs_glyph.Update()
         self.gs_glyph2D = gs_glyph
 
@@ -158,7 +184,11 @@ class Trajectory:
         self.glyph2D.Update()
 
         if self._has_ipp:
-            self.gs_polydata.SetPoints(to_vtk_gs_points(frame))
+            updated_gs_polydata = to_vtk_gs_polydata(frame)
+            self.gs_polydata.SetPoints(updated_gs_polydata.GetPoints())
+            self.gs_polydata.GetPointData().SetScalars(
+                updated_gs_polydata.GetPointData().GetScalars()
+            )
             self.gs_glyph2D.Update()
             self._link_mapper.SetInputData(build_link_polydata(frame))
 
