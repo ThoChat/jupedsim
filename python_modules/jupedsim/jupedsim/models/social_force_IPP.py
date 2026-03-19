@@ -68,7 +68,11 @@ class SocialForceModelIPPAgentParameters:
     def as_native(
         self,
     ) -> py_jps.SocialForceModelIPPAgentParameters:
-        gs_pos = self.ground_support_position if self.ground_support_position is not None else self.position
+        gs_pos = (
+            self.ground_support_position
+            if self.ground_support_position is not None
+            else self.position
+        )
         return py_jps.SocialForceModelIPPAgentParameters(
             position=self.position,
             orientation=self.orientation,

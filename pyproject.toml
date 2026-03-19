@@ -61,3 +61,4 @@ extend-ignore-names = ["desiredSpeed", "reactionTime", "agentScale", "obstacleSc
 "**{jupedsim_visualizer}/*" = ["N"]
 "serialization.py" = ["N"]
 "journey.ipynb" = ["N"]
+"python_modules/jupedsim/jupedsim/models/social_force_IPP.py" = ["N999"]

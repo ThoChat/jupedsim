@@ -59,8 +59,8 @@ from jupedsim.routing import RoutingEngine
 from jupedsim.serialization import TrajectoryWriter
 from jupedsim.simulation import Simulation
 from jupedsim.sqlite_serialization import (
-    SqliteTrajectoryWriter,
     SqliteIPPTrajectoryWriter,
+    SqliteTrajectoryWriter,
 )
 from jupedsim.stages import (
     ExitStage,
@@ -80,7 +80,9 @@ __commit__ = get_build_info().git_commit_hash
 Commit id that was used to build this module.
 """
 
-__compiler__ = f"{get_build_info().compiler} ({get_build_info().compiler_version})"
+__compiler__ = (
+    f"{get_build_info().compiler} ({get_build_info().compiler_version})"
+)
 """
 Id of the compiler used to build the native portion of this module.
 """

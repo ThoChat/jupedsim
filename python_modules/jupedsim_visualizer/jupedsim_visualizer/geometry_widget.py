@@ -29,9 +29,7 @@ class RenderWidget(QVTKRenderWindowInteractor):
         # WA_PaintOnScreen causes an infinite render loop on macOS
         # with VTK >= 9.6 and PySide6 >= 6.10.
         if platform.system() == "Darwin":
-            self.setAttribute(
-                Qt.WidgetAttribute.WA_PaintOnScreen, False
-            )
+            self.setAttribute(Qt.WidgetAttribute.WA_PaintOnScreen, False)
         self.navi = navi
         self.actor_sources = actor_sources
 

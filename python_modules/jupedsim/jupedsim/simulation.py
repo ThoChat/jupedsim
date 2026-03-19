@@ -151,7 +151,9 @@ class Simulation:
             model=py_jps_model, geometry=build_geometry(geometry)._obj, dt=dt
         )
 
-    def add_waypoint_stage(self, position: tuple[float, float], distance) -> int:
+    def add_waypoint_stage(
+        self, position: tuple[float, float], distance
+    ) -> int:
         """Add a new waypoint stage to this simulation.
 
         Arguments:
@@ -177,7 +179,9 @@ class Simulation:
         """
         return self._obj.add_queue_stage(positions)
 
-    def add_waiting_set_stage(self, positions: list[tuple[float, float]]) -> int:
+    def add_waiting_set_stage(
+        self, positions: list[tuple[float, float]]
+    ) -> int:
         """Add a new waiting set stage to this simulation.
 
         Arguments:
@@ -458,7 +462,9 @@ class Simulation:
         """
         return Agent(self._obj.agent(agent_id))
 
-    def agents_in_range(self, pos: tuple[float, float], distance: float) -> list[int]:
+    def agents_in_range(
+        self, pos: tuple[float, float], distance: float
+    ) -> list[int]:
         """Ids of agents within the given distance to the given position.
 
         Arguments:
@@ -527,7 +533,9 @@ class Simulation:
             case py_jps.WaitingSetProxy():
                 return WaitingSetStage(stage)
             case _:
-                raise Exception(f"Internal error, unexpected type: {type(stage)}")
+                raise Exception(
+                    f"Internal error, unexpected type: {type(stage)}"
+                )
 
     def set_tracing(self, status: bool) -> None:
         self._obj.set_tracing(status)
