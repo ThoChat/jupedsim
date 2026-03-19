@@ -55,6 +55,7 @@ void init_agent(py::module_& m)
             "model",
             [](GenericAgent& agent) -> auto& { return agent.model; },
             py::return_value_policy::reference);
-            [](GenericAgent& agent) -> auto& { return agent.model; },
+            [](GenericAgent& agent) -> auto& {
+        return agent.model; },
             py::return_value_policy::reference);
 }

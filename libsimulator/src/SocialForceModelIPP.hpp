@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 #pragma once
 
-#include "SocialForceModelIPPData.hpp"
 #include "CollisionGeometry.hpp"
 #include "NeighborhoodSearch.hpp"
 #include "OperationalModel.hpp"
+#include "SocialForceModelIPPData.hpp"
 #include "UniqueID.hpp"
 
 struct GenericAgent;
@@ -20,8 +20,7 @@ private:
 public:
     // Anthropometric scaling factor for ground support radius
     // foot length / (diameter * reference height)
-    static constexpr double GS_SCALING_FACTOR =
-        0.26 / (2 * 0.3 * 1.65);
+    static constexpr double GS_SCALING_FACTOR = 0.26 / (2 * 0.3 * 1.65);
 
     // Max upper body–leg separation as fraction of height
     // shank(0.2522) + thigh(0.2269) + ankle(0.0451)
@@ -55,9 +54,5 @@ private:
      * @param A repulsion amplitude
      * @param B interaction range (decay length)
      */
-    static Point ExponentialRepulsion(
-        const Point pt1,
-        const Point pt2,
-        double A,
-        double B);
+    static Point ExponentialRepulsion(const Point pt1, const Point pt2, double A, double B);
 };

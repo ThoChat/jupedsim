@@ -32,7 +32,8 @@ struct fmt::formatter<SocialForceModelIPPData> {
         return fmt::format_to(
             ctx.out(),
             "IPP[velocity={}, gs_pos={}, gs_vel={}, h={}, v0={}, tau={}, "
-            "lambda_u={}, lambda_b={}, v_s={}, lambda={}, A={}, A_w={}, B={}, B_w={}, B_leg={}, r={}])",
+            "lambda_u={}, lambda_b={}, v_s={}, lambda={}, A={}, A_w={}, B={}, B_w={}, B_leg={}, "
+            "r={}])",
             m.velocity,
             m.ground_support_position,
             m.ground_support_velocity,

@@ -62,13 +62,15 @@ OperationalModelUpdate SocialForceModelIPP::ComputeNewPosition(
         if(neighbor.id == ped.id) {
             continue;
         }
-        acc_ub += ExponentialRepulsion(ped.pos, neighbor.pos, model.agentScale, model.forceDistance);
+        acc_ub +=
+            ExponentialRepulsion(ped.pos, neighbor.pos, model.agentScale, model.forceDistance);
     }
 
     // Upper body repulsion from walls
     for(const auto& wall : walls) {
         const Point pt = wall.ShortestPoint(ped.pos);
-        acc_ub += ExponentialRepulsion(ped.pos, pt, model.obstacleScale, model.obstacleForceDistance);
+        acc_ub +=
+            ExponentialRepulsion(ped.pos, pt, model.obstacleScale, model.obstacleForceDistance);
     }
 
     // --- Ground support (leg) acceleration ---
@@ -94,8 +96,8 @@ OperationalModelUpdate SocialForceModelIPP::ComputeNewPosition(
     const auto& gsWalls = geometry.LineSegmentsInApproxDistanceTo(model.ground_support_position);
     for(const auto& wall : gsWalls) {
         const Point pt = wall.ShortestPoint(model.ground_support_position);
-        acc_gs +=
-            ExponentialRepulsion(model.ground_support_position, pt, model.obstacleScale, model.obstacleForceDistance);
+        acc_gs += ExponentialRepulsion(
+            model.ground_support_position, pt, model.obstacleScale, model.obstacleForceDistance);
     }
 
     // --- Euler integration ---
@@ -103,7 +105,8 @@ OperationalModelUpdate SocialForceModelIPP::ComputeNewPosition(
     update.position = ped.pos + update.velocity * dT;
 
     update.ground_support_velocity = model.ground_support_velocity + acc_gs * dT;
-    update.ground_support_position = model.ground_support_position + update.ground_support_velocity * dT;
+    update.ground_support_position =
+        model.ground_support_position + update.ground_support_velocity * dT;
 
     // --- Clamp upper body–leg separation to max leg length ---
     const double maxSeparation = LEG_SCALING_FACTOR * model.height;

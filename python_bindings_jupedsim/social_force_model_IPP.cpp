@@ -2,10 +2,9 @@
 #include "conversion.hpp"
 #include "wrapper.hpp"
 
-#include <jupedsim/jupedsim.h>
-
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <jupedsim/jupedsim.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -108,11 +107,10 @@ void init_social_force_model_IPP(py::module_& m)
                 p.radius);
         });
     py::class_<JPS_SocialForceModelIPPBuilder_Wrapper>(m, "SocialForceModelIPPBuilder")
-        .def(
-            py::init([]() {
-                return std::make_unique<JPS_SocialForceModelIPPBuilder_Wrapper>(
-                    JPS_SocialForceModelIPPBuilder_Create());
-            }))
+        .def(py::init([]() {
+            return std::make_unique<JPS_SocialForceModelIPPBuilder_Wrapper>(
+                JPS_SocialForceModelIPPBuilder_Create());
+        }))
         .def("build", [](JPS_SocialForceModelIPPBuilder_Wrapper& w) {
             JPS_ErrorMessage errorMsg{};
             auto result = JPS_SocialForceModelIPPBuilder_Build(w.handle, &errorMsg);
@@ -137,7 +135,8 @@ void init_social_force_model_IPP(py::module_& m)
             [](const JPS_SocialForceModelIPPState_Wrapper& w) {
                 return intoTuple(JPS_SocialForceModelIPPState_GetGroundSupportPosition(w.handle));
             },
-            [](JPS_SocialForceModelIPPState_Wrapper& w, std::tuple<double, double> ground_support_position) {
+            [](JPS_SocialForceModelIPPState_Wrapper& w,
+               std::tuple<double, double> ground_support_position) {
                 JPS_SocialForceModelIPPState_SetGroundSupportPosition(
                     w.handle, intoJPS_Point(ground_support_position));
             })
@@ -146,7 +145,8 @@ void init_social_force_model_IPP(py::module_& m)
             [](const JPS_SocialForceModelIPPState_Wrapper& w) {
                 return intoTuple(JPS_SocialForceModelIPPState_GetGroundSupportVelocity(w.handle));
             },
-            [](JPS_SocialForceModelIPPState_Wrapper& w, std::tuple<double, double> ground_support_velocity) {
+            [](JPS_SocialForceModelIPPState_Wrapper& w,
+               std::tuple<double, double> ground_support_velocity) {
                 JPS_SocialForceModelIPPState_SetGroundSupportVelocity(
                     w.handle, intoJPS_Point(ground_support_velocity));
             })
@@ -236,7 +236,8 @@ void init_social_force_model_IPP(py::module_& m)
                 return JPS_SocialForceModelIPPState_GetObstacleForceDistance(w.handle);
             },
             [](JPS_SocialForceModelIPPState_Wrapper& w, double obstacleForceDistance) {
-                JPS_SocialForceModelIPPState_SetObstacleForceDistance(w.handle, obstacleForceDistance);
+                JPS_SocialForceModelIPPState_SetObstacleForceDistance(
+                    w.handle, obstacleForceDistance);
             })
         .def_property(
             "leg_force_distance",
