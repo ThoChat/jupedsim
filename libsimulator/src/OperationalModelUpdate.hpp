@@ -3,8 +3,8 @@
 #include "CollisionFreeSpeedModelUpdate.hpp"
 #include "CollisionFreeSpeedModelV2Update.hpp"
 #include "GeneralizedCentrifugalForceModelUpdate.hpp"
-#include "SocialForceModelUpdate.hpp"
 #include "SocialForceModelIPPUpdate.hpp"
+#include "SocialForceModelUpdate.hpp"
 
 #include <variant>
 
