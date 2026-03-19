@@ -2,8 +2,6 @@
 
 from dataclasses import dataclass
 
-import jupedsim.native as py_jps
-
 
 @dataclass(kw_only=True)
 class SocialForceModelIPP:
@@ -64,38 +62,6 @@ class SocialForceModelIPPAgentParameters:
     obstacle_force_distance: float = 0.2
     leg_force_distance: float = 0.3
     radius: float = 0.15
-
-    def as_native(
-        self,
-    ) -> py_jps.SocialForceModelIPPAgentParameters:
-        gs_pos = (
-            self.ground_support_position
-            if self.ground_support_position is not None
-            else self.position
-        )
-        return py_jps.SocialForceModelIPPAgentParameters(
-            position=self.position,
-            orientation=self.orientation,
-            journey_id=self.journey_id,
-            stage_id=self.stage_id,
-            velocity=self.velocity,
-            ground_support_position=gs_pos,
-            ground_support_velocity=self.ground_support_velocity,
-            height=self.height,
-            desired_speed=self.desired_speed,
-            reaction_time=self.reaction_time,
-            lambda_u=self.lambda_u,
-            lambda_b=self.lambda_b,
-            balance_speed=self.balance_speed,
-            damping=self.damping,
-            agent_scale=self.agent_scale,
-            obstacle_scale=self.obstacle_scale,
-            force_distance=self.force_distance,
-            obstacle_force_distance=self.obstacle_force_distance,
-            leg_force_distance=self.leg_force_distance,
-            radius=self.radius,
-        )
-
 
 class SocialForceModelIPPState:
     def __init__(self, backing) -> None:
