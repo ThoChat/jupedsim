@@ -8,6 +8,7 @@
 #include "SimulationError.hpp"
 #include "SocialForceModelIPPData.hpp"
 
+#include <cmath>
 #include <stdexcept>
 
 SocialForceModelIPP::SocialForceModelIPP() {};
@@ -216,5 +217,5 @@ Point SocialForceModelIPP::ExponentialRepulsion(
         return Point(0, 0);
     }
     const Point n_ij = (pt1 - pt2).Normalized();
-    return n_ij * A * exp(-dist / B);
+    return n_ij * A * std::exp(-dist / B);
 }

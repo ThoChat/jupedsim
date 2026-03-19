@@ -2,6 +2,9 @@
 #pragma once
 
 #include "Point.hpp"
+
+#include <fmt/core.h>
+
 struct SocialForceModelIPPData {
     Point velocity{}; // v
     Point ground_support_position{}; // position of ground support circle

@@ -333,6 +333,34 @@ class Simulation:
                 force_distance=parameters.force_distance,
                 radius=parameters.radius,
             )
+        elif isinstance(parameters, SocialForceModelIPPAgentParameters):
+            ground_support_position = (
+                parameters.ground_support_position
+                if parameters.ground_support_position is not None
+                else parameters.position
+            )
+            model = py_jps.SocialForceModelIPPState(
+                velocity=parameters.velocity,
+                ground_support_position=ground_support_position,
+                ground_support_velocity=parameters.ground_support_velocity,
+                height=parameters.height,
+                desired_speed=parameters.desired_speed,
+                reaction_time=parameters.reaction_time,
+                lambda_u=parameters.lambda_u,
+                lambda_b=parameters.lambda_b,
+                balance_speed=parameters.balance_speed,
+                damping=parameters.damping,
+                agent_scale=parameters.agent_scale,
+                obstacle_scale=parameters.obstacle_scale,
+                force_distance=parameters.force_distance,
+                obstacle_force_distance=parameters.obstacle_force_distance,
+                leg_force_distance=parameters.leg_force_distance,
+                radius=parameters.radius,
+            )
+        else:
+            raise TypeError(
+                f"Unsupported agent parameter type: {type(parameters)}"
+            )
 
         # TODO(kkratz): Some models do not have an orientation as part of their
         # state, but we initially designed it to be. This needs to be first

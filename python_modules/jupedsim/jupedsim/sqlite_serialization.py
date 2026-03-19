@@ -285,6 +285,8 @@ class SqliteIPPTrajectoryWriter(TrajectoryWriter):
                 "   ori_y REAL NOT NULL,"
                 "   pos_gs_x REAL NOT NULL,"
                 "   pos_gs_y REAL NOT NULL,"
+                "   vel_gs_x REAL NOT NULL,"
+                "   vel_gs_y REAL NOT NULL,"
                 "   height REAL NOT NULL,"
                 "   radius REAL NOT NULL)"
             )
@@ -348,13 +350,15 @@ class SqliteIPPTrajectoryWriter(TrajectoryWriter):
                     agent.orientation[1],
                     agent.model.ground_support_position[0],
                     agent.model.ground_support_position[1],
+                    agent.model.ground_support_velocity[0],
+                    agent.model.ground_support_velocity[1],
                     agent.model.height,
                     agent.model.radius,
                 )
                 for agent in simulation.agents()
             ]
             cur.executemany(
-                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 frame_data,
             )
 
@@ -393,6 +397,13 @@ class SqliteIPPTrajectoryWriter(TrajectoryWriter):
 
     def every_nth_frame(self) -> int:
         return self._every_nth_frame
+
+    def close(self) -> None:
+        if self._con:
+            try:
+                self._con.close()
+            finally:
+                self._con = None  # type: ignore[assignment]
 
     def connection(self) -> sqlite3.Connection:
         return self._con
