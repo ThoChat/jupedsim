@@ -231,7 +231,12 @@ class SqliteTrajectoryWriter(TrajectoryWriter):
 
 
 class SqliteIPPTrajectoryWriter(TrajectoryWriter):
-    """Write trajectory data into a sqlite db for Inverted Pendulum Paradigm for agent representation"""
+    """Write trajectory data for SocialForceModelIPP simulations.
+
+    In addition to the standard upper-body pose, this writer persists
+    ground-support position and velocity as well as per-agent height and
+    radius. It is intended for simulations whose agents use IPP model state.
+    """
 
     def __init__(
         self,
@@ -239,17 +244,17 @@ class SqliteIPPTrajectoryWriter(TrajectoryWriter):
         output_file: Path,
         every_nth_frame: int = 4,
     ) -> None:
-        """SqliteIPPTrajectoryWriter constructor
+        """Create an IPP-specific SQLite trajectory writer.
 
         Args:
-            output_file : pathlib.Path
-                name of the output file.
-                Note: the file will not be written until the first call to :func:`begin_writing`
+            output_file: Name of the output file. The file will not be written
+                until the first call to :func:`begin_writing`.
             every_nth_frame: int
-                indicates interval between writes, 1 means every frame, 5 every 5th
+                Indicates interval between writes. `1` means every frame,
+                `5` means every fifth frame.
 
-        Returns:
-            SqliteIPPTrajectoryWriter
+        Raises:
+            TrajectoryWriter.Exception: If `every_nth_frame` is less than 1.
         """
         self._output_file = output_file
         if every_nth_frame < 1:
@@ -329,6 +334,10 @@ class SqliteIPPTrajectoryWriter(TrajectoryWriter):
 
         This method is intended to handle serialization of the trajectory data
         of a single iteration.
+
+        Raises:
+            TrajectoryWriter.Exception: If the simulation does not provide IPP
+                agent state required by this writer.
         """
         if not self._con:
             raise TrajectoryWriter.Exception("Database not opened.")
