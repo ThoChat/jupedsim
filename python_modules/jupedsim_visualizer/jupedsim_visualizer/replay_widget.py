@@ -4,7 +4,7 @@ import math
 from jupedsim import RoutingEngine
 from jupedsim.recording import Recording
 from PySide6.QtCore import QSignalBlocker, Qt, QTimer
-from PySide6.QtGui import QFont, QPaintEvent
+from PySide6.QtGui import QCloseEvent, QFont, QHideEvent
 from PySide6.QtStateMachine import QState, QStateMachine
 from PySide6.QtWidgets import (
     QApplication,
@@ -139,6 +139,7 @@ class ReplayWidget(QWidget):
         QWidget.__init__(self, parent)
         self.rec = rec
         self.trajectory = trajectory
+        self.timer = None
         self.control = PlayerControlWidget(parent=self)
         self.render_widget = RenderWidget(
             geo, navi, [geo, trajectory], parent=self
@@ -187,17 +188,27 @@ class ReplayWidget(QWidget):
 
     def play(self, checked: bool):
         if checked:
-            self.timer = QTimer()
+            if self.timer is None:
+                self.timer = QTimer(self)
+                self.timer.timeout.connect(self.frame_forward)
             self.timer.setInterval(int(1000.0 / self.rec.fps))
-            self.timer.timeout.connect(self.frame_forward)
             self.timer.start()
         else:
-            if self.timer:
-                self.timer.stop()
+            self._stop_timer()
+
+    def _stop_timer(self):
+        if self.timer is not None and self.timer.isActive():
+            self.timer.stop()
 
     def render(self):
         self.render_widget.render()
 
-    def paintEvent(self, event: QPaintEvent) -> None:
-        self.render()
-        return super().paintEvent(event)
+    def hideEvent(self, event: QHideEvent) -> None:
+        self._stop_timer()
+        self.control.play.setChecked(False)
+        return super().hideEvent(event)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self._stop_timer()
+        self.control.play.setChecked(False)
+        return super().closeEvent(event)

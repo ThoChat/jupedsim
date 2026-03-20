@@ -87,4 +87,11 @@ class RenderWidget(QVTKRenderWindowInteractor):
         self.grid.show(state)
 
     def render(self):
+        if not self.isVisible():
+            return
+        render_window = self.GetRenderWindow()
+        if render_window is None:
+            return
+        if self.iren is None:
+            return
         self.iren.Render()

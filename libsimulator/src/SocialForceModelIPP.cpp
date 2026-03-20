@@ -177,6 +177,22 @@ void SocialForceModelIPP::CheckModelConstraint(
     throwIfNotStrictlyPositive(model.obstacleForceDistance, "obstacle force distance");
     throwIfNotStrictlyPositive(model.legForceDistance, "leg force distance");
 
+    auto throwIfTooCloseToBoundary = [&geometry](const Point& point, double radius, std::string name) {
+        if(!geometry.InsideGeometry(point)) {
+            throw SimulationError(
+                "Model constraint violation: {} {} not inside walkable area", name, point);
+        }
+        const auto lineSegments = geometry.LineSegmentsInDistanceTo(radius, point);
+        if(std::begin(lineSegments) != std::end(lineSegments)) {
+            throw SimulationError(
+                "Model constraint violation: {} {} too close to geometry boundaries, distance <= "
+                "{}",
+                name,
+                point,
+                radius);
+        }
+    };
+
     const auto neighbors = neighborhoodSearch.GetNeighboringAgents(agent.pos, 2);
     for(const auto& neighbor : neighbors) {
         if(agent.id == neighbor.id) {
@@ -193,14 +209,9 @@ void SocialForceModelIPP::CheckModelConstraint(
                 model.radius);
         }
     }
-    const auto lineSegments = geometry.LineSegmentsInDistanceTo(model.radius, agent.pos);
-    if(std::begin(lineSegments) != std::end(lineSegments)) {
-        throw SimulationError(
-            "Model constraint violation: Agent {} too close to geometry boundaries, distance <= "
-            "{}",
-            agent.pos,
-            model.radius);
-    }
+
+    throwIfTooCloseToBoundary(agent.pos, model.radius, "Agent");
+    throwIfTooCloseToBoundary(model.ground_support_position, model.radius, "Ground support");
 }
 
 Point SocialForceModelIPP::DrivingForce(const GenericAgent& agent)

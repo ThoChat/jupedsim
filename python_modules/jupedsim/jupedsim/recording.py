@@ -16,6 +16,7 @@ class RecordingAgent:
     position: tuple[float, float]
     orientation: tuple[float, float]
     ground_support_position: tuple[float, float] | None = None
+    ground_support_velocity: tuple[float, float] | None = None
     height: float | None = None
     radius: float | None = None
 
@@ -69,13 +70,14 @@ class Recording:
                     (row[1], row[2]),
                     (row[3], row[4]),
                     ground_support_position=(row[5], row[6]),
-                    height=row[7],
-                    radius=row[8],
+                    ground_support_velocity=(row[7], row[8]),
+                    height=row[9],
+                    radius=row[10],
                 )
 
             query = (
                 "SELECT id, pos_x, pos_y, ori_x, ori_y,"
-                " pos_gs_x, pos_gs_y, height, radius"
+                " pos_gs_x, pos_gs_y, vel_gs_x, vel_gs_y, height, radius"
                 " FROM trajectory_data"
                 " WHERE frame == (?) ORDER BY id ASC"
             )

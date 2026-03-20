@@ -151,6 +151,21 @@ def test_ipp_constraint_rejects_overlapping_agents():
         )
 
 
+def test_ipp_constraint_rejects_ground_support_outside_geometry():
+    """CheckModelConstraint rejects agents with invalid ground support position."""
+    sim = _make_simulation()
+    journey_id, exit_id = _add_journey(sim)
+    with pytest.raises(RuntimeError):
+        sim.add_agent(
+            jps.SocialForceModelIPPAgentParameters(
+                position=(2, 2),
+                ground_support_position=(-0.1, 2),
+                journey_id=journey_id,
+                stage_id=exit_id,
+            )
+        )
+
+
 def test_ipp_agents_reach_exit():
     """Agents using the IPP model can reach an exit."""
     sim = _make_simulation()

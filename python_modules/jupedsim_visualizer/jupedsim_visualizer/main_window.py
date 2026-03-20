@@ -38,9 +38,16 @@ class MainWindow(QMainWindow):
         tabs.setDocumentMode(True)
         tabs.setTabsClosable(True)
         tabs.setTabBarAutoHide(True)
-        tabs.tabCloseRequested.connect(tabs.removeTab)
+        tabs.tabCloseRequested.connect(self._close_tab)
         self.setCentralWidget(tabs)
         self.tabs = tabs
+
+    def _close_tab(self, index: int):
+        widget = self.tabs.widget(index)
+        self.tabs.removeTab(index)
+        if widget is not None:
+            widget.close()
+            widget.deleteLater()
 
     def _build_menu_bar(self) -> None:
         menu = self.menuBar()
