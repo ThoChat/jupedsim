@@ -280,3 +280,37 @@ def test_ipp_trajectory_writer(tmp_path):
         assert height_val > 0
         assert radius_val > 0
     con.close()
+
+
+def test_ipp_trajectory_writer_rejects_non_ipp_models(tmp_path):
+    """SqliteIPPTrajectoryWriter rejects simulations without IPP state."""
+    from jupedsim.sqlite_serialization import SqliteIPPTrajectoryWriter
+    from jupedsim.serialization import TrajectoryWriter
+
+    output = tmp_path / "traj-non-ipp.sqlite"
+    writer = SqliteIPPTrajectoryWriter(output_file=output, every_nth_frame=1)
+    sim = jps.Simulation(
+        model=jps.CollisionFreeSpeedModel(
+            strength_neighbor_repulsion=8.0,
+            range_neighbor_repulsion=0.1,
+            strength_geometry_repulsion=5.0,
+            range_geometry_repulsion=0.02,
+        ),
+        geometry=[(0, 0), (20, 0), (20, 4), (0, 4)],
+    )
+    journey_id, exit_id = _add_journey(sim)
+    sim.add_agent(
+        jps.CollisionFreeSpeedModelAgentParameters(
+            position=(2, 2),
+            journey_id=journey_id,
+            stage_id=exit_id,
+        )
+    )
+
+    writer.begin_writing(sim)
+    with pytest.raises(
+        TrajectoryWriter.Exception,
+        match="SqliteIPPTrajectoryWriter requires agents with IPP state.",
+    ):
+        writer.write_iteration_state(sim)
+    writer.close()

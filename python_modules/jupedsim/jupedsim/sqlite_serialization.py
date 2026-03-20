@@ -340,23 +340,35 @@ class SqliteIPPTrajectoryWriter(TrajectoryWriter):
         cur = self._con.cursor()
         try:
             cur.execute("BEGIN")
-            frame_data = [
-                (
-                    frame,
-                    agent.id,
-                    agent.position[0],
-                    agent.position[1],
-                    agent.orientation[0],
-                    agent.orientation[1],
-                    agent.model.ground_support_position[0],
-                    agent.model.ground_support_position[1],
-                    agent.model.ground_support_velocity[0],
-                    agent.model.ground_support_velocity[1],
-                    agent.model.height,
-                    agent.model.radius,
+            frame_data = []
+            for agent in simulation.agents():
+                model = agent.model
+                required_attributes = (
+                    "ground_support_position",
+                    "ground_support_velocity",
+                    "height",
+                    "radius",
                 )
-                for agent in simulation.agents()
-            ]
+                if not all(hasattr(model, attr) for attr in required_attributes):
+                    raise TrajectoryWriter.Exception(
+                        "SqliteIPPTrajectoryWriter requires agents with IPP state."
+                    )
+                frame_data.append(
+                    (
+                        frame,
+                        agent.id,
+                        agent.position[0],
+                        agent.position[1],
+                        agent.orientation[0],
+                        agent.orientation[1],
+                        model.ground_support_position[0],
+                        model.ground_support_position[1],
+                        model.ground_support_velocity[0],
+                        model.ground_support_velocity[1],
+                        model.height,
+                        model.radius,
+                    )
+                )
             cur.executemany(
                 "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 frame_data,
@@ -391,6 +403,9 @@ class SqliteIPPTrajectoryWriter(TrajectoryWriter):
             )
 
             cur.execute("COMMIT")
+        except TrajectoryWriter.Exception:
+            cur.execute("ROLLBACK")
+            raise
         except sqlite3.Error as e:
             cur.execute("ROLLBACK")
             raise TrajectoryWriter.Exception(f"Error writing to database: {e}")
