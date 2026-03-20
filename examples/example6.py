@@ -5,9 +5,8 @@
 import pathlib
 import sys
 
-import shapely
-
 import jupedsim as jps
+import shapely
 
 
 def main():

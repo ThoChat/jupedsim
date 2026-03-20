@@ -18,8 +18,15 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
-from shapely import (GeometryCollection, LineString, MultiPolygon, Point,
-                     Polygon, polygonize, to_wkt)
+from shapely import (
+    GeometryCollection,
+    LineString,
+    MultiPolygon,
+    Point,
+    Polygon,
+    polygonize,
+    to_wkt,
+)
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 

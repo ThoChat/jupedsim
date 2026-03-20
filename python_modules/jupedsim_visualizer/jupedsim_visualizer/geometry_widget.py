@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 import platform
 
+import jupedsim as jps
 import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
-from jupedsim_visualizer.config import Colors
-from jupedsim_visualizer.geometry import HoverInfo
-from jupedsim_visualizer.grid import Grid
-from jupedsim_visualizer.move_controller import MoveController
+from jupedsim.internal.aabb import AABB
 from PySide6.QtCore import Qt, Signal
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleUser
 from vtkmodules.vtkRenderingCore import vtkRenderer
 
-import jupedsim as jps
-from jupedsim.internal.aabb import AABB
+from jupedsim_visualizer.config import Colors
+from jupedsim_visualizer.geometry import HoverInfo
+from jupedsim_visualizer.grid import Grid
+from jupedsim_visualizer.move_controller import MoveController
 
 
 class RenderWidget(QVTKRenderWindowInteractor):

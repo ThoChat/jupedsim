@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+import jupedsim as jps
 import pytest
 import shapely
-
-import jupedsim as jps
 
 
 def test_can_query_agents_in_range():

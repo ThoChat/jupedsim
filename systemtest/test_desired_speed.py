@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
-import pytest
-
 import jupedsim as jps
+import pytest
 
 deprecated_params = [
     (

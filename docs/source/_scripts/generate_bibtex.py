@@ -1,8 +1,7 @@
-import textwrap
 import time
 import warnings
-
 import requests
+import textwrap
 
 
 def _fetch_data_with_retries(

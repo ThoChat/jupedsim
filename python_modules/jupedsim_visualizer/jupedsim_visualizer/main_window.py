@@ -2,18 +2,23 @@
 import math
 from pathlib import Path
 
+import jupedsim as jps
 import shapely
+from jupedsim.recording import Recording
+from PySide6.QtCore import QSettings, QSize
+from PySide6.QtStateMachine import QFinalState, QState, QStateMachine
+from PySide6.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QMainWindow,
+    QMessageBox,
+    QTabWidget,
+)
+
 from jupedsim_visualizer.geometry import Geometry
 from jupedsim_visualizer.replay_widget import ReplayWidget
 from jupedsim_visualizer.trajectory import Trajectory
 from jupedsim_visualizer.view_geometry_widget import ViewGeometryWidget
-from PySide6.QtCore import QSettings, QSize
-from PySide6.QtStateMachine import QFinalState, QState, QStateMachine
-from PySide6.QtWidgets import (QApplication, QFileDialog, QMainWindow,
-                               QMessageBox, QTabWidget)
-
-import jupedsim as jps
-from jupedsim.recording import Recording
 
 
 class MainWindow(QMainWindow):
