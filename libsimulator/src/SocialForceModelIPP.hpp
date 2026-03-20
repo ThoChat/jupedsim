@@ -54,5 +54,5 @@ private:
      * @param A repulsion amplitude
      * @param B interaction range (decay length)
      */
-    static Point ExponentialRepulsion(const Point pt1, const Point pt2, double A, double B);
+    static Point ExponentialRepulsion(const Point& pt1, const Point& pt2, double A, double B);
 };

@@ -11,7 +11,7 @@
 #include <cmath>
 #include <stdexcept>
 
-SocialForceModelIPP::SocialForceModelIPP() {};
+SocialForceModelIPP::SocialForceModelIPP() = default;
 
 OperationalModelType SocialForceModelIPP::Type() const
 {
@@ -127,7 +127,9 @@ void SocialForceModelIPP::ApplyUpdate(const OperationalModelUpdate& update, Gene
     auto& model = std::get<SocialForceModelIPPData>(agent.model);
     const auto& upd = std::get<SocialForceModelIPPUpdate>(update);
     agent.pos = upd.position;
-    agent.orientation = upd.velocity.Normalized();
+    if(upd.velocity.Norm() > 1e-10) {
+        agent.orientation = upd.velocity.Normalized();
+    }
     model.velocity = upd.velocity;
     model.ground_support_position = upd.ground_support_position;
     model.ground_support_velocity = upd.ground_support_velocity;
@@ -177,6 +179,9 @@ void SocialForceModelIPP::CheckModelConstraint(
 
     const auto neighbors = neighborhoodSearch.GetNeighboringAgents(agent.pos, 2);
     for(const auto& neighbor : neighbors) {
+        if(agent.id == neighbor.id) {
+            continue;
+        }
         const auto distance = (agent.pos - neighbor.pos).Norm();
         if(model.radius >= distance) {
             throw SimulationError(
@@ -188,12 +193,11 @@ void SocialForceModelIPP::CheckModelConstraint(
                 model.radius);
         }
     }
-    const auto maxRadius = model.radius / 2;
-    const auto lineSegments = geometry.LineSegmentsInDistanceTo(maxRadius, agent.pos);
+    const auto lineSegments = geometry.LineSegmentsInDistanceTo(model.radius, agent.pos);
     if(std::begin(lineSegments) != std::end(lineSegments)) {
         throw SimulationError(
             "Model constraint violation: Agent {} too close to geometry boundaries, distance <= "
-            "{}/2",
+            "{}",
             agent.pos,
             model.radius);
     }
@@ -207,10 +211,10 @@ Point SocialForceModelIPP::DrivingForce(const GenericAgent& agent)
 }
 
 Point SocialForceModelIPP::ExponentialRepulsion(
-    const Point pt1,
-    const Point pt2,
-    const double A,
-    const double B)
+    const Point& pt1,
+    const Point& pt2,
+    double A,
+    double B)
 {
     const double dist = (pt1 - pt2).Norm();
     if(dist < 1e-10) {
