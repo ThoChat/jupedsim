@@ -7,10 +7,6 @@
 #include <pybind11/stl.h> // IWYU pragma: keep
 
 #include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <tuple>
-#include <vector>
 
 namespace py = pybind11;
 
