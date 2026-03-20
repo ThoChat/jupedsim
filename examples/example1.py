@@ -4,8 +4,9 @@
 import pathlib
 import sys
 
-import jupedsim as jps
 from shapely import GeometryCollection, Polygon
+
+import jupedsim as jps
 
 
 def main():

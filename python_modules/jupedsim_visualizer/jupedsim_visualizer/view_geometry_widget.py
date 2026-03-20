@@ -1,17 +1,12 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-import jupedsim as jps
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPaintEvent
-from PySide6.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
-
 from jupedsim_visualizer.geometry import Geometry
 from jupedsim_visualizer.geometry_widget import RenderWidget
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPaintEvent
+from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QVBoxLayout,
+                               QWidget)
+
+import jupedsim as jps
 
 
 class ViewGeometryWidget(QWidget):

@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 import math
 
-import jupedsim as jps
 import pytest
+
+import jupedsim as jps
 
 
 @pytest.fixture

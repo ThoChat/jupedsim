@@ -1,17 +1,14 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 import math
 
-from jupedsim import RoutingEngine
+from jupedsim_visualizer.config import ZLayers
 from vtkmodules.vtkCommonCore import vtkCommand, vtkPoints
-from vtkmodules.vtkCommonDataModel import (
-    vtkCellArray,
-    vtkPolyData,
-    vtkPolyLine,
-)
+from vtkmodules.vtkCommonDataModel import (vtkCellArray, vtkPolyData,
+                                           vtkPolyLine)
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleUser
 from vtkmodules.vtkRenderingCore import vtkActor, vtkCamera, vtkPolyDataMapper
 
-from jupedsim_visualizer.config import ZLayers
+from jupedsim import RoutingEngine
 
 
 class MoveController:

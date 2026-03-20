@@ -1,16 +1,11 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 import math
 
+from jupedsim_visualizer.config import Colors, ZLayers
 from vtkmodules.vtkCommonCore import vtkCommand
 from vtkmodules.vtkFiltersSources import vtkPlaneSource
-from vtkmodules.vtkRenderingCore import (
-    vtkActor,
-    vtkCamera,
-    vtkPolyDataMapper,
-    vtkRenderer,
-)
-
-from jupedsim_visualizer.config import Colors, ZLayers
+from vtkmodules.vtkRenderingCore import (vtkActor, vtkCamera,
+                                         vtkPolyDataMapper, vtkRenderer)
 
 
 class Grid:

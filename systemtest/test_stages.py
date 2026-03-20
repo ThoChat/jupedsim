@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-import jupedsim as jps
 import pytest
 import shapely
+
+import jupedsim as jps
 
 
 @pytest.fixture

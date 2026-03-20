@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 import pathlib
 
-import jupedsim as jps
 import pedpy
 from numpy.random import normal  # normal distribution of free movement speed
 from shapely import GeometryCollection, Polygon
+
+import jupedsim as jps
 
 ## Setup geometries
 room1 = Polygon([(-10, -10), (10, -10), (10, 10), (-10, 10)])

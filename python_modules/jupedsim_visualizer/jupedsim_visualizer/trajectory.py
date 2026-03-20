@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-from jupedsim.internal.aabb import AABB
-from jupedsim.recording import Recording, RecordingFrame
+from jupedsim_visualizer.config import Colors, ZLayers
 from vtkmodules.vtkCommonCore import vtkFloatArray, vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtkmodules.vtkFiltersCore import vtkGlyph2D
 from vtkmodules.vtkFiltersSources import vtkRegularPolygonSource
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
-from jupedsim_visualizer.config import Colors, ZLayers
+from jupedsim.internal.aabb import AABB
+from jupedsim.recording import Recording, RecordingFrame
 
 GS_SCALING_FACTOR = 0.26 / (2 * 0.3 * 1.65)
 DEFAULT_AGENT_RADIUS = 0.15

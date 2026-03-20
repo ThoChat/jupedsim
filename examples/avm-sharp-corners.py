@@ -3,9 +3,10 @@
 import pathlib
 import random
 
-import jupedsim as jps
 from shapely.geometry import Polygon
 from shapely.ops import unary_union
+
+import jupedsim as jps
 
 # ---- Define simulation parameters
 N = 1000
