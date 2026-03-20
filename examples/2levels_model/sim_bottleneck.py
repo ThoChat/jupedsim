@@ -18,7 +18,7 @@ walkable_area = pedpy.WalkableArea(area.geoms[0])
 
 ## Setup spawning area
 spawning_area = Polygon([(-8, -8), (8, -8), (8, 8), (-8, 8)])
-num_agents = 50
+num_agents = 10
 pos_in_spawning_area = jps.distributions.distribute_by_number(
     polygon=spawning_area,
     number_of_agents=num_agents,
@@ -65,9 +65,9 @@ for pos, v0 in zip(pos_in_spawning_area, v_distribution):
             balance_speed=1.0,  # coupling speed v_s [m/s]
             damping=1.0,  # velocity dissipation [1/s]
             agent_scale=5.0,  # A repulsion vs agents [N]
-            obstacle_scale=10.0,  # A_w repulsion vs walls [N]
             force_distance=0.5,  # B upper body range [m]
-            obstacle_force_distance=0.2,  # B_w wall range [m]
+            obstacle_force_distance=0.05,  # B_w wall range [m]
+            obstacle_scale=50.0,  # A_w repulsion vs walls [N]
             leg_force_distance=0.3,  # B_leg leg range [m]
             radius=0.15,  # upper body radius [m]
         )
