@@ -20,7 +20,7 @@ void init_routing(py::module_& m)
         .def("is_routable", &RoutingEngine::IsRoutable)
         .def("mesh", [](const RoutingEngine& routingEngine) {
             const auto mesh = routingEngine.MeshData();
-            const auto& verts = mesh->FVertices();
+            const auto verts = mesh->FVertices();
             py::list pyVerts(verts.size());
             for(size_t i = 0; i < verts.size(); ++i) {
                 pyVerts[i] = py::make_tuple(verts[i].x, verts[i].y);
