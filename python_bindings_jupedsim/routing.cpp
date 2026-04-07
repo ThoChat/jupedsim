@@ -7,10 +7,6 @@
 #include <pybind11/stl.h> // IWYU pragma: keep
 
 #include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <tuple>
-#include <vector>
 
 namespace py = pybind11;
 
@@ -23,21 +19,23 @@ void init_routing(py::module_& m)
         .def("compute_waypoints", &RoutingEngine::ComputeAllWaypoints)
         .def("is_routable", &RoutingEngine::IsRoutable)
         .def("mesh", [](const RoutingEngine& routingEngine) {
-            using Pt = glm::vec2;
-            using Vert = std::vector<Pt>;
-            using Ind = std::vector<uint16_t>;
-            using Polys = std::vector<Ind>;
             const auto mesh = routingEngine.MeshData();
+            const auto verts = mesh->FVertices();
+            py::list pyVerts(verts.size());
+            for(size_t i = 0; i < verts.size(); ++i) {
+                pyVerts[i] = py::make_tuple(verts[i].x, verts[i].y);
+            }
             const auto polygonCount = mesh->CountPolygons();
-            Polys polys{polygonCount};
+            py::list polys(polygonCount);
             for(size_t index = 0; index < polygonCount; ++index) {
                 const auto& poly = mesh->Polygons(index);
                 const auto& vertices = poly.vertices;
-                polys[index].reserve(vertices.size());
+                py::list pyPoly(vertices.size());
                 for(size_t vertIndex = 0; vertIndex < vertices.size(); ++vertIndex) {
-                    polys[index][vertIndex] = vertices[vertIndex];
+                    pyPoly[vertIndex] = vertices[vertIndex];
                 }
+                polys[index] = pyPoly;
             }
-            return std::make_tuple(mesh->FVertices(), polys);
+            return py::make_tuple(pyVerts, polys);
         });
 }

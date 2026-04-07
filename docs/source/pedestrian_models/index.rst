@@ -168,4 +168,34 @@ A `detailed description
 <https://pedestriandynamics.org/models/social_force_model/>`_ is available on
 `PedestrianDynamics`_.
 
+********************************************
+Social Force Model with Inverted Pendulum
+********************************************
+
+The Social Force Model with Inverted Pendulum Paradigm (IPP) extends the
+classical force-based view by representing each pedestrian with two coupled
+components: an upper body and a ground-support point. The upper body captures
+the main motion of the pedestrian, while the ground support models the role of
+the legs and the contact with the floor.
+
+The main idea of the model is to describe walking as a balance between
+forward motion, recovery, and interaction forces. The upper body is driven
+toward the desired direction, repelled by other pedestrians and walls, and
+coupled to the ground support through balancing and unbalancing dynamics. The
+ground support in turn follows the upper body while being affected by its own
+interactions with neighboring agents and geometry.
+
+This two-level representation makes it possible to capture effects that are
+not present in a single-body model, such as the separation between torso motion
+and stepping support, transient imbalance, and recovery of balance during
+movement.
+
+In :class:`~jupedsim.models.SocialForceModelIPP` all model parameters are
+defined per agent via
+:class:`~jupedsim.models.SocialForceModelIPPAgentParameters` and can be
+modified individually.
+
+The original publication can be found at
+https://arxiv.org/abs/2601.05867
+
 .. _PedestrianDynamics: https://PedestrianDynamics.org/

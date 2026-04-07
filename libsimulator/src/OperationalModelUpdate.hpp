@@ -3,6 +3,7 @@
 #include "CollisionFreeSpeedModelUpdate.hpp"
 #include "CollisionFreeSpeedModelV2Update.hpp"
 #include "GeneralizedCentrifugalForceModelUpdate.hpp"
+#include "SocialForceModelIPPUpdate.hpp"
 #include "SocialForceModelUpdate.hpp"
 
 #include <variant>
@@ -12,4 +13,5 @@ using OperationalModelUpdate = std::variant<
     CollisionFreeSpeedModelUpdate,
     CollisionFreeSpeedModelV2Update,
     AnticipationVelocityModelUpdate,
-    SocialForceModelUpdate>;
+    SocialForceModelUpdate,
+    SocialForceModelIPPUpdate>;

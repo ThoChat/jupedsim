@@ -230,6 +230,231 @@ class SqliteTrajectoryWriter(TrajectoryWriter):
         return self._value_or_default(cur, "ymax", float("-inf"))
 
 
+class SqliteIPPTrajectoryWriter(TrajectoryWriter):
+    """Write trajectory data for SocialForceModelIPP simulations.
+
+    In addition to the standard upper-body pose, this writer persists
+    ground-support position and velocity as well as per-agent height and
+    radius. It is intended for simulations whose agents use IPP model state.
+    """
+
+    def __init__(
+        self,
+        *,
+        output_file: Path,
+        every_nth_frame: int = 4,
+    ) -> None:
+        """Create an IPP-specific SQLite trajectory writer.
+
+        Args:
+            output_file: Name of the output file. The file will not be written
+                until the first call to :func:`begin_writing`.
+            every_nth_frame: int
+                Indicates interval between writes. `1` means every frame,
+                `5` means every fifth frame.
+
+        Raises:
+            TrajectoryWriter.Exception: If `every_nth_frame` is less than 1.
+        """
+        self._output_file = output_file
+        if every_nth_frame < 1:
+            raise TrajectoryWriter.Exception("'every_nth_frame' has to be > 0")
+        self._every_nth_frame = every_nth_frame
+        self._con = sqlite3.connect(self._output_file, isolation_level=None)
+        # Don't wait for the OS to persist data
+        self._con.execute("PRAGMA synchronous=OFF;")
+        # Don't allow rollbacks (we don't have need for it)
+        self._con.execute("PRAGMA journal_mode=OFF;")
+
+    def begin_writing(self, simulation: Simulation) -> None:
+        """Begin writing trajectory data.
+
+        This method is intended to handle all data writing that has to be done
+        once before the trajectory data can be written. E.g. Meta information
+        such as framerate etc...
+        """
+        fps = 1 / simulation.delta_time() / self._every_nth_frame
+        geo = simulation.get_geometry().as_wkt()
+
+        cur = self._con.cursor()
+        try:
+            cur.execute("BEGIN")
+            cur.execute("DROP TABLE IF EXISTS trajectory_data")
+            cur.execute(
+                "CREATE TABLE trajectory_data ("
+                "   frame INTEGER NOT NULL,"
+                "   id INTEGER NOT NULL,"
+                "   pos_x REAL NOT NULL,"
+                "   pos_y REAL NOT NULL,"
+                "   ori_x REAL NOT NULL,"
+                "   ori_y REAL NOT NULL,"
+                "   pos_gs_x REAL NOT NULL,"
+                "   pos_gs_y REAL NOT NULL,"
+                "   vel_gs_x REAL NOT NULL,"
+                "   vel_gs_y REAL NOT NULL,"
+                "   height REAL NOT NULL,"
+                "   radius REAL NOT NULL)"
+            )
+            cur.execute("DROP TABLE IF EXISTS metadata")
+            cur.execute(
+                "CREATE TABLE metadata(key TEXT NOT NULL UNIQUE PRIMARY KEY, value TEXT NOT NULL)"
+            )
+            cur.executemany(
+                "INSERT INTO metadata VALUES(?, ?)",
+                (("version", DATABASE_VERSION), ("fps", fps)),
+            )
+            cur.execute("DROP TABLE IF EXISTS geometry")
+            cur.execute(
+                "CREATE TABLE geometry("
+                "   hash INTEGER NOT NULL, "
+                "   wkt TEXT NOT NULL)"
+            )
+            cur.execute("CREATE UNIQUE INDEX geometry_hash on geometry( hash)")
+            cur.execute(
+                "INSERT INTO geometry VALUES(?, ?)",
+                (hash(geo), geo),
+            )
+            cur.execute("DROP TABLE IF EXISTS frame_data")
+            cur.execute(
+                "CREATE TABLE frame_data("
+                "   frame INTEGER NOT NULL,"
+                "   geometry_hash INTEGER NOT NULL)"
+            )
+
+            cur.execute(
+                "CREATE INDEX frame_id_idx ON trajectory_data(frame, id)"
+            )
+            cur.execute("COMMIT")
+        except sqlite3.Error as e:
+            cur.execute("ROLLBACK")
+            raise TrajectoryWriter.Exception(f"Error creating database: {e}")
+
+    def write_iteration_state(self, simulation: Simulation) -> None:
+        """Write trajectory data of one simulation iteration.
+
+        This method is intended to handle serialization of the trajectory data
+        of a single iteration.
+
+        Raises:
+            TrajectoryWriter.Exception: If the simulation does not provide IPP
+                agent state required by this writer.
+        """
+        if not self._con:
+            raise TrajectoryWriter.Exception("Database not opened.")
+
+        iteration = simulation.iteration_count()
+        if iteration % self.every_nth_frame() != 0:
+            return
+        frame = iteration / self.every_nth_frame()
+        cur = self._con.cursor()
+        try:
+            cur.execute("BEGIN")
+            frame_data = []
+            for agent in simulation.agents():
+                model = agent.model
+                required_attributes = (
+                    "ground_support_position",
+                    "ground_support_velocity",
+                    "height",
+                    "radius",
+                )
+                if not all(hasattr(model, attr) for attr in required_attributes):
+                    raise TrajectoryWriter.Exception(
+                        "SqliteIPPTrajectoryWriter requires agents with IPP state."
+                    )
+                frame_data.append(
+                    (
+                        frame,
+                        agent.id,
+                        agent.position[0],
+                        agent.position[1],
+                        agent.orientation[0],
+                        agent.orientation[1],
+                        model.ground_support_position[0],
+                        model.ground_support_position[1],
+                        model.ground_support_velocity[0],
+                        model.ground_support_velocity[1],
+                        model.height,
+                        model.radius,
+                    )
+                )
+            cur.executemany(
+                "INSERT INTO trajectory_data VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                frame_data,
+            )
+
+            geo_wkt = simulation.get_geometry().as_wkt()
+            geo_hash = hash(geo_wkt)
+            cur.execute(
+                "INSERT OR IGNORE INTO geometry(hash, wkt) VALUES(?,?)",
+                (geo_hash, geo_wkt),
+            )
+            cur.execute(
+                "INSERT INTO frame_data VALUES(?, ?)",
+                (frame, geo_hash),
+            )
+
+            xmin, ymin, xmax, ymax = from_wkt(geo_wkt).bounds
+
+            old_xmin = self._x_min(cur)
+            old_xmax = self._x_max(cur)
+            old_ymin = self._y_min(cur)
+            old_ymax = self._y_max(cur)
+
+            cur.executemany(
+                "INSERT OR REPLACE INTO metadata(key, value) VALUES(?,?)",
+                [
+                    ("xmin", str(min(xmin, float(old_xmin)))),
+                    ("xmax", str(max(xmax, float(old_xmax)))),
+                    ("ymin", str(min(ymin, float(old_ymin)))),
+                    ("ymax", str(max(ymax, float(old_ymax)))),
+                ],
+            )
+
+            cur.execute("COMMIT")
+        except TrajectoryWriter.Exception:
+            cur.execute("ROLLBACK")
+            raise
+        except sqlite3.Error as e:
+            cur.execute("ROLLBACK")
+            raise TrajectoryWriter.Exception(f"Error writing to database: {e}")
+
+    def every_nth_frame(self) -> int:
+        return self._every_nth_frame
+
+    def close(self) -> None:
+        if self._con:
+            try:
+                self._con.close()
+            finally:
+                self._con = None  # type: ignore[assignment]
+
+    def connection(self) -> sqlite3.Connection:
+        return self._con
+
+    def _value_or_default(self, cur, key, default: float | int | str):
+        res = cur.execute(
+            "SELECT value FROM metadata WHERE key = ?", (key,)
+        ).fetchone()
+        if res is None:
+            return default
+        else:
+            text = res[0]
+            return type(default)(text)
+
+    def _x_min(self, cur):
+        return self._value_or_default(cur, "xmin", float("inf"))
+
+    def _x_max(self, cur):
+        return self._value_or_default(cur, "xmax", float("-inf"))
+
+    def _y_min(self, cur):
+        return self._value_or_default(cur, "ymin", float("inf"))
+
+    def _y_max(self, cur):
+        return self._value_or_default(cur, "ymax", float("-inf"))
+
+
 def update_database_to_latest_version(connection: sqlite3.Connection):
     version = get_database_version(connection)
 

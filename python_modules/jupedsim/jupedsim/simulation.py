@@ -11,32 +11,21 @@ from jupedsim.geometry_utils import build_geometry
 from jupedsim.internal.tracing import Trace
 from jupedsim.journey import JourneyDescription
 from jupedsim.models.anticipation_velocity_model import (
-    AnticipationVelocityModel,
-    AnticipationVelocityModelAgentParameters,
-)
+    AnticipationVelocityModel, AnticipationVelocityModelAgentParameters)
 from jupedsim.models.collision_free_speed import (
-    CollisionFreeSpeedModel,
-    CollisionFreeSpeedModelAgentParameters,
-)
+    CollisionFreeSpeedModel, CollisionFreeSpeedModelAgentParameters)
 from jupedsim.models.collision_free_speed_v2 import (
-    CollisionFreeSpeedModelV2,
-    CollisionFreeSpeedModelV2AgentParameters,
-)
+    CollisionFreeSpeedModelV2, CollisionFreeSpeedModelV2AgentParameters)
 from jupedsim.models.generalized_centrifugal_force import (
     GeneralizedCentrifugalForceModel,
-    GeneralizedCentrifugalForceModelAgentParameters,
-)
-from jupedsim.models.social_force import (
-    SocialForceModel,
-    SocialForceModelAgentParameters,
-)
+    GeneralizedCentrifugalForceModelAgentParameters)
+from jupedsim.models.social_force import (SocialForceModel,
+                                          SocialForceModelAgentParameters)
+from jupedsim.models.social_force_IPP import (
+    SocialForceModelIPP, SocialForceModelIPPAgentParameters)
 from jupedsim.serialization import TrajectoryWriter
-from jupedsim.stages import (
-    ExitStage,
-    NotifiableQueueStage,
-    WaitingSetStage,
-    WaypointStage,
-)
+from jupedsim.stages import (ExitStage, NotifiableQueueStage, WaitingSetStage,
+                             WaypointStage)
 
 
 class Simulation:
@@ -58,6 +47,7 @@ class Simulation:
             | CollisionFreeSpeedModelV2
             | AnticipationVelocityModel
             | SocialForceModel
+            | SocialForceModelIPP
         ),
         geometry: (
             str
@@ -135,6 +125,9 @@ class Simulation:
             model_builder = py_jps.SocialForceModelBuilder(
                 body_force=model.body_force, friction=model.friction
             )
+            py_jps_model = model_builder.build()
+        elif isinstance(model, SocialForceModelIPP):
+            model_builder = py_jps.SocialForceModelIPPBuilder()
             py_jps_model = model_builder.build()
         else:
             raise Exception("Unknown model type supplied")
@@ -260,6 +253,7 @@ class Simulation:
             | CollisionFreeSpeedModelV2AgentParameters
             | AnticipationVelocityModelAgentParameters
             | SocialForceModelAgentParameters
+            | SocialForceModelIPPAgentParameters
         ),
     ) -> int:
         """Add an agent to the simulation.
@@ -323,6 +317,34 @@ class Simulation:
                 obstacle_scale=parameters.obstacle_scale,
                 force_distance=parameters.force_distance,
                 radius=parameters.radius,
+            )
+        elif isinstance(parameters, SocialForceModelIPPAgentParameters):
+            ground_support_position = (
+                parameters.ground_support_position
+                if parameters.ground_support_position is not None
+                else parameters.position
+            )
+            model = py_jps.SocialForceModelIPPState(
+                velocity=parameters.velocity,
+                ground_support_position=ground_support_position,
+                ground_support_velocity=parameters.ground_support_velocity,
+                height=parameters.height,
+                desired_speed=parameters.desired_speed,
+                reaction_time=parameters.reaction_time,
+                lambda_u=parameters.lambda_u,
+                lambda_b=parameters.lambda_b,
+                balance_speed=parameters.balance_speed,
+                damping=parameters.damping,
+                agent_scale=parameters.agent_scale,
+                obstacle_scale=parameters.obstacle_scale,
+                force_distance=parameters.force_distance,
+                obstacle_force_distance=parameters.obstacle_force_distance,
+                leg_force_distance=parameters.leg_force_distance,
+                radius=parameters.radius,
+            )
+        else:
+            raise TypeError(
+                f"Unsupported agent parameter type: {type(parameters)}"
             )
 
         # TODO(kkratz): Some models do not have an orientation as part of their
