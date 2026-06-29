@@ -22,11 +22,11 @@ private:
 public:
     // Models parameters and constants;
     // static constexpr double LAMBDA_LOCOMOTION_1 = 5; // model parameter that ajust the control on position during Locomotion phase
-    static constexpr double LAMBDA_LOCOMOTION_2 = 0.5; // model parameter that ajust the control on velocity during Locomotion phase
-    static constexpr double LAMBDA_LOCOMOTION_3 = 1; // model parameter that ajust the dissipation term during Locomotion phase
+    static constexpr double LAMBDA_LOCOMOTION_2 = 5; //  Lambda_u
+    static constexpr double LAMBDA_LOCOMOTION_3 = 0; // model parameter that ajust the dissipation term during Locomotion phase
 
     // static constexpr double LAMBDA_RECOVERY_1 = 5; // model parameter that ajust the control on position during Recovery phase
-    static constexpr double LAMBDA_RECOVERY_2 = 1; // model parameter that ajust the control on velocity during Recovery phase
+    static constexpr double LAMBDA_RECOVERY_2 = 1; // Lambda_b
     // static constexpr double LAMBDA_RECOVERY_3 = 1; // model parameter that ajust the dissipation term during Recovery phase
 
     // Scalin factors multiplied by the height [m] gives
